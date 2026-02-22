@@ -1,0 +1,78 @@
+{
+  "spec_version": "1.0",
+  "tool_version": "0.13.5",
+  "checks_version": "5",
+  "receipt_id": "29bedd86-1786-4379-a5f9-3844958e57de",
+  "receipt_fingerprint": "b99d44bd14d30ebf",
+  "full_fingerprint": "b99d44bd14d30ebf41c3481931df08f47a81679c26a53cf0382c704942824ed5",
+  "correlation_id": "sanna-fixture-escalated-001",
+  "timestamp": "2026-02-22T21:59:43.385789+00:00",
+  "inputs": {
+    "query": "Delete the customer record for user 12345.",
+    "context": "User 12345: John Doe, account active since 2023-01-15."
+  },
+  "outputs": {
+    "response": "This action requires approval. The delete operation has been escalated."
+  },
+  "context_hash": "10b47a9c2dfc1a0ab0710fd1cb240b3c61e0557776083a7f7e35bb314ccdc392",
+  "output_hash": "0d3831dba589e7d9673687ac518561411b253215dc6dd434ccc097933c80a817",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "PASS",
+  "enforcement": {
+    "action": "escalated",
+    "reason": "Delete operation requires human approval per must_escalate policy",
+    "failed_checks": [],
+    "enforcement_mode": "halt",
+    "timestamp": "2026-02-22T21:59:43.385789+00:00"
+  },
+  "receipt_signature": {
+    "signature": "xJu8or3ZnmLHGYwzRW3Mb5PXjKnLwFJwQHNSCO/oz9pI+D9V+AihVl+egoaS+lpVkb/247k295j3joKrBwuzCw==",
+    "key_id": "c7a4db86e09b9a78be11b8c90b9214ae4085beae4c72d45b8bb3fd5c98f22307",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-02-22T21:59:43.386084+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}

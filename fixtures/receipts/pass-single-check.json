@@ -1,0 +1,71 @@
+{
+  "spec_version": "1.0",
+  "tool_version": "0.13.5",
+  "checks_version": "5",
+  "receipt_id": "de0f42f6-058c-490d-bc06-ced4eeebbe15",
+  "receipt_fingerprint": "7faa71c2bb39ddcf",
+  "full_fingerprint": "7faa71c2bb39ddcf55e157d415f234cb0d4f89d98472f9146dad1db8e71898c7",
+  "correlation_id": "sanna-fixture-pass-001",
+  "timestamp": "2026-02-22T21:59:43.381932+00:00",
+  "inputs": {
+    "query": "What is the capital of France?",
+    "context": "France is a country in Western Europe. Its capital is Paris."
+  },
+  "outputs": {
+    "response": "The capital of France is Paris."
+  },
+  "context_hash": "96f6c721339be5b85d75f466d025373180a4dac3c18e72003af339c63d15f190",
+  "output_hash": "5eebc757bbbe8b82b9962187595c7cb6c1accc2ec1e1fc3b69d76c2f38a69f89",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "PASS",
+  "receipt_signature": {
+    "signature": "Ck9CaGH+6zyWlAkxE0BckLTo+MF1JbNEu7lK5kABZuppsAUXNNbI74HuqrUiKLGjqVCEOANFAzlYly1k+4VoCw==",
+    "key_id": "c7a4db86e09b9a78be11b8c90b9214ae4085beae4c72d45b8bb3fd5c98f22307",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-02-22T21:59:43.382849+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}

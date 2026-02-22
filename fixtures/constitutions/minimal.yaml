@@ -1,0 +1,34 @@
+sanna_constitution: 1.0.0
+identity:
+  agent_name: test-minimal-agent
+  domain: testing
+  description: Minimal valid constitution for cross-language fixture testing
+provenance:
+  authored_by: test-author@sanna.dev
+  approved_by:
+  - test-author@sanna.dev
+  approval_date: '2026-02-22'
+  approval_method: fixture-generation
+  change_history: []
+  signature:
+    value: wjOpqXrqHT/iH0pcGLxJy2QxOBkq9/b/r8dAsZ4uU+B3k5a9rmFi6KkIM0smhUEHk+OWCxSQXroegFesvOgNAA==
+    key_id: c7a4db86e09b9a78be11b8c90b9214ae4085beae4c72d45b8bb3fd5c98f22307
+    signed_by: test-author@sanna.dev
+    signed_at: '2026-02-22T21:59:43.363829+00:00'
+    scheme: constitution_sig_v1
+boundaries:
+- id: B001
+  description: Agent operates within testing scope only
+  category: scope
+  severity: high
+trust_tiers:
+  autonomous: []
+  requires_approval: []
+  prohibited: []
+halt_conditions: []
+invariants:
+- id: INV_NO_FABRICATION
+  rule: Agent must not fabricate information absent from provided context
+  enforcement: halt
+  check: sanna.context_contradiction
+policy_hash: 70e5ed9ce2a31c1e25bf9f1b4eadce9174dbb7449d209d3920b870b5a95b0d69
