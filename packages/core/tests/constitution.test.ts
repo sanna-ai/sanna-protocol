@@ -1,0 +1,193 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import {
+  loadConstitution,
+  verifyConstitutionSignature,
+  computeFileContentHash,
+  validateConstitutionData,
+} from "../src/constitution.js";
+import { loadPublicKey } from "../src/crypto.js";
+
+const FIXTURES = resolve(__dirname, "../../../spec/fixtures");
+const golden = JSON.parse(
+  readFileSync(resolve(FIXTURES, "golden-hashes.json"), "utf-8"),
+);
+
+// ── Load fixtures ────────────────────────────────────────────────────
+
+const minimalPath = resolve(FIXTURES, "constitutions/minimal.yaml");
+const fullPath = resolve(FIXTURES, "constitutions/full-featured.yaml");
+const pubKeyPath = resolve(FIXTURES, "keypairs/test-author.pub");
+const pubKey = loadPublicKey(pubKeyPath);
+
+describe("loadConstitution — minimal.yaml", () => {
+  const c = loadConstitution(minimalPath);
+
+  it("parses schema_version", () => {
+    expect(c.schema_version).toBe("1.0.0");
+  });
+
+  it("parses identity", () => {
+    expect(c.identity.agent_name).toBe("test-minimal-agent");
+    expect(c.identity.domain).toBe("testing");
+    expect(c.identity.description).toContain("Minimal valid constitution");
+  });
+
+  it("parses provenance", () => {
+    expect(c.provenance.authored_by).toBe("test-author@sanna.dev");
+    expect(c.provenance.approved_by).toEqual(["test-author@sanna.dev"]);
+    expect(c.provenance.approval_date).toBe("2026-02-22");
+    expect(c.provenance.approval_method).toBe("fixture-generation");
+  });
+
+  it("parses signature block", () => {
+    expect(c.provenance.signature).not.toBeNull();
+    expect(c.provenance.signature!.scheme).toBe("constitution_sig_v1");
+    expect(c.provenance.signature!.key_id).toBe(golden.test_key_id);
+    expect(c.provenance.signature!.value).toBeTruthy();
+  });
+
+  it("parses boundaries", () => {
+    expect(c.boundaries).toHaveLength(1);
+    expect(c.boundaries[0].id).toBe("B001");
+    expect(c.boundaries[0].category).toBe("scope");
+    expect(c.boundaries[0].severity).toBe("high");
+  });
+
+  it("parses invariants", () => {
+    expect(c.invariants).toHaveLength(1);
+    expect(c.invariants[0].id).toBe("INV_NO_FABRICATION");
+    expect(c.invariants[0].enforcement).toBe("halt");
+    expect(c.invariants[0].check).toBe("sanna.context_contradiction");
+  });
+
+  it("has empty trust_tiers", () => {
+    expect(c.trust_tiers.autonomous).toEqual([]);
+    expect(c.trust_tiers.requires_approval).toEqual([]);
+    expect(c.trust_tiers.prohibited).toEqual([]);
+  });
+
+  it("has no authority_boundaries", () => {
+    expect(c.authority_boundaries).toBeNull();
+  });
+
+  it("has policy_hash", () => {
+    expect(c.policy_hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+});
+
+describe("loadConstitution — full-featured.yaml", () => {
+  const c = loadConstitution(fullPath);
+
+  it("parses multiple boundaries", () => {
+    expect(c.boundaries.length).toBeGreaterThanOrEqual(3);
+    expect(c.boundaries.map((b) => b.id)).toContain("B001");
+    expect(c.boundaries.map((b) => b.id)).toContain("B002");
+  });
+
+  it("parses multiple invariants", () => {
+    expect(c.invariants.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("parses authority_boundaries", () => {
+    expect(c.authority_boundaries).not.toBeNull();
+    expect(c.authority_boundaries!.can_execute.length).toBeGreaterThan(0);
+    expect(c.authority_boundaries!.cannot_execute.length).toBeGreaterThan(0);
+    expect(c.authority_boundaries!.must_escalate.length).toBeGreaterThan(0);
+  });
+
+  it("parses escalation rules with targets", () => {
+    const withTarget = c.authority_boundaries!.must_escalate.find(
+      (r) => r.target !== null,
+    );
+    expect(withTarget).toBeDefined();
+    expect(withTarget!.target!.type).toBe("webhook");
+  });
+
+  it("parses halt_conditions", () => {
+    expect(c.halt_conditions.length).toBeGreaterThanOrEqual(2);
+    expect(c.halt_conditions[0].id).toBe("H001");
+  });
+
+  it("parses trusted_sources", () => {
+    expect(c.trusted_sources).not.toBeNull();
+    expect(c.trusted_sources!.tier_1).toContain("internal-database");
+    expect(c.trusted_sources!.untrusted).toContain("user-input");
+  });
+
+  it("parses trust_tiers", () => {
+    expect(c.trust_tiers.autonomous.length).toBeGreaterThan(0);
+    expect(c.trust_tiers.prohibited.length).toBeGreaterThan(0);
+  });
+});
+
+describe("content_hash verification", () => {
+  it("minimal.yaml content_hash matches golden", () => {
+    const hash = computeFileContentHash(minimalPath);
+    expect(hash).toBe(golden.constitutions.minimal.content_hash);
+  });
+
+  it("full-featured.yaml content_hash matches golden", () => {
+    const hash = computeFileContentHash(fullPath);
+    expect(hash).toBe(golden.constitutions["full-featured"].content_hash);
+  });
+});
+
+describe("verifyConstitutionSignature", () => {
+  it("verifies minimal.yaml signature with test-author.pub", () => {
+    const c = loadConstitution(minimalPath);
+    const valid = verifyConstitutionSignature(c, pubKey);
+    expect(valid).toBe(true);
+  });
+
+  it("returns false for unsigned constitution", () => {
+    const c = loadConstitution(fullPath);
+    // full-featured.yaml is not signed
+    const valid = verifyConstitutionSignature(c, pubKey);
+    expect(valid).toBe(false);
+  });
+});
+
+describe("validateConstitutionData", () => {
+  it("returns errors for empty object", () => {
+    const errors = validateConstitutionData({});
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors).toContain("Missing required field: identity");
+  });
+
+  it("returns no errors for valid minimal data", () => {
+    const data = {
+      identity: { agent_name: "test", domain: "test" },
+      provenance: {
+        authored_by: "x@test.com",
+        approved_by: ["x@test.com"],
+        approval_date: "2026-01-01",
+        approval_method: "manual",
+      },
+      boundaries: [
+        { id: "B001", description: "Test", category: "scope", severity: "high" },
+      ],
+    };
+    const errors = validateConstitutionData(data);
+    expect(errors).toEqual([]);
+  });
+
+  it("catches duplicate boundary IDs", () => {
+    const data = {
+      identity: { agent_name: "test", domain: "test" },
+      provenance: {
+        authored_by: "x@test.com",
+        approved_by: ["x@test.com"],
+        approval_date: "2026-01-01",
+        approval_method: "manual",
+      },
+      boundaries: [
+        { id: "B001", description: "A", category: "scope", severity: "high" },
+        { id: "B001", description: "B", category: "scope", severity: "high" },
+      ],
+    };
+    const errors = validateConstitutionData(data);
+    expect(errors.some((e) => e.includes("Duplicate boundary ID"))).toBe(true);
+  });
+});
