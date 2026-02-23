@@ -1,0 +1,3 @@
+# Test keypairs are intentional fixtures - not real secrets
+paths-ignore:
+  - "fixtures/keypairs/*.key"
