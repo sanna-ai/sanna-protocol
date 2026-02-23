@@ -5,12 +5,13 @@
  * See Sanna specification v1.0, Section 6.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import yaml from "js-yaml";
 import type { KeyObject } from "node:crypto";
 
-import { canonicalize, hashContent } from "./hashing.js";
-import { verify, getKeyId } from "./crypto.js";
+import { canonicalize, hashContent, hashObj } from "./hashing.js";
+import { sign, verify, getKeyId } from "./crypto.js";
 import type {
   Constitution,
   Boundary,
@@ -476,4 +477,81 @@ export function verifyConstitutionSignature(
   const data = Buffer.from(canonical, "utf-8");
 
   return verify(data, sig.value, publicKey);
+}
+
+// ── Constitution signing ─────────────────────────────────────────────
+
+/**
+ * Compute policy_hash and add Ed25519 signature to a constitution.
+ *
+ * Returns a new constitution object with provenance.signature populated.
+ */
+export function signConstitution(
+  constitution: Constitution,
+  privateKey: KeyObject,
+  signedBy: string,
+): Constitution {
+  const keyId = getKeyId(privateKey);
+
+  // Build signable dict with policy_hash and blank signature
+  const sigBlock: ConstitutionSignature = {
+    value: "",
+    key_id: keyId,
+    signed_by: signedBy,
+    signed_at: new Date().toISOString(),
+    scheme: "constitution_sig_v1",
+  };
+
+  // Clone and attach signature placeholder
+  const signed: Constitution = structuredClone(constitution);
+  signed.provenance = { ...signed.provenance, signature: sigBlock };
+
+  // Pass 1: compute policy_hash (signable dict still has policy_hash=null)
+  const preDict = constitutionToSignableDict(signed);
+  const preSanitized = sanitizeForSigning(preDict);
+  signed.policy_hash = hashObj(preSanitized);
+
+  // Pass 2: rebuild signable dict with correct policy_hash, then sign
+  const signableDict = constitutionToSignableDict(signed);
+  const sanitized = sanitizeForSigning(signableDict);
+  const canonical = canonicalize(sanitized);
+  const data = Buffer.from(canonical, "utf-8");
+  const signatureB64 = sign(data, privateKey);
+
+  // Replace placeholder
+  signed.provenance.signature!.value = signatureB64;
+
+  return signed;
+}
+
+/**
+ * Serialize a constitution to YAML and write to a file.
+ */
+export function saveConstitution(constitution: Constitution, path: string): void {
+  const dir = dirname(path);
+  if (dir) mkdirSync(dir, { recursive: true });
+
+  const dict = constitutionToSignableDict(constitution);
+
+  // Restore actual signature value (constitutionToSignableDict blanks it)
+  if (constitution.provenance.signature?.value) {
+    const prov = dict.provenance as Record<string, unknown>;
+    const sig = prov.signature as Record<string, unknown>;
+    sig.value = constitution.provenance.signature.value;
+  }
+
+  // Use sanna_constitution instead of schema_version at top level
+  const output: Record<string, unknown> = { sanna_constitution: dict.schema_version };
+  for (const [k, v] of Object.entries(dict)) {
+    if (k !== "schema_version") output[k] = v;
+  }
+
+  const yamlStr = yaml.dump(output, {
+    lineWidth: -1,
+    noRefs: true,
+    quotingType: "'",
+    forceQuotes: false,
+  });
+
+  writeFileSync(path, yamlStr, "utf-8");
 }

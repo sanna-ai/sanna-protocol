@@ -27,6 +27,8 @@ export {
   validateConstitutionData,
   verifyConstitutionSignature,
   computeFileContentHash,
+  signConstitution,
+  saveConstitution,
 } from "./constitution.js";
 
 export {
@@ -46,6 +48,81 @@ export {
 export type { ReceiptParams } from "./receipt.js";
 
 export { verifyReceipt } from "./verifier.js";
+
+export { ReceiptStore } from "./store.js";
+
+export {
+  DriftAnalyzer,
+  calculateSlope,
+  projectBreach,
+  formatDriftReport,
+  exportDriftReport,
+} from "./drift.js";
+
+export {
+  createBundle,
+  verifyBundle,
+} from "./bundle.js";
+
+export {
+  checkC1ContextGrounding,
+  checkC2ConstitutionalAlignment,
+  checkC3InstructionAdherence,
+  checkC4OutputConsistency,
+  checkC5ConstraintSatisfaction,
+  runCoherenceChecks,
+} from "./checks.js";
+
+export type { CoherenceCheckOptions } from "./checks.js";
+
+export {
+  loadInvariantChecks,
+  runInvariantCheck,
+  runAllInvariantChecks,
+} from "./invariants.js";
+
+export {
+  sannaObserve,
+  withSannaGovernance,
+  SannaHaltError,
+  buildTraceData,
+} from "./middleware.js";
+
+export {
+  createApprovalRequest,
+  signApproval,
+  verifyApproval,
+  isApprovalExpired,
+  ApprovalStore,
+} from "./approval.js";
+
+export type { CreateApprovalOptions, ApprovalStoreFilters } from "./approval.js";
+
+export {
+  createIdentityClaim,
+  verifyIdentityClaim,
+  IdentityRegistry,
+} from "./identity.js";
+
+export type { CreateClaimOptions } from "./identity.js";
+
+export {
+  safeWriteFile,
+  safeWriteJson,
+  safeWriteYaml,
+  safeReadFile,
+  validatePath,
+  isSymlink,
+  ensureDirectory,
+  secureTempDir,
+} from "./safe-io.js";
+
+export {
+  diffConstitutions,
+  formatDiffText,
+  formatDiffJson,
+  isDriftingConstitution,
+} from "./constitution-diff.js";
 
 export type {
   Constitution,
@@ -69,4 +146,29 @@ export type {
   Enforcement,
   ConstitutionRef,
   VerificationResult,
+  ReceiptQueryFilters,
+  DriftStatus,
+  CheckDriftDetail,
+  AgentDriftSummary,
+  DriftReport,
+  BundleCheck,
+  BundleVerificationResult,
+  CreateBundleOptions,
+  EnforcementMode,
+  SannaObserveOptions,
+  SannaResult,
+  TraceData,
+  InvariantDefinition,
+  ApprovalRequest,
+  ApprovalSignature,
+  ApprovalStatus,
+  ApprovalVerificationResult,
+  IdentityClaim,
+  IdentityClaimType,
+  ClaimVerificationResult,
+  SafeWriteOptions,
+  PathValidationResult,
+  DiffResult,
+  DiffEntry,
+  DiffSection,
 } from "./types.js";

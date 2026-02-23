@@ -1,0 +1,35 @@
+{
+  "name": "@sanna/cli",
+  "version": "0.1.0",
+  "description": "CLI for the Sanna protocol",
+  "license": "AGPL-3.0-only",
+  "author": "Sanna Contributors",
+  "type": "module",
+  "bin": {
+    "sanna": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sanna/core": "*",
+    "@sanna/gateway": "*",
+    "commander": "^13.1.0",
+    "js-yaml": "^4.1.0",
+    "prompts": "^2.4.2"
+  }
+}

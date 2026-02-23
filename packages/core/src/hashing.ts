@@ -6,9 +6,11 @@
  */
 
 import { createHash } from "node:crypto";
-// canonicalize's .d.ts uses `export default` but ships CJS — cast to fix Node16 DTS.
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const jcs = require("canonicalize") as (input: unknown) => string | undefined;
+import { createRequire } from "node:module";
+
+// canonicalize ships CJS only — use createRequire for ESM compatibility.
+const _require = createRequire(import.meta.url);
+const jcs = _require("canonicalize") as (input: unknown) => string | undefined;
 
 // ── Constants ────────────────────────────────────────────────────────
 

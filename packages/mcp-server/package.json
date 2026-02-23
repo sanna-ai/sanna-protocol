@@ -1,0 +1,32 @@
+{
+  "name": "@sanna/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for the Sanna protocol",
+  "license": "AGPL-3.0-only",
+  "author": "Sanna Contributors",
+  "type": "module",
+  "bin": {
+    "sanna-mcp-server": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@sanna/core": "*"
+  }
+}

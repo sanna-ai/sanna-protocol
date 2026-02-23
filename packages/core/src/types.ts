@@ -188,3 +188,208 @@ export interface VerificationResult {
   warnings: string[];
   checks_performed: string[];
 }
+
+// ── Store types ─────────────────────────────────────────────────────
+
+export interface ReceiptQueryFilters {
+  agent_id?: string;
+  constitution_id?: string;
+  correlation_id?: string;
+  status?: string;
+  enforcement?: boolean;
+  since?: string;
+  until?: string;
+  limit?: number;
+  offset?: number;
+}
+
+// ── Drift types ─────────────────────────────────────────────────────
+
+export type DriftStatus = "HEALTHY" | "WARNING" | "CRITICAL" | "INSUFFICIENT_DATA";
+
+export interface CheckDriftDetail {
+  check_id: string;
+  total_evaluated: number;
+  pass_count: number;
+  fail_count: number;
+  fail_rate: number;
+  trend_slope: number;
+  projected_breach_days: number | null;
+  status: string;
+}
+
+export interface AgentDriftSummary {
+  agent_id: string;
+  constitution_id: string;
+  status: DriftStatus;
+  total_receipts: number;
+  checks: CheckDriftDetail[];
+  projected_breach_days: number | null;
+}
+
+export interface DriftReport {
+  window_days: number;
+  threshold: number;
+  generated_at: string;
+  agents: AgentDriftSummary[];
+  fleet_status: string;
+}
+
+// ── Bundle types ────────────────────────────────────────────────────
+
+export interface BundleCheck {
+  name: string;
+  passed: boolean;
+  detail: string;
+}
+
+export interface BundleVerificationResult {
+  valid: boolean;
+  checks: BundleCheck[];
+  receipt_summary: Record<string, unknown> | null;
+  errors: string[];
+}
+
+export interface CreateBundleOptions {
+  receiptPath: string;
+  constitutionPath: string;
+  publicKeyPath: string;
+  outputPath: string;
+  description?: string;
+}
+
+// ── Middleware types ─────────────────────────────────────────────────
+
+export type EnforcementMode = "enforced" | "advisory" | "permissive";
+
+export interface SannaObserveOptions {
+  constitution?: Constitution;
+  constitutionPath?: string;
+  constitutionPublicKeyPath?: string;
+  signingKeyPath?: string;
+  enforcementMode?: EnforcementMode;
+  toolName?: string;
+  contextParam?: string;
+  queryParam?: string;
+}
+
+export interface SannaResult<T> {
+  output: T;
+  receipt: Receipt;
+  halted: boolean;
+}
+
+export interface TraceData {
+  correlationId: string;
+  query: string;
+  context: string;
+  output: string;
+  constitution?: Constitution;
+  checkResults?: CheckResult[];
+}
+
+export interface InvariantDefinition {
+  id: string;
+  rule: string;
+  enforcement: "halt" | "warn" | "log";
+  type?: string;
+  pattern?: string;
+  maxLength?: number;
+  keywords?: string[];
+}
+
+// ── Approval types ─────────────────────────────────────────────────
+
+export type ApprovalStatus = "pending" | "approved" | "rejected" | "expired";
+
+export interface ApprovalSignature {
+  approver_key_id: string;
+  approved_at: string;
+  signature: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  constitution_hash: string;
+  requester: string;
+  requested_at: string;
+  expires_at: string;
+  status: ApprovalStatus;
+  required_approvals: number;
+  approvals: ApprovalSignature[];
+}
+
+export interface ApprovalVerificationResult {
+  valid: boolean;
+  verified_count: number;
+  required_count: number;
+  details: Array<{
+    approver_key_id: string;
+    signature_valid: boolean;
+    error?: string;
+  }>;
+}
+
+// ── Identity types ─────────────────────────────────────────────────
+
+export type IdentityClaimType = "agent_identity" | "operator_identity" | "organization";
+
+export interface IdentityClaim {
+  id: string;
+  claim_type: IdentityClaimType;
+  subject_key_id: string;
+  claims: Record<string, string>;
+  issued_at: string;
+  expires_at: string;
+  signature: string;
+  signer_key_id: string;
+  revoked?: boolean;
+}
+
+export interface ClaimVerificationResult {
+  valid: boolean;
+  expired: boolean;
+  signature_valid: boolean;
+  claim_type: IdentityClaimType;
+  subject_key_id: string;
+}
+
+// ── Safe I/O types ─────────────────────────────────────────────────
+
+export interface SafeWriteOptions {
+  mode?: number;
+  ensureDir?: boolean;
+}
+
+export interface PathValidationResult {
+  valid: boolean;
+  resolved: string;
+  error?: string;
+}
+
+// ── Constitution diff types ────────────────────────────────────────
+
+export interface DiffEntry {
+  path: string;
+  change_type: "added" | "removed" | "modified";
+  old_value?: unknown;
+  new_value?: unknown;
+}
+
+export type DiffSection =
+  | "identity"
+  | "provenance"
+  | "boundaries"
+  | "trust_tiers"
+  | "halt_conditions"
+  | "invariants"
+  | "authority_boundaries"
+  | "trusted_sources"
+  | "metadata";
+
+export interface DiffResult {
+  sections: Record<DiffSection, DiffEntry[]>;
+  total_changes: number;
+  old_version?: string;
+  new_version?: string;
+}
