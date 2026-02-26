@@ -6,11 +6,9 @@
  */
 
 import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
-
-// canonicalize ships CJS only — use createRequire for ESM compatibility.
-const _require = createRequire(import.meta.url);
-const jcs = _require("canonicalize") as (input: unknown) => string | undefined;
+// canonicalize ships CJS — cast through unknown for Node16 module compat.
+import canonicalize_ from "canonicalize";
+const jcs = canonicalize_ as unknown as (input: unknown) => string | undefined;
 
 // ── Constants ────────────────────────────────────────────────────────
 

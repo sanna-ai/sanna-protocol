@@ -12,11 +12,8 @@
  * Modeled after the Python enforcement/constitution_engine.py module.
  */
 
-import { createRequire } from "node:module";
+import isSafeRegex from "safe-regex2";
 import type { CheckResult, Constitution, InvariantDefinition } from "./types.js";
-
-const _require = createRequire(import.meta.url);
-const isSafeRegex: (pattern: string | RegExp) => boolean = _require("safe-regex2");
 
 // ── PII patterns ─────────────────────────────────────────────────────
 
