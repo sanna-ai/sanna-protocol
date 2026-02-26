@@ -1,0 +1,149 @@
+# Sanna Constitution — OpenClaw Developer
+# Strict containment for skill marketplace distribution.
+# ─────────────────────────────────────────────────────────────────────
+# EVALUATION ORDER (this matters)
+# ================================
+# The engine evaluates boundaries in strict priority order and returns
+# the FIRST match. Understanding this order is critical to writing
+# constitutions that work.
+#
+#   1. cannot_execute  — checked FIRST, matches TOOL NAMES ONLY
+#      → If the tool name matches, verdict is HALT. Done. Nothing
+#        else is checked.
+#
+#   2. must_escalate   — checked SECOND, matches FULL ACTION CONTEXT
+#      → If any condition's keywords appear in the tool name + all
+#        parameter names + all parameter values, verdict is ESCALATE.
+#        Done. Nothing else is checked.
+#
+#   3. can_execute     — checked THIRD, matches TOOL NAMES ONLY
+#      → If the tool name matches, verdict is ALLOW.
+#
+#   4. default         — if nothing matched, verdict is ALLOW
+#      (uncategorized action)
+#
+# WHY THIS MATTERS
+# ────────────────
+# A tool in can_execute is STILL subject to must_escalate conditions.
+# "exec" is allowed, but exec(command="sudo rm -rf /") hits the
+# "sudo" and "rm -rf" escalation conditions BEFORE can_execute fires.
+#
+# A tool in cannot_execute is NEVER subject to must_escalate conditions.
+# If "cron" is in cannot_execute, it's halted immediately — the engine
+# never reaches must_escalate to check parameters.
+#
+# COMMON MISTAKE
+# ──────────────
+# Putting command patterns in cannot_execute. If you add "crontab" to
+# cannot_execute, it only blocks a tool literally named "crontab". An
+# agent calling exec(command="crontab -l") sails right through because
+# cannot_execute only matches tool names, and the tool name is "exec".
+# Move command patterns to must_escalate conditions instead.
+#
+# RULE OF THUMB
+# ─────────────
+# Governing what a tool IS → cannot_execute / can_execute (tool names)
+# Governing what a tool DOES → must_escalate conditions (parameters)
+#
+
+sanna_constitution: "1.0.0"
+
+identity:
+  agent_name: skill-builder-agent
+  domain: skill-development
+  description: >
+    Strict containment for skill marketplace distribution.
+    Only file operations within declared scope are autonomous.
+    Everything outside scope is halted.
+
+provenance:
+  authored_by: developer@skills.dev
+  approved_by:
+    - security@skills.dev
+  approval_date: "2026-02-14"
+  approval_method: security-review
+  change_history: []
+
+boundaries:
+  - id: B001
+    description: Operate only within the declared skill scope directory
+    category: scope
+    severity: critical
+  - id: B002
+    description: No external network access or communication
+    category: authorization
+    severity: critical
+  - id: B003
+    description: No access to system configuration or credentials
+    category: confidentiality
+    severity: critical
+
+halt_conditions:
+  - id: H001
+    trigger: Agent attempts any operation outside declared skill scope
+    escalate_to: security@skills.dev
+    severity: critical
+    enforcement: halt
+
+invariants:
+  - id: INV_NO_FABRICATION
+    rule: Do not claim facts absent from provided sources.
+    enforcement: halt
+  - id: INV_MARK_INFERENCE
+    rule: Clearly mark inferences and speculation as such.
+    enforcement: halt
+  - id: INV_NO_FALSE_CERTAINTY
+    rule: Do not express certainty exceeding evidence strength.
+    enforcement: halt
+  - id: INV_PRESERVE_TENSION
+    rule: Do not collapse conflicting evidence without explicit justification.
+    enforcement: halt
+  - id: INV_NO_PREMATURE_COMPRESSION
+    rule: Do not issue unconditional conclusions when evidence is mixed.
+    enforcement: halt
+
+authority_boundaries:
+  cannot_execute:
+    - purchase
+    - transfer_funds
+    - payment
+    - send_email
+    - post_message
+    - send_slack
+    - read_credentials
+    - read_api_key
+    - read_pii
+    - upload_external
+    - send_data
+    - modify_settings
+    - edit_agent_config
+    - access_external
+    - deploy
+    - execute_code
+    - create_event
+    - modify_event
+    - delete_repo
+    - force_push
+    - drop_table
+  must_escalate:
+    - condition: "delete file"
+      target:
+        type: log
+    - condition: "remove file"
+      target:
+        type: log
+    - condition: "update page"
+      target:
+        type: log
+    - condition: "update record"
+      target:
+        type: log
+  can_execute:
+    - read_file
+    - write_file
+    - search
+
+escalation_targets:
+  default: log
+
+policy_hash: null

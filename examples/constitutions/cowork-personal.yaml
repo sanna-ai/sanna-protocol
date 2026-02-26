@@ -1,0 +1,176 @@
+# Sanna Constitution — Cowork Personal
+# For knowledge workers using Cowork / Claude Desktop with MCP servers.
+# ─────────────────────────────────────────────────────────────────────
+# EVALUATION ORDER (this matters)
+# ================================
+# The engine evaluates boundaries in strict priority order and returns
+# the FIRST match. Understanding this order is critical to writing
+# constitutions that work.
+#
+#   1. cannot_execute  — checked FIRST, matches TOOL NAMES ONLY
+#      → If the tool name matches, verdict is HALT. Done. Nothing
+#        else is checked.
+#
+#   2. must_escalate   — checked SECOND, matches FULL ACTION CONTEXT
+#      → If any condition's keywords appear in the tool name + all
+#        parameter names + all parameter values, verdict is ESCALATE.
+#        Done. Nothing else is checked.
+#
+#   3. can_execute     — checked THIRD, matches TOOL NAMES ONLY
+#      → If the tool name matches, verdict is ALLOW.
+#
+#   4. default         — if nothing matched, verdict is ALLOW
+#      (uncategorized action)
+#
+# WHY THIS MATTERS
+# ────────────────
+# A tool in can_execute is STILL subject to must_escalate conditions.
+# "exec" is allowed, but exec(command="sudo rm -rf /") hits the
+# "sudo" and "rm -rf" escalation conditions BEFORE can_execute fires.
+#
+# A tool in cannot_execute is NEVER subject to must_escalate conditions.
+# If "cron" is in cannot_execute, it's halted immediately — the engine
+# never reaches must_escalate to check parameters.
+#
+# COMMON MISTAKE
+# ──────────────
+# Putting command patterns in cannot_execute. If you add "crontab" to
+# cannot_execute, it only blocks a tool literally named "crontab". An
+# agent calling exec(command="crontab -l") sails right through because
+# cannot_execute only matches tool names, and the tool name is "exec".
+# Move command patterns to must_escalate conditions instead.
+#
+# RULE OF THUMB
+# ─────────────
+# Governing what a tool IS → cannot_execute / can_execute (tool names)
+# Governing what a tool DOES → must_escalate conditions (parameters)
+#
+
+sanna_constitution: "1.0.0"
+
+identity:
+  agent_name: knowledge-worker-agent
+  domain: knowledge-work
+  description: >
+    Knowledge worker agent for daily productivity.
+    Reads and drafts autonomously, escalates external actions
+    and financial transactions, halts on credentials and destructive ops.
+
+provenance:
+  authored_by: user@company.com
+  approved_by:
+    - user@company.com
+  approval_date: "2026-02-14"
+  approval_method: self-review
+  change_history: []
+
+boundaries:
+  - id: B001
+    description: Operate within the user's workspace and approved integrations
+    category: scope
+    severity: high
+  - id: B002
+    description: Never access credentials, API keys, or personally identifiable information
+    category: confidentiality
+    severity: critical
+  - id: B003
+    description: All external communications require explicit user approval
+    category: authorization
+    severity: high
+
+halt_conditions:
+  - id: H001
+    trigger: Agent attempts to read credentials or API keys
+    escalate_to: user@company.com
+    severity: critical
+    enforcement: halt
+  - id: H002
+    trigger: Agent attempts to exfiltrate data to external service
+    escalate_to: user@company.com
+    severity: critical
+    enforcement: halt
+
+invariants:
+  - id: INV_NO_FABRICATION
+    rule: Do not claim facts absent from provided sources.
+    enforcement: halt
+  - id: INV_MARK_INFERENCE
+    rule: Clearly mark inferences and speculation as such.
+    enforcement: warn
+  - id: INV_NO_FALSE_CERTAINTY
+    rule: Do not express certainty exceeding evidence strength.
+    enforcement: warn
+  - id: INV_PRESERVE_TENSION
+    rule: Do not collapse conflicting evidence without explicit justification.
+    enforcement: warn
+  - id: INV_NO_PREMATURE_COMPRESSION
+    rule: Do not issue unconditional conclusions when evidence is mixed.
+    enforcement: warn
+
+authority_boundaries:
+  cannot_execute:
+    # Sensitive data access
+    - read_credentials
+    - read_api_key
+    - read_pii
+    # Data exfiltration
+    - upload_external
+    - send_data
+    # System configuration
+    - modify_settings
+    - edit_agent_config
+    # Code & deployment
+    - deploy
+    - execute_code
+    # Destructive operations
+    - delete_repo
+    - force_push
+    - drop_table
+  must_escalate:
+    - condition: "send email"
+      target:
+        type: log
+    - condition: "post message"
+      target:
+        type: log
+    - condition: "delete file"
+      target:
+        type: log
+    - condition: "remove file"
+      target:
+        type: log
+    - condition: "access outside"
+      target:
+        type: log
+    - condition: "create event"
+      target:
+        type: log
+    - condition: "modify event"
+      target:
+        type: log
+    - condition: "update page"
+      target:
+        type: log
+    - condition: "update record"
+      target:
+        type: log
+    - condition: "purchase"
+      target:
+        type: log
+    - condition: "payment"
+      target:
+        type: log
+    - condition: "transfer funds"
+      target:
+        type: log
+  can_execute:
+    - read_file
+    - write_file
+    - search
+    - summarize
+    - draft
+
+escalation_targets:
+  default: log
+
+policy_hash: null
