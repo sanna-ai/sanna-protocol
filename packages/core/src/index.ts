@@ -159,6 +159,14 @@ export {
   isDriftingConstitution,
 } from "./constitution-diff.js";
 
+export {
+  NullSink,
+  LocalSQLiteSink,
+  CloudHTTPSink,
+  CompositeSink,
+} from "./sinks/index.js";
+export type { CloudHTTPSinkOptions } from "./sinks/index.js";
+
 export type {
   Constitution,
   Boundary,
@@ -201,8 +209,12 @@ export type {
   IdentityClaim,
   IdentityClaimType,
   ClaimVerificationResult,
+  FailurePolicy,
+  SinkResult,
+  ReceiptSink,
   SafeWriteOptions,
   PathValidationResult,
+  ContentMode,
   DiffResult,
   DiffEntry,
   DiffSection,

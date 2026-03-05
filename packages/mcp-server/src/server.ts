@@ -712,7 +712,7 @@ function handleVerifyConstitution(
 }
 
 function handleListChecks(): ToolResult {
-  const CHECKS_VERSION = "5";
+  const CHECKS_VERSION = "6";
   return jsonResult({
     checks_version: CHECKS_VERSION,
     spec_version: SPEC_VERSION,
@@ -890,7 +890,7 @@ const HANDLER_MAP: Record<
 
 export function createSannaServer(config: SannaMCPConfig = {}): Server {
   const server = new Server(
-    { name: "sanna-mcp-server", version: "0.1.0" },
+    { name: "sanna-mcp-server", version: "1.0.0" },
     { capabilities: { tools: {} } },
   );
 

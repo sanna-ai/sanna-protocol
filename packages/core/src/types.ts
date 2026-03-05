@@ -150,6 +150,9 @@ export interface ConstitutionRef {
   constitution_approval?: unknown;
 }
 
+/** Content handling mode for receipt data. */
+export type ContentMode = "full" | "redacted" | "hashes_only" | null;
+
 /** A full Sanna receipt (signed or unsigned). */
 export interface Receipt {
   spec_version: string;
@@ -168,6 +171,10 @@ export interface Receipt {
   checks_passed: number;
   checks_failed: number;
   status: string;
+  parent_receipts?: string[] | null;
+  workflow_id?: string | null;
+  content_mode?: ContentMode;
+  content_mode_source?: string | null;
   receipt_signature?: ReceiptSignature;
   constitution_ref?: ConstitutionRef;
   enforcement?: Enforcement;
@@ -271,6 +278,26 @@ export interface SannaObserveOptions {
   toolName?: string;
   contextParam?: string;
   queryParam?: string;
+  parentReceipts?: string[] | null;
+  workflowId?: string | null;
+  sink?: ReceiptSink;
+}
+
+// ── ReceiptSink types ─────────────────────────────────────────────
+
+export type FailurePolicy = "log_and_continue" | "throw" | "buffer_and_retry";
+
+export interface SinkResult {
+  success: boolean;
+  error?: string;
+  receiptId?: string;
+}
+
+export interface ReceiptSink {
+  store(receipt: Receipt): Promise<SinkResult>;
+  storeBatch?(receipts: Receipt[]): Promise<SinkResult[]>;
+  flush?(): Promise<void>;
+  close?(): Promise<void>;
 }
 
 export interface SannaResult<T> {

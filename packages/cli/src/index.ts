@@ -21,7 +21,7 @@ const program = new Command();
 program
   .name("sanna")
   .description("Trust infrastructure for AI agents")
-  .version("0.1.0");
+  .version("1.0.0");
 
 program.addCommand(initCommand);
 program.addCommand(keygenCommand);

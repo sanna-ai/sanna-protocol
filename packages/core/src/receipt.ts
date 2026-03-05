@@ -10,18 +10,22 @@ import type { KeyObject } from "node:crypto";
 
 import { EMPTY_HASH, canonicalize, hashContent, hashObj } from "./hashing.js";
 import { sign, getKeyId } from "./crypto.js";
-import type { Receipt, CheckResult, ReceiptSignature } from "./types.js";
+import type { Receipt, CheckResult, ReceiptSignature, ContentMode } from "./types.js";
 
 // ── Constants ────────────────────────────────────────────────────────
 
-export const SPEC_VERSION = "1.0";
-export const CHECKS_VERSION = "5";
+export const SPEC_VERSION = "1.1";
+export const CHECKS_VERSION = "6";
 
 // ── Fingerprint computation ──────────────────────────────────────────
 
 /**
- * Compute the 12-field fingerprint components for a receipt.
+ * Compute the 14-field fingerprint components for a receipt.
  * Returns the pipe-delimited fingerprint input string.
+ *
+ * Fields 1-12: (original)
+ * Field 13: parent_receipts_hash — SHA-256 of canonicalized parent_receipts. EMPTY_HASH if null/absent.
+ * Field 14: workflow_id_hash — SHA-256 of UTF-8 workflow_id. EMPTY_HASH if null/absent.
  *
  * See spec §4.1 for the full algorithm.
  */
@@ -96,6 +100,14 @@ export function computeFingerprintInput(receipt: Record<string, unknown>): strin
   const extensions = receipt.extensions as Record<string, unknown> | undefined;
   const extensionsHash = isTruthy(extensions) ? hashObj(extensions) : EMPTY_HASH;
 
+  // Field 13: parent_receipts_hash
+  const parentReceipts = receipt.parent_receipts as string[] | null | undefined;
+  const parentReceiptsHash = isTruthy(parentReceipts) ? hashObj(parentReceipts) : EMPTY_HASH;
+
+  // Field 14: workflow_id_hash
+  const workflowId = receipt.workflow_id as string | null | undefined;
+  const workflowIdHash = workflowId ? hashContent(workflowId, 64) : EMPTY_HASH;
+
   return [
     correlationId,
     contextHash,
@@ -109,6 +121,8 @@ export function computeFingerprintInput(receipt: Record<string, unknown>): strin
     escalationHash,
     trustHash,
     extensionsHash,
+    parentReceiptsHash,
+    workflowIdHash,
   ].join("|");
 }
 
@@ -206,6 +220,10 @@ export interface ReceiptParams {
   escalation_events?: Record<string, unknown>[];
   source_trust_evaluations?: Record<string, unknown>[];
   extensions?: Record<string, unknown>;
+  parent_receipts?: string[] | null;
+  workflow_id?: string | null;
+  content_mode?: ContentMode;
+  content_mode_source?: string | null;
 }
 
 /**
@@ -237,7 +255,7 @@ export function generateReceipt(params: ReceiptParams): Receipt {
 
   const receiptBase: Record<string, unknown> = {
     spec_version: SPEC_VERSION,
-    tool_version: params.tool_version ?? "sanna-ts/0.1.0",
+    tool_version: params.tool_version ?? "sanna-ts/1.0.0",
     checks_version: CHECKS_VERSION,
     receipt_id: randomUUID(),
     correlation_id: params.correlation_id,
@@ -252,6 +270,10 @@ export function generateReceipt(params: ReceiptParams): Receipt {
     status,
   };
 
+  // Chaining fields (participate in fingerprint)
+  if (params.parent_receipts != null) receiptBase.parent_receipts = params.parent_receipts;
+  if (params.workflow_id != null) receiptBase.workflow_id = params.workflow_id;
+
   // Optional fields
   if (params.constitution_ref) receiptBase.constitution_ref = params.constitution_ref;
   if (params.enforcement) receiptBase.enforcement = params.enforcement;
@@ -260,6 +282,10 @@ export function generateReceipt(params: ReceiptParams): Receipt {
   if (params.escalation_events) receiptBase.escalation_events = params.escalation_events;
   if (params.source_trust_evaluations) receiptBase.source_trust_evaluations = params.source_trust_evaluations;
   if (params.extensions) receiptBase.extensions = params.extensions;
+
+  // Metadata fields (do NOT participate in fingerprint)
+  if (params.content_mode != null) receiptBase.content_mode = params.content_mode;
+  if (params.content_mode_source != null) receiptBase.content_mode_source = params.content_mode_source;
 
   // Compute fingerprints
   const { receipt_fingerprint, full_fingerprint } = computeFingerprints(receiptBase);

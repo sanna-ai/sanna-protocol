@@ -23,12 +23,15 @@ import {
   loadPrivateKey,
   loadPublicKey,
   ReceiptStore,
+  LocalSQLiteSink,
 } from "@sanna-ai/core";
 import type {
   Constitution,
   Receipt,
   AuthorityDecision,
   CheckResult,
+  ReceiptSink,
+  ContentMode,
 } from "@sanna-ai/core";
 
 import type { GatewayConfig, DownstreamConfig } from "./config.js";
@@ -83,9 +86,13 @@ export class SannaGateway {
   private _signingKey: KeyObject | null = null;
   private _publicKey: KeyObject | null = null;
   private _receiptStore: ReceiptStore | null = null;
+  private _receiptSink: ReceiptSink | null = null;
   private _escalationStore: EscalationStore | null = null;
   private _piiEnabled = false;
   private _piiPatterns: PiiPattern[] | undefined;
+  private _contentMode: ContentMode = null;
+  private _workflowId: string | null = null;
+  private _escalationReceiptFingerprints = new Map<string, string>();
   private _allTools: Array<{
     name: string;
     description?: string;
@@ -94,10 +101,11 @@ export class SannaGateway {
     originalName: string;
   }> = [];
 
-  constructor(config: GatewayConfig) {
+  constructor(config: GatewayConfig, receiptSink?: ReceiptSink) {
     this._config = config;
+    this._receiptSink = receiptSink ?? null;
     this._server = new Server(
-      { name: "sanna-gateway", version: "0.1.0" },
+      { name: "sanna-gateway", version: "1.0.0" },
       { capabilities: { tools: {} } },
     );
   }
@@ -140,12 +148,27 @@ export class SannaGateway {
     }
     // If no public key configured, skip signature verification (opt-in feature)
 
-    // 3. Receipt store
+    // 3. Receipt store / sink
     if (this._config.receipts?.store_path) {
+      if (!this._receiptSink) {
+        // Legacy config: wrap in LocalSQLiteSink
+        process.stderr.write(
+          "[sanna-gateway] DEPRECATED: receipts.store_path — use receiptSink constructor param instead\n",
+        );
+        this._receiptSink = new LocalSQLiteSink(this._config.receipts.store_path);
+      }
       this._receiptStore = new ReceiptStore(
         this._config.receipts.store_path,
       );
     }
+
+    // 3b. Content mode
+    if (this._config.receipts?.content_mode) {
+      this._contentMode = this._config.receipts.content_mode;
+    }
+
+    // 3c. Session workflow ID
+    this._workflowId = `gw-${crypto.randomUUID()}`;
 
     // 4. Escalation store
     if (this._config.escalation) {
@@ -288,6 +311,7 @@ export class SannaGateway {
     }
     this._downstreams.clear();
     this._receiptStore?.close();
+    await this._receiptSink?.close?.();
   }
 
   // ── Handler registration ─────────────────────────────────────────
@@ -343,13 +367,15 @@ export class SannaGateway {
     if (toolName === META_TOOL_APPROVE) {
       const ok = this._escalationStore.verifyAndApprove(id, token);
       if (ok) {
-        // Re-execute the original tool call
+        // Re-execute the original tool call with escalation receipt as parent
         const esc = this._escalationStore.get(id);
         if (esc) {
+          const escalationReceiptFp = this._escalationReceiptFingerprints.get(id);
           return this._handleToolCall(
             esc.tool_name,
             esc.args,
             true, // wasEscalated
+            escalationReceiptFp ? [escalationReceiptFp] : undefined,
           );
         }
         return {
@@ -391,6 +417,7 @@ export class SannaGateway {
     namespacedName: string,
     rawArgs: Record<string, unknown>,
     wasEscalated = false,
+    parentReceipts?: string[] | null,
   ) {
     // a. Parse namespace
     const parsed = parseNamespacedTool(namespacedName);
@@ -500,6 +527,7 @@ export class SannaGateway {
           false,
           wasEscalated,
           triad,
+          parentReceipts,
         );
         this._storeReceipt(receipt);
 
@@ -546,8 +574,15 @@ export class SannaGateway {
               false,
               false,
               triad,
+              parentReceipts,
             );
             this._storeReceipt(receipt);
+
+            // Track escalation receipt fingerprint for chaining
+            const escFp = receipt.full_fingerprint as string;
+            if (escFp) {
+              this._escalationReceiptFingerprints.set(esc.escalation_id, escFp);
+            }
 
             // Deliver token via configured methods (best-effort)
             const deliveryMethods = this._config.escalation?.delivery_methods ?? ["inline"];
@@ -684,6 +719,7 @@ export class SannaGateway {
       wasAllowed,
       wasEscalated,
       triad,
+      parentReceipts,
     );
     this._storeReceipt(receipt);
 
@@ -717,6 +753,7 @@ export class SannaGateway {
     wasAllowed: boolean,
     wasEscalated: boolean,
     triad: { input_hash: string; reasoning_hash: string; action_hash: string },
+    parentReceipts?: string[] | null,
   ): Record<string, unknown> {
     const correlationId = `gw-${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
 
@@ -736,6 +773,10 @@ export class SannaGateway {
             enforcement_mode: this._config.enforcement.mode,
             timestamp: new Date().toISOString(),
           },
+      parent_receipts: parentReceipts,
+      workflow_id: this._workflowId,
+      content_mode: this._contentMode,
+      content_mode_source: this._contentMode ? "local_config" : null,
     });
 
     // Add triad
@@ -755,7 +796,11 @@ export class SannaGateway {
   }
 
   private _storeReceipt(receipt: Record<string, unknown>): void {
-    if (this._receiptStore) {
+    if (this._receiptSink) {
+      this._receiptSink.store(receipt as unknown as Receipt).catch(() => {
+        // Best-effort persistence
+      });
+    } else if (this._receiptStore) {
       try {
         this._receiptStore.save(receipt as unknown as Receipt);
       } catch {

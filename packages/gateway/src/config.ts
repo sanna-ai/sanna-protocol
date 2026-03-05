@@ -52,6 +52,8 @@ export interface GatewayConfig {
   receipts?: {
     store_path?: string;
     sign: boolean;
+    sink?: string;
+    content_mode?: "full" | "redacted" | "hashes_only";
   };
   pii?: {
     enabled: boolean;

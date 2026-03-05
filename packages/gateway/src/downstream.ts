@@ -81,7 +81,7 @@ export class DownstreamConnection {
     });
 
     this._client = new Client(
-      { name: `sanna-gateway/${this.name}`, version: "0.1.0" },
+      { name: `sanna-gateway/${this.name}`, version: "1.0.0" },
     );
 
     // Handle transport close

@@ -98,7 +98,7 @@ describe("fingerprint determinism", () => {
       correlation_id: "det-001",
       context_hash: "aaaa".repeat(16),
       output_hash: "bbbb".repeat(16),
-      checks_version: "5",
+      checks_version: "6",
       checks: [{ check_id: "C1", passed: true, severity: "info", evidence: null }],
     };
     const fp1 = computeFingerprints(base);
@@ -112,7 +112,7 @@ describe("fingerprint determinism", () => {
       correlation_id: "det-001",
       context_hash: "aaaa".repeat(16),
       output_hash: "bbbb".repeat(16),
-      checks_version: "5",
+      checks_version: "6",
       checks: [],
     };
     const fp1 = computeFingerprints(base);

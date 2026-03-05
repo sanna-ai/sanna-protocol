@@ -31,6 +31,7 @@ import type {
   EnforcementMode,
   TraceData,
   AuthorityDecision,
+  ReceiptSink,
 } from "./types.js";
 
 // ── SannaHaltError ───────────────────────────────────────────────────
@@ -193,6 +194,9 @@ function runGovernance(
   enforcementMode: EnforcementMode,
   signingKey: KeyObject | undefined,
   toolName: string | undefined,
+  parentReceipts?: string[] | null,
+  workflowId?: string | null,
+  sink?: ReceiptSink,
 ): SannaResult<unknown> {
   const outputStr = toStr(output);
   const correlationId = `sanna-${randomUUID().replace(/-/g, "").slice(0, 12)}`;
@@ -227,6 +231,8 @@ function runGovernance(
         },
         authorityDecisions,
         signingKey,
+        parentReceipts,
+        workflowId,
       });
 
       throw new SannaHaltError(
@@ -282,9 +288,20 @@ function runGovernance(
     enforcement,
     authorityDecisions,
     signingKey,
+    parentReceipts,
+    workflowId,
   });
 
-  // 6. Halt if enforced mode
+  // 6. Store receipt in sink (best-effort)
+  if (sink) {
+    sink.store(receipt).catch((err) => {
+      process.stderr.write(
+        `[sanna] sink.store failed: ${err instanceof Error ? err.message : err}\n`,
+      );
+    });
+  }
+
+  // 7. Halt if enforced mode
   if (halted) {
     throw new SannaHaltError(
       `Sanna coherence check failed: ${haltChecks.map((c) => `${c.check_id} (${c.name})`).join(", ")}`,
@@ -307,6 +324,8 @@ interface GovernanceReceiptParams {
   enforcement?: Record<string, unknown>;
   authorityDecisions?: Record<string, unknown>[];
   signingKey?: KeyObject;
+  parentReceipts?: string[] | null;
+  workflowId?: string | null;
 }
 
 function generateGovernanceReceipt(params: GovernanceReceiptParams): Receipt {
@@ -330,6 +349,8 @@ function generateGovernanceReceipt(params: GovernanceReceiptParams): Receipt {
     constitution_ref: constitutionRef,
     enforcement: params.enforcement,
     authority_decisions: params.authorityDecisions,
+    parent_receipts: params.parentReceipts,
+    workflow_id: params.workflowId,
   });
 
   // Sign receipt if key is available
@@ -399,6 +420,9 @@ export function sannaObserve<TArgs extends unknown[], TReturn>(
       enforcementMode,
       signingKey,
       options.toolName,
+      options.parentReceipts,
+      options.workflowId,
+      options.sink,
     );
 
     return result as SannaResult<TReturn>;
