@@ -1,3 +1,7 @@
-# Test keypairs are intentional fixtures - not real secrets
+# Test keypairs are intentional fixtures for cross-language verification - not real secrets.
+# See fixtures/README.md: "The private key is included for testing purposes only."
 paths-ignore:
+  - "fixtures/keypairs/"
   - "fixtures/keypairs/*.key"
+  - "fixtures/keypairs/*.pub"
+  - "**/test-author.key"
