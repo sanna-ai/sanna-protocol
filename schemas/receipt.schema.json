@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sanna.dev/schemas/receipt/v1.0.json",
+  "$id": "https://sanna.dev/schemas/receipt/v1.1.json",
   "title": "Sanna Reasoning Receipt",
-  "description": "Schema for Sanna reasoning receipts v1.0 — artifacts that capture AI reasoning provenance, constitution enforcement, and consistency check results",
+  "description": "Schema for Sanna reasoning receipts v1.1 — artifacts that capture AI reasoning provenance, constitution enforcement, and consistency check results",
   "type": "object",
   "required": [
     "spec_version",
@@ -25,9 +25,9 @@
   "properties": {
     "spec_version": {
       "type": "string",
-      "description": "Specification version. See spec/sanna-specification-v1.0.md",
+      "description": "Specification version. See spec/sanna-specification-v1.1.md",
       "pattern": "^[0-9]+\\.[0-9]+$",
-      "examples": ["1.0"]
+      "examples": ["1.1"]
     },
     "tool_version": {
       "type": "string",
@@ -39,7 +39,7 @@
       "type": "string",
       "description": "Version of check evaluation schema (increment when check semantics change)",
       "pattern": "^[0-9]+$",
-      "examples": ["5"]
+      "examples": ["6"]
     },
     "receipt_id": {
       "type": "string",
@@ -317,6 +317,35 @@
       "type": ["string", "null"],
       "description": "Receipt Triad assurance level. MUST be present when any triad hash is present.",
       "enum": ["full", "partial", null]
+    },
+    "parent_receipts": {
+      "description": "Array of full_fingerprint strings from parent receipts for receipt chaining. Participates in fingerprint computation (field 13).",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Full 64-hex SHA-256 fingerprint of a parent receipt"
+          }
+        },
+        {"type": "null"}
+      ]
+    },
+    "workflow_id": {
+      "description": "Opaque string grouping related receipts into a workflow. Participates in fingerprint computation (field 14).",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "content_mode": {
+      "description": "Content handling mode for Cloud. Metadata only — does NOT participate in fingerprint computation.",
+      "type": ["string", "null"],
+      "enum": ["full", "redacted", "hashes_only", null]
+    },
+    "content_mode_source": {
+      "description": "Origin of the content_mode value. Metadata only — does NOT participate in fingerprint computation. MUST be absent when content_mode is absent.",
+      "type": ["string", "null"],
+      "enum": ["local_config", "cloud_tenant", "override", null]
     },
     "redacted_fields": {
       "type": ["array", "null"],

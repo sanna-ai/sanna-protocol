@@ -16,7 +16,7 @@ agent trust problem.
 | Verification | Offline — no central endpoint required | Centralized (openterms.com) |
 | Deployment modes | Library / Gateway / Platform | SaaS API |
 | Domain scope | General-purpose (any agent, any domain) | Financial transactions |
-| Fingerprint construction | 12-field pipe-delimited SHA-256 | Receipt hash |
+| Fingerprint construction | 14-field pipe-delimited SHA-256 (v1.1) | Receipt hash |
 | Canonicalization | Sanna Canonical JSON (RFC 8785 derived, NFC normalized) | RFC 8785 JSON Canonicalization Scheme |
 | Key identification | SHA-256 of raw 32-byte Ed25519 public key | Key reference |
 | Approval chain | Cryptographic approval binding with HMAC-SHA256 escalation tokens | Not specified |

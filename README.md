@@ -6,9 +6,9 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 
 | Path | Description |
 |------|-------------|
-| [`spec/`](spec/sanna-specification-v1.0.md) | Protocol specification v1.0 — receipt format, fingerprint construction, canonicalization, signing, verification |
+| [`spec/`](spec/sanna-specification-v1.1.md) | Protocol specification v1.1 — receipt format, 14-field fingerprint, canonicalization, signing, verification |
 | [`schemas/`](schemas/) | JSON Schema (2020-12) for [constitutions](schemas/constitution.schema.json) and [receipts](schemas/receipt.schema.json) |
-| [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes |
+| [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes, 1,296 canonicalization test vectors |
 | [`templates/`](templates/) | Starter constitutions: [privacy-focused](templates/privacy-focused.yaml), [developer](templates/developer.yaml), [locked-down](templates/locked-down.yaml) |
 | [`http/`](http/header-conventions.md) | HTTP header conventions (`X-Sanna-Receipt`, `X-Sanna-Receipt-URL`, `X-Sanna-Verify`, `X-Sanna-Constitution`) |
 | [`docs/`](docs/) | [Implementers guide](docs/implementers-guide.md), [protocol comparison](docs/protocol-comparison.md) (Sanna vs ORS v0.1) |
@@ -25,7 +25,7 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 A conformant implementation must produce identical hashes and fingerprints for identical inputs. The [`fixtures/`](fixtures/) directory contains everything needed to verify:
 
 1. Load the test keypair from `fixtures/keypairs/`
-2. For each receipt in `fixtures/receipts/`, recompute `context_hash`, `output_hash`, and the 12-field fingerprint
+2. For each receipt in `fixtures/receipts/`, recompute `context_hash`, `output_hash`, and the 14-field fingerprint
 3. Compare all computed values against `fixtures/golden-hashes.json`
 4. Verify Ed25519 signatures using the test public key
 

@@ -1,9 +1,9 @@
-# Sanna Reasoning Receipt Specification v1.0
+# Sanna Reasoning Receipt Specification v1.1
 
 **Status:** Released
-**Version:** 1.0.2
-**Date:** 2026-02-17
-**Reference implementation:** sanna v0.13.4
+**Version:** 1.1.0
+**Date:** 2026-03-05
+**Reference implementation:** sanna v0.13.7
 
 ---
 
@@ -51,7 +51,7 @@ Every receipt MUST contain the following fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `spec_version` | string | Specification version (`"1.0"`) |
+| `spec_version` | string | Specification version (`"1.1"`) |
 | `tool_version` | string | Semver of the tool that generated this receipt |
 | `checks_version` | string | Integer string; increment when check semantics change |
 | `receipt_id` | string | UUID v4 (lowercase hex, dashes) |
@@ -83,6 +83,10 @@ Every receipt MUST contain the following fields:
 | `reasoning_hash` | string/null | Receipt Triad: SHA-256 of agent justification (see Section 7) |
 | `action_hash` | string/null | Receipt Triad: SHA-256 of tool call and arguments (see Section 7) |
 | `assurance` | string/null | Receipt Triad assurance level (`"full"`, `"partial"`) (see Section 7) |
+| `parent_receipts` | array/null | Array of `full_fingerprint` strings from parent receipts for receipt chaining (see Section 2.12). Participates in fingerprint computation. |
+| `workflow_id` | string/null | Opaque string grouping related receipts into a workflow (see Section 2.13). Participates in fingerprint computation. |
+| `content_mode` | string/null | Content handling mode: `"full"`, `"redacted"`, or `"hashes_only"` (see Section 2.14). Metadata only — does NOT participate in fingerprint computation. |
+| `content_mode_source` | string/null | Origin of the content_mode value: `"local_config"`, `"cloud_tenant"`, or `"override"` (see Section 2.14). Metadata only — does NOT participate in fingerprint computation. |
 | `extensions` | object | Reverse-domain-namespaced vendor metadata |
 | `identity_verification` | object/null | Identity claim verification results (see Section 2.10) |
 
@@ -314,7 +318,7 @@ MUST recompute:
    marker-bearing) `outputs` object.
 3. `receipt_fingerprint` and `full_fingerprint` -- recomputed from
    the updated `context_hash` and `output_hash` using the standard
-   12-field fingerprint formula (Section 4.1).
+   14-field fingerprint formula (Section 4.1).
 
 The receipt signature (if applied) MUST be computed AFTER redaction
 markers and hash recomputation are complete.
@@ -352,6 +356,79 @@ When redaction is enabled:
 
 When redaction is disabled, receipts are persisted with the standard
 `.json` suffix and no markers are applied.
+
+### 2.12 Parent Receipts (Receipt Chaining)
+
+The `parent_receipts` field enables receipt chaining for multi-step
+workflows. When an agent action depends on the output of a previous
+governed action, the new receipt links back to the parent receipt(s)
+via their full fingerprints.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `parent_receipts` | array of strings, or null | Each element is a `full_fingerprint` (64-hex SHA-256) from a parent receipt |
+
+**Rules:**
+
+- Each element MUST match the pattern `^[a-f0-9]{64}$`.
+- The array MAY be empty (no parents), but an empty array is distinct
+  from null/absent for canonicalization purposes. An empty array
+  `[]` hashes to `hash_obj([])`, while null/absent produces
+  `EMPTY_HASH`.
+- `parent_receipts` **participates in fingerprint computation**
+  (see Section 4.1, field 13).
+- When `parent_receipts` is null or absent, `EMPTY_HASH` is used
+  as the fingerprint component, consistent with other absent-field
+  handling.
+
+### 2.13 Workflow ID
+
+The `workflow_id` field groups related receipts into a logical
+workflow. It is an opaque string assigned by the caller or gateway.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `workflow_id` | string or null | Opaque workflow identifier |
+
+**Rules:**
+
+- No format constraint beyond being a non-empty string when present.
+  UUIDs, URNs, and human-readable identifiers are all valid.
+- `workflow_id` **participates in fingerprint computation** (see
+  Section 4.1, field 14). The fingerprint component is the SHA-256
+  of the UTF-8 encoded `workflow_id` string.
+- When `workflow_id` is null or absent, `EMPTY_HASH` is used as
+  the fingerprint component.
+- Cloud uses `workflow_id` to query and visualize receipt chains
+  via the `/v1/receipts/chain/{workflow_id}` endpoint.
+
+### 2.14 Content Mode (Metadata)
+
+The `content_mode` and `content_mode_source` fields declare how
+receipt content should be handled by downstream systems (e.g.,
+Sanna Cloud). These are **metadata fields** that do NOT participate
+in fingerprint computation.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `content_mode` | string or null | `"full"`, `"redacted"`, or `"hashes_only"` |
+| `content_mode_source` | string or null | `"local_config"`, `"cloud_tenant"`, or `"override"` |
+
+**Rules:**
+
+- `content_mode` is set by the gateway from local configuration
+  or Cloud tenant settings. It declares whether the receipt carries
+  full content, redacted content (with markers), or hash-only
+  content (inputs/outputs stripped, only content hashes retained).
+- `content_mode_source` identifies who set the content_mode value.
+  It MUST be absent when `content_mode` is absent.
+- Both fields are absent in library-mode receipts (non-gateway).
+  When Cloud receives a receipt without `content_mode`, it infers
+  `"full"`.
+- **These fields do NOT participate in fingerprint computation.**
+  The same agent action MUST produce the same fingerprint regardless
+  of Cloud configuration. Including content_mode in the fingerprint
+  would break verification when Cloud settings change.
 
 ---
 
@@ -451,26 +528,44 @@ receipt content.**
 The fingerprint is computed from a pipe-delimited string of hash
 components:
 
-```
-fingerprint_input = "{correlation_id}|{context_hash}|{output_hash}|{checks_version}|{checks_hash}|{constitution_hash}|{enforcement_hash}|{coverage_hash}|{authority_hash}|{escalation_hash}|{trust_hash}|{extensions_hash}"
+```python
+fingerprint_input = '|'.join([
+    spec_version,          # Field 1  — literal string
+    tool_version,          # Field 2  — literal string
+    checks_version,        # Field 3  — literal string
+    timestamp,             # Field 4  — literal string
+    agent_id,              # Field 5  — literal string (correlation_id)
+    context_hash,          # Field 6  — 64-hex SHA-256
+    output_hash,           # Field 7  — 64-hex SHA-256
+    query_hash,            # Field 8  — 64-hex SHA-256 of inputs.query (or EMPTY_HASH)
+    constitution_hash,     # Field 9  — 64-hex SHA-256
+    status,                # Field 10 — literal string
+    checks_hash,           # Field 11 — 64-hex SHA-256
+    extensions_hash,       # Field 12 — 64-hex SHA-256
+    parent_receipts_hash,  # Field 13 — 64-hex SHA-256 (NEW in v1.1)
+    workflow_id_hash,      # Field 14 — 64-hex SHA-256 (NEW in v1.1)
+])
+fingerprint = sha256(fingerprint_input)
 ```
 
-This is always exactly 12 pipe-separated fields.
+This is always exactly **14 pipe-separated fields**.
 
-| Component | Source |
-|-----------|--------|
-| `correlation_id` | Receipt `correlation_id` field (literal string value) |
-| `context_hash` | Receipt `context_hash` field (64-hex SHA-256) |
-| `output_hash` | Receipt `output_hash` field (64-hex SHA-256) |
-| `checks_version` | Receipt `checks_version` field (literal string value) |
-| `checks_hash` | `hash_obj()` of check data (see Section 4.3) (64-hex SHA-256) |
-| `constitution_hash` | `hash_obj()` of constitution_ref (excluding `constitution_approval`) or `EMPTY_HASH` (64-hex SHA-256) |
-| `enforcement_hash` | `hash_obj()` of enforcement object or `EMPTY_HASH` (64-hex SHA-256) |
-| `coverage_hash` | `hash_obj()` of evaluation_coverage or `EMPTY_HASH` (64-hex SHA-256) |
-| `authority_hash` | `hash_obj()` of authority_decisions or `EMPTY_HASH` (64-hex SHA-256) |
-| `escalation_hash` | `hash_obj()` of escalation_events or `EMPTY_HASH` (64-hex SHA-256) |
-| `trust_hash` | `hash_obj()` of source_trust_evaluations or `EMPTY_HASH` (64-hex SHA-256) |
-| `extensions_hash` | `hash_obj()` of extensions or `EMPTY_HASH` (64-hex SHA-256) |
+| # | Component | Source |
+|---|-----------|--------|
+| 1 | `spec_version` | Receipt `spec_version` field (literal string value) |
+| 2 | `tool_version` | Receipt `tool_version` field (literal string value) |
+| 3 | `checks_version` | Receipt `checks_version` field (literal string value) |
+| 4 | `timestamp` | Receipt `timestamp` field (literal ISO 8601 string) |
+| 5 | `agent_id` | Receipt `correlation_id` field (literal string value) |
+| 6 | `context_hash` | Receipt `context_hash` field (64-hex SHA-256) |
+| 7 | `output_hash` | Receipt `output_hash` field (64-hex SHA-256) |
+| 8 | `query_hash` | SHA-256 of `inputs.query` string (NFC normalized, UTF-8), or `EMPTY_HASH` if `inputs.query` is null/absent |
+| 9 | `constitution_hash` | `hash_obj()` of constitution_ref (excluding `constitution_approval`) or `EMPTY_HASH` (64-hex SHA-256) |
+| 10 | `status` | Receipt `status` field (literal string value: `PASS`, `WARN`, `FAIL`, or `PARTIAL`) |
+| 11 | `checks_hash` | `hash_obj()` of check data (see Section 4.3) (64-hex SHA-256) |
+| 12 | `extensions_hash` | `hash_obj()` of extensions or `EMPTY_HASH` (64-hex SHA-256) |
+| 13 | `parent_receipts_hash` | `hash_obj()` of `parent_receipts` array, or `EMPTY_HASH` if null/absent (64-hex SHA-256). **New in v1.1.** |
+| 14 | `workflow_id_hash` | SHA-256 of the UTF-8 encoded `workflow_id` string, or `EMPTY_HASH` if null/absent (64-hex SHA-256). **New in v1.1.** |
 
 `EMPTY_HASH` is the SHA-256 digest of zero bytes, used as sentinel for
 absent fields:
@@ -479,9 +574,16 @@ absent fields:
 EMPTY_HASH = sha256_hex(b"") = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ```
 
-Note: `correlation_id` and `checks_version` contribute their literal
-string values to the fingerprint formula. All other components
-contribute 64-character hexadecimal SHA-256 strings or `EMPTY_HASH`.
+Note: Fields 1-5 and 10 contribute their literal string values to the
+fingerprint formula. All other components contribute 64-character
+hexadecimal SHA-256 strings or `EMPTY_HASH`.
+
+**v1.1 breaking change:** The fingerprint formula expanded from 12
+fields (v1.0) to 14 fields. There is no backward compatibility with
+the 14-field formula. All implementations MUST use the 14-field
+formula. Existing test vectors and golden receipts have been
+regenerated. The `checks_version` constant has been incremented to
+`"6"` to indicate the algorithm change.
 
 The `receipt_fingerprint` is `hash_text(fingerprint_input, truncate=16)` (16 hex chars).
 The `full_fingerprint` is `hash_text(fingerprint_input)` (64 hex chars).
@@ -534,9 +636,11 @@ canonical JSON, not `{...}` with the key omitted.
 
 ### 4.4 checks_version
 
-The current value of `checks_version` is `"5"`. This value is
-incremented when the semantics of built-in checks change in a way that
-alters check results for identical inputs.
+The current value of `checks_version` is `"6"`. This value was
+incremented from `"5"` in v1.1 to reflect the expansion of the
+fingerprint formula from 12 to 14 fields. It is incremented when the
+semantics of built-in checks change or the fingerprint algorithm
+changes in a way that alters fingerprints for identical inputs.
 
 Verifiers MUST treat `checks_version` as an opaque string. They
 compare it for equality during fingerprint verification but MUST NOT
@@ -546,10 +650,16 @@ interpret its numeric value or make behavioral decisions based on it.
 
 The following fields are NOT included in fingerprint computation:
 - `receipt_id` (random)
-- `timestamp` (non-deterministic)
 - `receipt_fingerprint` and `full_fingerprint` (self-referential)
 - `receipt_signature` (computed after fingerprint)
 - `identity_verification` (verified separately)
+- `content_mode` (Cloud metadata — see Section 2.14)
+- `content_mode_source` (Cloud metadata — see Section 2.14)
+
+Note: `parent_receipts` and `workflow_id` ARE included in fingerprint
+computation (fields 13 and 14). `content_mode` and `content_mode_source`
+are excluded because they describe how Cloud should *handle* the receipt,
+not the receipt's cryptographic identity.
 
 ---
 
@@ -1163,7 +1273,7 @@ An implementation claiming to be a compatible generator MUST:
 
 1. Produce receipts that validate against the normative receipt JSON
    schema (`receipt.schema.json`).
-2. Compute fingerprints using the 12-field formula specified in
+2. Compute fingerprints using the 14-field formula specified in
    Section 4.1, producing identical fingerprints for identical receipt
    content.
 3. Use Sanna Canonical JSON (Section 3.1) for all hash computations,
@@ -1186,7 +1296,7 @@ An implementation claiming to be a compatible generator MUST:
 An implementation claiming to be a compatible verifier MUST:
 
 1. Verify the receipt fingerprint by recomputing it from receipt fields
-   using the 12-field formula and comparing against the stored
+   using the 14-field formula and comparing against the stored
    `full_fingerprint`.
 2. Verify content hashes (`context_hash`, `output_hash`) by
    recomputing them from the `inputs` and `outputs` fields.
@@ -1233,6 +1343,7 @@ conformance.
 | 1.0 | 0.13.0 | Initial specification. Field renames: `schema_version` to `spec_version`, `trace_id` to `correlation_id`, `coherence_status` to `status`, `halt_event` to `enforcement`. Added `full_fingerprint`. UUID v4 receipt IDs. Full 64-hex content hashes. 12-field fingerprint formula. Custom evaluator fail-closed default. |
 | 1.0.1 | 0.13.0 | 28 precision fixes from cross-platform security review. Key ID uses raw Ed25519 bytes (not DER). NFC normalization documented. Float rejection in signing contexts. hash_text default truncation corrected to 64. Status computation handles all severity levels. Receipt Triad hashing byte-precise. HMAC token format documented. Threat model added. Schemas for authority_decisions, escalation_events, source_trust_evaluations, identity_verification documented. Key file encoding specified. correlation_id pipe constraint. checks_hash ordering and null key rules. |
 | 1.0.2 | 0.13.2 | 7 cross-platform review fixes. Redaction Marker schema (Section 2.11): marker structure, original_hash computation, pre-existing marker injection guard, file naming convention, hash recomputation rules. Authority Name Normalization algorithm (Appendix D): NFKC + camelCase splitting + separator normalization + casefold + dot-join, with 16 test vectors, matching semantics, and separatorless fallback. HMAC token binding corrections (Section 8.2): `esc_` prefix on escalation IDs, Python-default separators for args_digest (not Sanna Canonical JSON), original tool name (not normalized). Canonical JSON cross-language guidance (Section 3.1): Go HTML-escaping warning, float rejection clarified for Go/Rust number parsing. Base64 pinned to RFC 4648 standard with padding (Section 5.1), whitespace stripping scope clarified. Exit code accumulation rule: highest-priority code wins (Section 9.2). |
+| 1.1.0 | 0.13.7 | **Breaking change:** Fingerprint formula expanded from 12 fields to 14 fields. No backward compatibility with 12-field formula. New first-class fields: `parent_receipts` (receipt chaining, fingerprint field 13), `workflow_id` (workflow grouping, fingerprint field 14). New metadata fields: `content_mode`, `content_mode_source` (Cloud content handling, NOT in fingerprint). `checks_version` incremented to `"6"`. Gateway extension namespace (`com.sanna.gateway`) documented (Appendix E). Canonical YAML hash specification (Appendix F). 1,000+ cross-language canonicalization test vectors. Golden receipts regenerated for 14-field formula. |
 
 ---
 
@@ -1415,3 +1526,138 @@ because the config author controls both the tool name and the override
 entry. Constitution authority boundaries use normalized matching
 because the constitution author may not know the exact tool naming
 convention of every downstream server.
+
+## Appendix E: Gateway Extension Namespace (`com.sanna.gateway`)
+
+The `com.sanna.gateway` extension namespace is used by the Python and
+TypeScript gateway implementations to store gateway-specific metadata
+in the `extensions` field of receipts. These fields are **extensions**,
+not first-class protocol fields. They are documented here for
+interoperability across implementations.
+
+Verifiers MUST ignore unknown extensions per the protocol rule in
+Section 2.2. The fields below are OPTIONAL — their absence does not
+invalidate a receipt.
+
+### E.1 Standard Gateway Extension Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `gateway_id` | string | Identifier of the gateway instance that generated this receipt |
+| `server_name` | string | Name of the downstream MCP server |
+| `tool_name` | string | Original (unprefixed) tool name on the downstream server |
+| `tool_name_prefixed` | string | Gateway-prefixed tool name (e.g., `notion_API-patch-page`) |
+| `arguments_hash` | string | SHA-256 hex of the tool call arguments (Python-default separators) |
+| `gateway_version` | string | Semver of the gateway implementation |
+
+### E.2 Escalation Extension Fields
+
+Present on escalation and resolution receipts (see Section 8.1):
+
+| Field | Type | Present In | Description |
+|-------|------|-----------|-------------|
+| `escalation_id` | string | Escalation receipt | Unique escalation ID (`esc_` + 32 hex) |
+| `escalation_receipt_id` | string | Resolution receipt | `receipt_id` of the original escalation receipt |
+| `escalation_action` | string | Resolution receipt | `"approved"` or `"denied"` |
+
+### E.3 Receipt Triad Extension Fields
+
+These fields extend the first-class Receipt Triad (Section 7) with
+gateway-specific context:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `input_hash` | string | SHA-256 of `{"tool": tool_name, "args": args_without_justification}` |
+| `reasoning_hash` | string | SHA-256 of the agent's `_justification` parameter |
+| `action_hash` | string | SHA-256 of the forwarded tool call (equal to `input_hash` at gateway boundary) |
+| `assurance` | string | `"full"` or `"partial"` |
+| `justification_present` | boolean | Whether the agent provided a `_justification` parameter |
+| `justification_evaluated` | boolean | Whether reasoning checks were run on the justification |
+
+### E.4 Content Mode Extension Fields
+
+When `content_mode` (Section 2.14) is set, gateways MAY also include:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `content_mode` | string | Mirror of the first-class `content_mode` field |
+| `content_mode_source` | string | Mirror of the first-class `content_mode_source` field |
+| `content_stripped` | boolean | `true` if inputs/outputs were stripped before persistence |
+
+### E.5 Example
+
+```json
+{
+  "extensions": {
+    "com.sanna.gateway": {
+      "gateway_id": "gw-prod-01",
+      "server_name": "notion",
+      "tool_name": "API-patch-page",
+      "tool_name_prefixed": "notion_API-patch-page",
+      "arguments_hash": "a1b2c3d4...",
+      "gateway_version": "0.14.0",
+      "input_hash": "5f2b9d...",
+      "reasoning_hash": "e3b0c4...",
+      "action_hash": "5f2b9d...",
+      "assurance": "full",
+      "justification_present": true,
+      "justification_evaluated": true
+    }
+  }
+}
+```
+
+Third-party implementations generating gateway-mode receipts SHOULD
+use the `com.sanna.gateway` namespace for these fields to ensure
+interoperability with Sanna Cloud and verification tooling. Custom
+vendor extensions SHOULD use their own reverse-domain namespace
+(e.g., `com.example.mygateway`).
+
+## Appendix F: Canonical YAML Hash for Constitutions
+
+When a receipt references a constitution via `constitution_ref`, the
+`policy_hash` field links the receipt to a specific constitution
+version. This appendix specifies how constitution hashes are computed
+for receipt binding.
+
+### F.1 Raw YAML Bytes Hash
+
+The primary constitution hash (`policy_hash`) is the SHA-256 of the
+**raw YAML file bytes** after the following normalization:
+
+1. Read the file as raw bytes (do NOT parse YAML first).
+2. Decode as UTF-8.
+3. Apply `hash_text()` normalization (NFC, line-ending normalization,
+   trailing whitespace stripping, leading/trailing strip).
+4. The result is the `policy_hash` (64-hex SHA-256, or 16-hex
+   truncated for display).
+
+This means `policy_hash` covers the exact text of the constitution,
+including comments, formatting, and field ordering. Two YAML files
+with identical parsed content but different formatting will produce
+different policy hashes.
+
+### F.2 Canonical YAML Hash (Future)
+
+A future version of this specification MAY define a `canonical_yaml_hash`
+that normalizes YAML structure before hashing (sorted keys, normalized
+whitespace, stripped comments). This would allow semantically identical
+constitutions to produce the same hash regardless of formatting.
+
+When defined, `canonical_yaml_hash` would be an additional field in
+`constitution_ref`, not a replacement for `policy_hash`. The raw
+`policy_hash` remains the authoritative binding because it
+unambiguously identifies the exact file that was signed.
+
+### F.3 Constitution Signature vs Policy Hash
+
+| Mechanism | What it covers | Purpose |
+|-----------|---------------|---------|
+| `policy_hash` | Raw YAML bytes (normalized text) | Receipt-to-constitution binding |
+| Constitution signature | Selected YAML fields (canonical JSON) | Tamper detection |
+
+The constitution signature covers a structured subset of the YAML
+content (serialized as canonical JSON for signing), while `policy_hash`
+covers the full raw text. These serve complementary purposes:
+`policy_hash` ensures the receipt references a specific file,
+while the signature ensures the file hasn't been tampered with.

@@ -1,12 +1,12 @@
 {
-  "spec_version": "1.0",
-  "tool_version": "0.13.5",
-  "checks_version": "5",
-  "receipt_id": "29bedd86-1786-4379-a5f9-3844958e57de",
-  "receipt_fingerprint": "b99d44bd14d30ebf",
-  "full_fingerprint": "b99d44bd14d30ebf41c3481931df08f47a81679c26a53cf0382c704942824ed5",
+  "spec_version": "1.1",
+  "tool_version": "0.13.7",
+  "checks_version": "6",
+  "receipt_id": "57085e47-087d-43fa-9e5e-ce9b0c033af4",
+  "receipt_fingerprint": "b522a267f06171bb",
+  "full_fingerprint": "b522a267f06171bb34fb1a91b3f09be2244635ad0291ab01145af1959a97c63d",
   "correlation_id": "sanna-fixture-escalated-001",
-  "timestamp": "2026-02-22T21:59:43.385789+00:00",
+  "timestamp": "2026-03-05T16:41:08.759173+00:00",
   "inputs": {
     "query": "Delete the customer record for user 12345.",
     "context": "User 12345: John Doe, account active since 2023-01-15."
@@ -66,13 +66,13 @@
     "reason": "Delete operation requires human approval per must_escalate policy",
     "failed_checks": [],
     "enforcement_mode": "halt",
-    "timestamp": "2026-02-22T21:59:43.385789+00:00"
+    "timestamp": "2026-03-05T16:41:08.759173+00:00"
   },
   "receipt_signature": {
-    "signature": "xJu8or3ZnmLHGYwzRW3Mb5PXjKnLwFJwQHNSCO/oz9pI+D9V+AihVl+egoaS+lpVkb/247k295j3joKrBwuzCw==",
-    "key_id": "c7a4db86e09b9a78be11b8c90b9214ae4085beae4c72d45b8bb3fd5c98f22307",
+    "signature": "UdaV3X1GICcgOgnweEwtE+mfxpJBBDP7i0NmdXjAq4HCjQoRa39WIrZkZEcihXOslIqKgR5n0Hq3oXrDGOj3DA==",
+    "key_id": "df1d7e494ae6988ea59883b9131bbd222b9985a44392d5e2e529ccaed137b04c",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-02-22T21:59:43.386084+00:00",
+    "signed_at": "2026-03-05T16:41:08.759358+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

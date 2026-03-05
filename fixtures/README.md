@@ -38,7 +38,7 @@ For each receipt in `receipts/`:
 1. **Parse** the JSON and validate against `schemas/receipt.schema.json`
 2. **Recompute `context_hash`** from `inputs` using Sanna Canonical JSON + SHA-256
 3. **Recompute `output_hash`** from `outputs` using Sanna Canonical JSON + SHA-256
-4. **Recompute the fingerprint** using the 12-field pipe-delimited formula
+4. **Recompute the fingerprint** using the 14-field pipe-delimited formula
 5. **Compare** all computed values against `golden-hashes.json`
 6. **Verify the Ed25519 signature** using the test public key
 
@@ -97,8 +97,8 @@ This file contains the expected values for cross-language verification:
 |-------|---------------|
 | `context_hash` | Recompute from `inputs` via `hash_obj()` |
 | `output_hash` | Recompute from `outputs` via `hash_obj()` |
-| `receipt_fingerprint` | Recompute via 12-field formula, take first 16 hex chars |
-| `full_fingerprint` | Recompute via 12-field formula, full 64 hex chars |
+| `receipt_fingerprint` | Recompute via 14-field formula, take first 16 hex chars |
+| `full_fingerprint` | Recompute via 14-field formula, full 64 hex chars |
 | `signature_key_id` | Must match `test_key_id` |
 | `canonical_json_sha256` | SHA-256 of canonical JSON of receipt (without signature block) |
 

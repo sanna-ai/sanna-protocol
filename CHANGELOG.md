@@ -6,6 +6,38 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-05
+
+### Added
+- `parent_receipts` field: array of `full_fingerprint` strings for receipt
+  chaining in multi-step workflows. Participates in fingerprint computation
+  (field 13).
+- `workflow_id` field: opaque string grouping related receipts into a
+  workflow. Participates in fingerprint computation (field 14).
+- `content_mode` field: enum (`full`, `redacted`, `hashes_only`) declaring
+  content handling for Cloud. Metadata only — does NOT participate in
+  fingerprint.
+- `content_mode_source` field: origin of content_mode value (`local_config`,
+  `cloud_tenant`, `override`). Metadata only — does NOT participate in
+  fingerprint.
+- Gateway extension namespace appendix (Appendix E): formalizes
+  `com.sanna.gateway` extension schema for interoperability
+- Canonical YAML hash specification (Appendix F): documents how
+  constitutions are hashed for receipt linking
+- 1,296 cross-language canonicalization test vectors
+  (`fixtures/canonicalization-vectors.json`): Unicode NFC, key ordering,
+  null/empty handling, integer boundaries, array ordering, whitespace/escaping,
+  round-trip verification, 14-field fingerprint computation
+
+### Changed
+- **BREAKING:** Fingerprint formula expanded from 12 fields to 14 fields.
+  No backward compatibility with the 12-field formula.
+- `checks_version` incremented from `"5"` to `"6"` to reflect the
+  fingerprint algorithm change
+- All golden receipt fixtures regenerated with 14-field fingerprint
+- JSON Schema updated (`receipt.schema.json`) with four new fields
+- Spec version bumped from `1.0` to `1.1`
+
 ## [1.0.2] - 2026-02-17
 
 ### Added

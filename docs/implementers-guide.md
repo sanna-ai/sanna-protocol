@@ -86,18 +86,33 @@ EMPTY_HASH = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 ## 4. Fingerprint Construction
 
-The fingerprint is a pipe-delimited string of 12 components, hashed with
-SHA-256. This is the tamper-evidence mechanism — get it wrong and no receipt
-will verify.
+The fingerprint is a pipe-delimited string of **14 components** (expanded
+from 12 in v1.1), hashed with SHA-256. This is the tamper-evidence
+mechanism — get it wrong and no receipt will verify.
 
-```
-fingerprint_input = "{correlation_id}|{context_hash}|{output_hash}|{checks_version}|{checks_hash}|{constitution_hash}|{enforcement_hash}|{coverage_hash}|{authority_hash}|{escalation_hash}|{trust_hash}|{extensions_hash}"
+```python
+fingerprint_input = '|'.join([
+    spec_version,          # 1  — literal
+    tool_version,          # 2  — literal
+    checks_version,        # 3  — literal
+    timestamp,             # 4  — literal
+    agent_id,              # 5  — literal (correlation_id)
+    context_hash,          # 6  — 64-hex SHA-256
+    output_hash,           # 7  — 64-hex SHA-256
+    query_hash,            # 8  — 64-hex SHA-256 or EMPTY_HASH
+    constitution_hash,     # 9  — 64-hex SHA-256 or EMPTY_HASH
+    status,                # 10 — literal
+    checks_hash,           # 11 — 64-hex SHA-256
+    extensions_hash,       # 12 — 64-hex SHA-256 or EMPTY_HASH
+    parent_receipts_hash,  # 13 — 64-hex SHA-256 or EMPTY_HASH (NEW v1.1)
+    workflow_id_hash,      # 14 — 64-hex SHA-256 or EMPTY_HASH (NEW v1.1)
+])
 ```
 
 **Rules:**
 
-- Always exactly 12 pipe-separated fields
-- `correlation_id` and `checks_version` are literal string values
+- Always exactly **14** pipe-separated fields
+- Fields 1-5 and 10 are literal string values
 - All other components are 64-char hex SHA-256 or `EMPTY_HASH`
 - Absent optional fields → `EMPTY_HASH` (null and missing are identical)
 - Strip `constitution_approval` from `constitution_ref` before hashing

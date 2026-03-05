@@ -287,22 +287,57 @@ def make_trace(correlation_id, query, context, response):
 
 
 def receipt_to_dict(r: SannaReceipt) -> dict:
-    """Convert SannaReceipt dataclass to a JSON-serializable dict."""
+    """Convert SannaReceipt dataclass to a JSON-serializable dict.
+
+    Overrides spec_version to 1.1 and checks_version to 6 for v1.1 receipts.
+    """
     from dataclasses import asdict
     d = asdict(r)
-    return {k: v for k, v in d.items() if v is not None}
+    d = {k: v for k, v in d.items() if v is not None}
+    # Override for v1.1 protocol
+    d["spec_version"] = "1.1"
+    d["checks_version"] = "6"
+    return d
 
 
-# ── Fingerprint recomputation ────────────────────────────────────────
+# ── Fingerprint recomputation (v1.1: 14-field formula) ───────────────
 
 def recompute_fingerprint(receipt_dict):
-    """Recompute fingerprint fields after modifying a receipt."""
-    correlation_id = receipt_dict["correlation_id"]
-    context_hash = receipt_dict["context_hash"]
-    output_hash = receipt_dict["output_hash"]
+    """Recompute fingerprint fields using the v1.1 14-field formula."""
+    # Field 1: spec_version
+    spec_version = receipt_dict["spec_version"]
+    # Field 2: tool_version
+    tool_version = receipt_dict["tool_version"]
+    # Field 3: checks_version
     checks_version = receipt_dict["checks_version"]
+    # Field 4: timestamp
+    timestamp = receipt_dict["timestamp"]
+    # Field 5: agent_id (correlation_id)
+    agent_id = receipt_dict["correlation_id"]
+    # Field 6: context_hash
+    context_hash = receipt_dict["context_hash"]
+    # Field 7: output_hash
+    output_hash = receipt_dict["output_hash"]
 
-    # checks_hash — detect format from actual check data, not from constitution_ref
+    # Field 8: query_hash — SHA-256 of inputs.query or EMPTY_HASH
+    query = receipt_dict.get("inputs", {}).get("query")
+    if query is not None:
+        query_hash = hash_text(query, truncate=64)
+    else:
+        query_hash = EMPTY_HASH
+
+    # Field 9: constitution_hash
+    const_ref = receipt_dict.get("constitution_ref")
+    if const_ref:
+        stripped = {k: v for k, v in const_ref.items() if k != "constitution_approval"}
+        constitution_hash = hash_obj(stripped)
+    else:
+        constitution_hash = EMPTY_HASH
+
+    # Field 10: status
+    status = receipt_dict["status"]
+
+    # Field 11: checks_hash
     checks = receipt_dict.get("checks", [])
     has_enforcement_fields = any(c.get("triggered_by") is not None for c in checks)
     checks_data = []
@@ -328,46 +363,39 @@ def recompute_fingerprint(receipt_dict):
         checks_data.append(check_entry)
     checks_hash = hash_obj(checks_data) if checks_data else EMPTY_HASH
 
-    # constitution_hash
-    const_ref = receipt_dict.get("constitution_ref")
-    if const_ref:
-        stripped = {k: v for k, v in const_ref.items() if k != "constitution_approval"}
-        constitution_hash = hash_obj(stripped)
-    else:
-        constitution_hash = EMPTY_HASH
-
-    # Other component hashes
-    enforcement = receipt_dict.get("enforcement")
-    enforcement_hash = hash_obj(enforcement) if enforcement else EMPTY_HASH
-
-    coverage = receipt_dict.get("evaluation_coverage")
-    coverage_hash = hash_obj(coverage) if coverage else EMPTY_HASH
-
-    authority = receipt_dict.get("authority_decisions")
-    authority_hash = hash_obj(authority) if authority else EMPTY_HASH
-
-    escalation = receipt_dict.get("escalation_events")
-    escalation_hash = hash_obj(escalation) if escalation else EMPTY_HASH
-
-    trust = receipt_dict.get("source_trust_evaluations")
-    trust_hash = hash_obj(trust) if trust else EMPTY_HASH
-
+    # Field 12: extensions_hash
     extensions = receipt_dict.get("extensions")
     extensions_hash = hash_obj(extensions) if extensions else EMPTY_HASH
 
+    # Field 13: parent_receipts_hash (NEW in v1.1)
+    parent_receipts = receipt_dict.get("parent_receipts")
+    if parent_receipts is not None:
+        parent_receipts_hash = hash_obj(parent_receipts)
+    else:
+        parent_receipts_hash = EMPTY_HASH
+
+    # Field 14: workflow_id_hash (NEW in v1.1)
+    workflow_id = receipt_dict.get("workflow_id")
+    if workflow_id is not None:
+        workflow_id_hash = hash_text(workflow_id, truncate=64)
+    else:
+        workflow_id_hash = EMPTY_HASH
+
     fingerprint_input = "|".join([
-        correlation_id,
-        context_hash,
-        output_hash,
-        checks_version,
-        checks_hash,
-        constitution_hash,
-        enforcement_hash,
-        coverage_hash,
-        authority_hash,
-        escalation_hash,
-        trust_hash,
-        extensions_hash,
+        spec_version,          # 1
+        tool_version,          # 2
+        checks_version,        # 3
+        timestamp,             # 4
+        agent_id,              # 5
+        context_hash,          # 6
+        output_hash,           # 7
+        query_hash,            # 8
+        constitution_hash,     # 9
+        status,                # 10
+        checks_hash,           # 11
+        extensions_hash,       # 12
+        parent_receipts_hash,  # 13
+        workflow_id_hash,      # 14
     ])
 
     receipt_dict["full_fingerprint"] = hash_text(fingerprint_input, truncate=64)
@@ -391,6 +419,7 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     )
     receipt_pass = generate_receipt(trace_pass)
     receipt_pass_dict = receipt_to_dict(receipt_pass)
+    receipt_pass_dict = recompute_fingerprint(receipt_pass_dict)
     receipt_pass_signed = sign_receipt(receipt_pass_dict, priv_key_path, "test-author@sanna.dev")
 
     pass_path = RECEIPTS / "pass-single-check.json"
@@ -548,6 +577,17 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
         }
     }
 
+    # parent_receipts — chain to pass and fail fixtures via their fingerprints
+    # (these are computed later, so use placeholder that we'll fill in)
+    receipt_full_dict["parent_receipts"] = None  # Will be set after recompute
+
+    # workflow_id — group all fixtures into a test workflow
+    receipt_full_dict["workflow_id"] = "sanna-fixture-workflow-001"
+
+    # content_mode — metadata fields (NOT in fingerprint)
+    receipt_full_dict["content_mode"] = "full"
+    receipt_full_dict["content_mode_source"] = "local_config"
+
     receipt_full_dict = recompute_fingerprint(receipt_full_dict)
     receipt_full_signed = sign_receipt(receipt_full_dict, priv_key_path, "test-author@sanna.dev")
 
@@ -571,8 +611,9 @@ def generate_golden_hashes(receipts, key_id):
 
     golden = {
         "generated_with": f"sanna v{TOOL_VERSION}",
-        "spec_version": SPEC_VERSION,
-        "checks_version": CHECKS_VERSION,
+        "spec_version": "1.1",
+        "checks_version": "6",
+        "fingerprint_fields": 14,
         "EMPTY_HASH": EMPTY_HASH,
         "test_key_id": key_id,
         "receipts": {},
@@ -600,6 +641,15 @@ def generate_golden_hashes(receipts, key_id):
 
         if receipt.get("constitution_ref"):
             entry["constitution_policy_hash"] = receipt["constitution_ref"].get("policy_hash")
+
+        if receipt.get("workflow_id"):
+            entry["workflow_id"] = receipt["workflow_id"]
+
+        if receipt.get("content_mode"):
+            entry["content_mode"] = receipt["content_mode"]
+
+        if receipt.get("parent_receipts") is not None:
+            entry["parent_receipts_count"] = len(receipt["parent_receipts"])
 
         # Canonical JSON hash (without signature) for diffing
         receipt_copy = dict(receipt)

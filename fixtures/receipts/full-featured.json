@@ -1,12 +1,12 @@
 {
-  "spec_version": "1.0",
-  "tool_version": "0.13.5",
-  "checks_version": "5",
-  "receipt_id": "29cd4c7c-acea-4fb9-926d-db2692e36d5e",
-  "receipt_fingerprint": "767647b0308cb91a",
-  "full_fingerprint": "767647b0308cb91a5f6b00098f5506f3083b76c1ff4dcd68ab64327535697ee1",
+  "spec_version": "1.1",
+  "tool_version": "0.13.7",
+  "checks_version": "6",
+  "receipt_id": "00cce227-6352-4673-a9bb-f1ed3c946181",
+  "receipt_fingerprint": "93f5dd09d5b49cb5",
+  "full_fingerprint": "93f5dd09d5b49cb503601b4fe80920eb8c1973d7c53f2a697d3c7bb83541f6cb",
   "correlation_id": "sanna-fixture-full-001",
-  "timestamp": "2026-02-22T21:59:43.386853+00:00",
+  "timestamp": "2026-03-05T16:41:08.760107+00:00",
   "inputs": {
     "query": "Summarize the Q3 financial report and recommend next steps.",
     "context": "Q3 revenue: $4.2M (up 15% YoY). Operating expenses: $3.1M. Net income: $1.1M. Customer churn decreased to 2.3%. New enterprise contracts: 7."
@@ -80,7 +80,7 @@
     "reason": "All checks passed",
     "failed_checks": [],
     "enforcement_mode": "log",
-    "timestamp": "2026-02-22T21:59:43.386853+00:00"
+    "timestamp": "2026-03-05T16:41:08.760107+00:00"
   },
   "evaluation_coverage": {
     "total_invariants": 5,
@@ -98,7 +98,7 @@
       "reason": "Action matches can_execute pattern *_read",
       "boundary_type": "can_execute",
       "escalation_target": null,
-      "timestamp": "2026-02-22T21:59:43.386853+00:00"
+      "timestamp": "2026-03-05T16:41:08.760107+00:00"
     }
   ],
   "escalation_events": [],
@@ -106,7 +106,7 @@
     {
       "source_name": "internal-database",
       "trust_tier": "tier_1",
-      "evaluated_at": "2026-02-22T21:59:43.386853+00:00",
+      "evaluated_at": "2026-03-05T16:41:08.760107+00:00",
       "verification_flag": null,
       "context_used": true
     }
@@ -117,11 +117,15 @@
       "purpose": "golden-test-vector"
     }
   },
+  "parent_receipts": null,
+  "workflow_id": "sanna-fixture-workflow-001",
+  "content_mode": "full",
+  "content_mode_source": "local_config",
   "receipt_signature": {
-    "signature": "tQxtOBrD7u5KtaiiSF+SeQDsV38yLSrjrUM+GW2EjLUWHLPPjjG0ruZ29cHkZdO36I0pCtb8G0nsMvtvwVwMDg==",
-    "key_id": "c7a4db86e09b9a78be11b8c90b9214ae4085beae4c72d45b8bb3fd5c98f22307",
+    "signature": "g5BzoVmTjU4fXMnMVcvJqCGpAUiJ2HHXYfdMRPA5lYHR1MM12yMVz7hDJvSsxjJGCYoNF428ClEOKXgeX0FHAA==",
+    "key_id": "df1d7e494ae6988ea59883b9131bbd222b9985a44392d5e2e529ccaed137b04c",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-02-22T21:59:43.387084+00:00",
+    "signed_at": "2026-03-05T16:41:08.760301+00:00",
     "scheme": "receipt_sig_v1"
   }
 }
