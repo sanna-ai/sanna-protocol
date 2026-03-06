@@ -31,11 +31,19 @@ export const CHECKS_VERSION = "6";
  */
 export function computeFingerprintInput(receipt: Record<string, unknown>): string {
   const correlationId = (receipt.correlation_id as string) ?? "";
+
+  // Bug #4: correlation_id must not contain pipe character (matches Python ValueError)
+  if (correlationId.includes("|")) {
+    throw new Error(
+      `correlation_id must not contain '|' character: ${correlationId}`,
+    );
+  }
+
   const contextHash = (receipt.context_hash as string) ?? "";
   const outputHash = (receipt.output_hash as string) ?? "";
   const checksVersion = (receipt.checks_version as string) ?? "";
 
-  // checks_hash
+  // checks_hash — optional fields default to null (not undefined) to match Python's None serialization
   const checks = (receipt.checks as Record<string, unknown>[]) ?? [];
   const hasEnforcementFields = checks.some((c) => c.triggered_by !== undefined);
   let checksData: Record<string, unknown>[];
@@ -45,10 +53,10 @@ export function computeFingerprintInput(receipt: Record<string, unknown>): strin
       passed: c.passed,
       severity: c.severity ?? "",
       evidence: c.evidence ?? null,
-      triggered_by: c.triggered_by,
-      enforcement_level: c.enforcement_level,
-      check_impl: c.check_impl,
-      replayable: c.replayable,
+      triggered_by: c.triggered_by ?? null,
+      enforcement_level: c.enforcement_level ?? null,
+      check_impl: c.check_impl ?? null,
+      replayable: c.replayable ?? null,
     }));
   } else {
     checksData = checks.map((c) => ({
@@ -73,26 +81,33 @@ export function computeFingerprintInput(receipt: Record<string, unknown>): strin
     constitutionHash = EMPTY_HASH;
   }
 
-  // null/undefined → EMPTY_HASH; any actual value (including [] or {}) → hash it.
+  // Python treats [] and {} as falsy; match that behavior for fields 5-12.
+  const isTruthy = (v: unknown): boolean => {
+    if (!v) return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === "object") return Object.keys(v as Record<string, unknown>).length > 0;
+    return true;
+  };
+
   const enforcement = receipt.enforcement as Record<string, unknown> | undefined;
-  const enforcementHash = enforcement != null ? hashObj(enforcement) : EMPTY_HASH;
+  const enforcementHash = isTruthy(enforcement) ? hashObj(enforcement) : EMPTY_HASH;
 
   const coverage = receipt.evaluation_coverage as Record<string, unknown> | undefined;
-  const coverageHash = coverage != null ? hashObj(coverage) : EMPTY_HASH;
+  const coverageHash = isTruthy(coverage) ? hashObj(coverage) : EMPTY_HASH;
 
   const authority = receipt.authority_decisions as unknown[] | undefined;
-  const authorityHash = authority != null ? hashObj(authority) : EMPTY_HASH;
+  const authorityHash = isTruthy(authority) ? hashObj(authority) : EMPTY_HASH;
 
   const escalation = receipt.escalation_events as unknown[] | undefined;
-  const escalationHash = escalation != null ? hashObj(escalation) : EMPTY_HASH;
+  const escalationHash = isTruthy(escalation) ? hashObj(escalation) : EMPTY_HASH;
 
   const trust = receipt.source_trust_evaluations as unknown[] | undefined;
-  const trustHash = trust != null ? hashObj(trust) : EMPTY_HASH;
+  const trustHash = isTruthy(trust) ? hashObj(trust) : EMPTY_HASH;
 
   const extensions = receipt.extensions as Record<string, unknown> | undefined;
-  const extensionsHash = extensions != null ? hashObj(extensions) : EMPTY_HASH;
+  const extensionsHash = isTruthy(extensions) ? hashObj(extensions) : EMPTY_HASH;
 
-  // Field 13: parent_receipts_hash
+  // Field 13: parent_receipts_hash — explicit null check ([] ≠ null)
   const parentReceipts = receipt.parent_receipts as string[] | null | undefined;
   const parentReceiptsHash = parentReceipts != null ? hashObj(parentReceipts) : EMPTY_HASH;
 
@@ -100,6 +115,26 @@ export function computeFingerprintInput(receipt: Record<string, unknown>): strin
   const workflowId = receipt.workflow_id as string | null | undefined;
   const workflowIdHash = workflowId != null ? hashContent(workflowId, 64) : EMPTY_HASH;
 
+  // 12-field fingerprint for checks_version < 6 (backward compat with pre-v1.0 receipts)
+  const cvInt = parseInt(checksVersion, 10);
+  if (!isNaN(cvInt) && cvInt < 6) {
+    return [
+      correlationId,
+      contextHash,
+      outputHash,
+      checksVersion,
+      checksHash,
+      constitutionHash,
+      enforcementHash,
+      coverageHash,
+      authorityHash,
+      escalationHash,
+      trustHash,
+      extensionsHash,
+    ].join("|");
+  }
+
+  // 14-field fingerprint for checks_version >= 6
   return [
     correlationId,
     contextHash,
@@ -223,6 +258,12 @@ export interface ReceiptParams {
  * Computes hashes, fingerprints, UUID, and status.
  */
 export function generateReceipt(params: ReceiptParams): Receipt {
+  if (params.correlation_id.includes("|")) {
+    throw new Error(
+      `correlation_id must not contain '|' character: ${params.correlation_id}`,
+    );
+  }
+
   const contextHash = hashObj(params.inputs);
   const outputHash = hashObj(params.outputs);
 

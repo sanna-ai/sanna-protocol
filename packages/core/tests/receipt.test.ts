@@ -5,6 +5,7 @@ import {
   generateReceipt,
   signReceipt,
   computeFingerprints,
+  computeFingerprintInput,
   SPEC_VERSION,
   CHECKS_VERSION,
 } from "../src/receipt.js";
@@ -160,5 +161,132 @@ describe("signReceipt", () => {
     const sig = (receipt.receipt_signature as Record<string, unknown>).signature as string;
 
     expect(verify(data, sig, pubKey)).toBe(true);
+  });
+});
+
+// ── Bug #1: checks_hash undefined vs null ────────────────────────────
+
+describe("checks_hash optional fields default to null", () => {
+  it("undefined enforcement fields serialize as null, not stripped", () => {
+    // A check with triggered_by present but other enforcement fields undefined
+    const receipt: Record<string, unknown> = {
+      correlation_id: "null-test",
+      context_hash: "a".repeat(64),
+      output_hash: "b".repeat(64),
+      checks_version: "6",
+      checks: [
+        {
+          check_id: "C1",
+          passed: true,
+          severity: "info",
+          evidence: null,
+          triggered_by: "boundary",
+          // enforcement_level, check_impl, replayable intentionally omitted
+        },
+      ],
+    };
+    const fp1 = computeFingerprints(receipt);
+
+    // Same check but with explicit nulls — should produce identical fingerprint
+    const receiptWithNulls: Record<string, unknown> = {
+      ...receipt,
+      checks: [
+        {
+          check_id: "C1",
+          passed: true,
+          severity: "info",
+          evidence: null,
+          triggered_by: "boundary",
+          enforcement_level: null,
+          check_impl: null,
+          replayable: null,
+        },
+      ],
+    };
+    const fp2 = computeFingerprints(receiptWithNulls);
+    expect(fp1.full_fingerprint).toBe(fp2.full_fingerprint);
+  });
+});
+
+// ── Bug #2: checks_version backward compatibility ────────────────────
+
+describe("checks_version < 6 produces 12-field fingerprint", () => {
+  it("checks_version 5 produces 12-field pipe-delimited string", () => {
+    const receipt: Record<string, unknown> = {
+      correlation_id: "v5-test",
+      context_hash: "a".repeat(64),
+      output_hash: "b".repeat(64),
+      checks_version: "5",
+      checks: [],
+      parent_receipts: ["some-parent"],
+      workflow_id: "some-workflow",
+    };
+    const input = computeFingerprintInput(receipt);
+    const fields = input.split("|");
+    expect(fields).toHaveLength(12);
+  });
+
+  it("checks_version 6 produces 14-field pipe-delimited string", () => {
+    const receipt: Record<string, unknown> = {
+      correlation_id: "v6-test",
+      context_hash: "a".repeat(64),
+      output_hash: "b".repeat(64),
+      checks_version: "6",
+      checks: [],
+    };
+    const input = computeFingerprintInput(receipt);
+    const fields = input.split("|");
+    expect(fields).toHaveLength(14);
+  });
+
+  it("checks_version 4 produces 12-field string", () => {
+    const receipt: Record<string, unknown> = {
+      correlation_id: "v4-test",
+      context_hash: "a".repeat(64),
+      output_hash: "b".repeat(64),
+      checks_version: "4",
+      checks: [],
+    };
+    const input = computeFingerprintInput(receipt);
+    expect(input.split("|")).toHaveLength(12);
+  });
+});
+
+// ── Bug #4: correlation_id pipe validation ───────────────────────────
+
+describe("correlation_id pipe validation", () => {
+  it("throws on pipe character in computeFingerprintInput", () => {
+    const receipt: Record<string, unknown> = {
+      correlation_id: "bad|id",
+      context_hash: "a".repeat(64),
+      output_hash: "b".repeat(64),
+      checks_version: "6",
+      checks: [],
+    };
+    expect(() => computeFingerprintInput(receipt)).toThrow(
+      "correlation_id must not contain '|' character",
+    );
+  });
+
+  it("throws on pipe character in generateReceipt", () => {
+    expect(() =>
+      generateReceipt({
+        correlation_id: "has|pipe",
+        inputs: { q: "x" },
+        outputs: { r: "y" },
+        checks: [{ check_id: "C1", passed: true, severity: "info", evidence: null }],
+      }),
+    ).toThrow("correlation_id must not contain '|' character");
+  });
+
+  it("accepts correlation_id without pipe", () => {
+    expect(() =>
+      generateReceipt({
+        correlation_id: "valid-id-no-pipes",
+        inputs: { q: "x" },
+        outputs: { r: "y" },
+        checks: [{ check_id: "C1", passed: true, severity: "info", evidence: null }],
+      }),
+    ).not.toThrow();
   });
 });
