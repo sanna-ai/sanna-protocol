@@ -6,9 +6,9 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 
 | Path | Description |
 |------|-------------|
-| [`spec/`](spec/sanna-specification-v1.1.md) | Protocol specification v1.1 — receipt format, 14-field fingerprint, canonicalization, signing, verification |
+| [`spec/`](spec/sanna-specification-v1.2.md) | Protocol specification v1.2 — receipt format, 14-field fingerprint, multi-surface governance, canonicalization, signing, verification |
 | [`schemas/`](schemas/) | JSON Schema (2020-12) for [constitutions](schemas/constitution.schema.json) and [receipts](schemas/receipt.schema.json) |
-| [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes, 1,296 canonicalization test vectors |
+| [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes, 1,296 canonicalization test vectors, 24 multi-surface (CLI/API) test vectors |
 | [`templates/`](templates/) | Starter constitutions: [privacy-focused](templates/privacy-focused.yaml), [developer](templates/developer.yaml), [locked-down](templates/locked-down.yaml) |
 | [`http/`](http/header-conventions.md) | HTTP header conventions (`X-Sanna-Receipt`, `X-Sanna-Receipt-URL`, `X-Sanna-Verify`, `X-Sanna-Constitution`) |
 | [`docs/`](docs/) | [Implementers guide](docs/implementers-guide.md), [protocol comparison](docs/protocol-comparison.md) (Sanna vs ORS v0.1) |
@@ -18,7 +18,7 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 | Language | Package | Install |
 |----------|---------|---------|
 | Python | [`sanna`](https://pypi.org/project/sanna/) | `pip install sanna` |
-| TypeScript | `@sanna/core` | Coming soon |
+| TypeScript | [`@sanna/core`](https://www.npmjs.com/package/@sanna/core) | `npm install @sanna/core` |
 
 ## Conformance Verification
 

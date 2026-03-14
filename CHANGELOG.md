@@ -6,6 +6,41 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-14
+
+### Fixed
+- **Section 4.1 fingerprint formula corrected to match reference implementations.**
+  The previous formula listed `spec_version`, `tool_version`, `timestamp`,
+  `agent_id` (correlation_id), `query_hash`, and `status` as literal string
+  fields, and omitted `enforcement_hash`, `coverage_hash`, `authority_hash`,
+  `escalation_hash`, and `trust_hash`. The reference implementations (sanna
+  v1.0.0, sanna-ts v1.0.2) use the correct 14-field formula with
+  `correlation_id` as field 1 and structural hashes for fields 5-14. The
+  spec now documents the formula that all implementations produce. No
+  breaking change: no third-party implementation used the incorrect formula.
+
+### Added
+- `event_type` optional receipt field: identifies governance surface and
+  enforcement outcome (MCP, CLI, API) with nine enumerated values. Aligned
+  with GCD Layer 4 (Enforcement) event types.
+- `context_limitation` optional receipt field: documents what the governance
+  boundary observes, with five enumerated values (`gateway_boundary`,
+  `cli_execution`, `cli_no_justification`, `api_execution`,
+  `api_no_justification`).
+- Receipt Triad specification for CLI execution boundary (Section 7.6):
+  `input_hash` from `{args, command, cwd, env_keys}`, `action_hash` from
+  `{exit_code, stderr, stdout}`.
+- Receipt Triad specification for API execution boundary (Section 7.7):
+  `input_hash` from `{body_hash, headers_keys, method, url}`, `action_hash`
+  from `{body_hash, response_headers_keys, status_code}`.
+- `cli_permissions` constitution block: binary-level governance with
+  strict/permissive modes, argv pattern matching, per-command authority.
+- `api_permissions` constitution block: URL pattern governance with method
+  filtering, strict/permissive modes, per-endpoint authority.
+- Multi-surface test vectors (`fixtures/multi-surface-vectors.json`).
+- Updated constitution templates with multi-surface governance blocks.
+- GCD event type reservation note for future Layer 1-3 events.
+
 ## [1.1.0] - 2026-03-05
 
 ### Added

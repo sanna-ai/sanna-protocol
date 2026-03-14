@@ -92,29 +92,31 @@ mechanism — get it wrong and no receipt will verify.
 
 ```python
 fingerprint_input = '|'.join([
-    spec_version,          # 1  — literal
-    tool_version,          # 2  — literal
-    checks_version,        # 3  — literal
-    timestamp,             # 4  — literal
-    agent_id,              # 5  — literal (correlation_id)
-    context_hash,          # 6  — 64-hex SHA-256
-    output_hash,           # 7  — 64-hex SHA-256
-    query_hash,            # 8  — 64-hex SHA-256 or EMPTY_HASH
-    constitution_hash,     # 9  — 64-hex SHA-256 or EMPTY_HASH
-    status,                # 10 — literal
-    checks_hash,           # 11 — 64-hex SHA-256
-    extensions_hash,       # 12 — 64-hex SHA-256 or EMPTY_HASH
-    parent_receipts_hash,  # 13 — 64-hex SHA-256 or EMPTY_HASH (NEW v1.1)
-    workflow_id_hash,      # 14 — 64-hex SHA-256 or EMPTY_HASH (NEW v1.1)
+    correlation_id,        # 1  — literal string
+    context_hash,          # 2  — hash_obj(inputs), 64-hex SHA-256
+    output_hash,           # 3  — hash_obj(outputs), 64-hex SHA-256
+    CHECKS_VERSION,        # 4  — literal string (currently "6")
+    checks_hash,           # 5  — hash_obj(checks_data), 64-hex SHA-256
+    constitution_hash,     # 6  — hash_obj(constitution_ref minus constitution_approval), or EMPTY_HASH
+    enforcement_hash,      # 7  — hash_obj(enforcement), or EMPTY_HASH
+    coverage_hash,         # 8  — hash_obj(evaluation_coverage), or EMPTY_HASH
+    authority_hash,        # 9  — hash_obj(authority_decisions), or EMPTY_HASH
+    escalation_hash,       # 10 — hash_obj(escalation_events), or EMPTY_HASH
+    trust_hash,            # 11 — hash_obj(source_trust_evaluations), or EMPTY_HASH
+    extensions_hash,       # 12 — hash_obj(extensions), or EMPTY_HASH
+    parent_receipts_hash,  # 13 — hash_obj(parent_receipts), or EMPTY_HASH
+    workflow_id_hash,      # 14 — hash_text(workflow_id), or EMPTY_HASH
 ])
 ```
 
 **Rules:**
 
 - Always exactly **14** pipe-separated fields
-- Fields 1-5 and 10 are literal string values
+- Fields 1 and 4 are literal string values
 - All other components are 64-char hex SHA-256 or `EMPTY_HASH`
 - Absent optional fields → `EMPTY_HASH` (null and missing are identical)
+- For fields 7-12, empty objects/arrays also produce `EMPTY_HASH`
+- For field 13, `null` → `EMPTY_HASH` but `[]` is hashed as empty array (different hash)
 - Strip `constitution_approval` from `constitution_ref` before hashing
 - `receipt_fingerprint` = first 16 chars of `hash_text(fingerprint_input)`
 - `full_fingerprint` = full 64 chars of `hash_text(fingerprint_input)`

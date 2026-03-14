@@ -56,3 +56,26 @@ invariants:
     rule: Agent must clearly mark inferences that go beyond source material
     enforcement: warn
     check: sanna.unmarked_inference
+
+cli_permissions:
+    mode: strict
+    justification_required: true
+    commands:
+        - id: cli-001
+          binary: curl
+          authority: cannot_execute
+          description: "No outbound HTTP via CLI"
+        - id: cli-002
+          binary: wget
+          authority: cannot_execute
+          description: "No outbound HTTP via CLI"
+
+api_permissions:
+    mode: strict
+    justification_required: true
+    endpoints: []
+    invariants:
+        - id: api-inv-001
+          description: "No API keys in URL parameters"
+          pattern: "[?&](api_key|token|secret|key)="
+          verdict: halt

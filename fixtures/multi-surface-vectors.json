@@ -1,0 +1,350 @@
+{
+  "description": "Multi-surface governance test vectors for Sanna Protocol v1.2",
+  "generated": "2026-03-14",
+  "cli_input_vectors": [
+    {
+      "description": "Simple git push",
+      "input_obj": {
+        "args": [
+          "push",
+          "origin",
+          "main"
+        ],
+        "command": "git",
+        "cwd": "/home/agent/repo",
+        "env_keys": [
+          "HOME",
+          "PATH"
+        ]
+      },
+      "expected_canonical_json": "{\"args\":[\"push\",\"origin\",\"main\"],\"command\":\"git\",\"cwd\":\"/home/agent/repo\",\"env_keys\":[\"HOME\",\"PATH\"]}",
+      "expected_hash": "60036ba0f2c08d3b6d36eee4e0b899956a55dcb2223d2e8f7739f18ca1365cdd"
+    },
+    {
+      "description": "No arguments (ls)",
+      "input_obj": {
+        "args": [],
+        "command": "ls",
+        "cwd": "/tmp",
+        "env_keys": [
+          "HOME",
+          "PATH",
+          "SHELL"
+        ]
+      },
+      "expected_canonical_json": "{\"args\":[],\"command\":\"ls\",\"cwd\":\"/tmp\",\"env_keys\":[\"HOME\",\"PATH\",\"SHELL\"]}",
+      "expected_hash": "4005a4b5c21baf6616746c82dc71a0218d43b250f2a4d56e74a9e9049fac8ced"
+    },
+    {
+      "description": "Special characters in args",
+      "input_obj": {
+        "args": [
+          "-r",
+          "hello world",
+          "./src/my files/"
+        ],
+        "command": "grep",
+        "cwd": "/home/agent/project",
+        "env_keys": [
+          "HOME",
+          "LANG",
+          "PATH"
+        ]
+      },
+      "expected_canonical_json": "{\"args\":[\"-r\",\"hello world\",\"./src/my files/\"],\"command\":\"grep\",\"cwd\":\"/home/agent/project\",\"env_keys\":[\"HOME\",\"LANG\",\"PATH\"]}",
+      "expected_hash": "5e83d785ad116a8a3c91ff4dfb10f5d8741e1e88f49fff3a9c019bd86163d5ae"
+    },
+    {
+      "description": "Unicode in cwd",
+      "input_obj": {
+        "args": [
+          "script.py"
+        ],
+        "command": "python",
+        "cwd": "/home/agent/日本語/project",
+        "env_keys": [
+          "HOME",
+          "PATH"
+        ]
+      },
+      "expected_canonical_json": "{\"args\":[\"script.py\"],\"command\":\"python\",\"cwd\":\"/home/agent/日本語/project\",\"env_keys\":[\"HOME\",\"PATH\"]}",
+      "expected_hash": "8e0b0e198005321edebc2e4fc050184d9f9414f6a8b7395bcf5127582f79eb96"
+    },
+    {
+      "description": "Empty env_keys",
+      "input_obj": {
+        "args": [
+          "hello"
+        ],
+        "command": "echo",
+        "cwd": "/tmp",
+        "env_keys": []
+      },
+      "expected_canonical_json": "{\"args\":[\"hello\"],\"command\":\"echo\",\"cwd\":\"/tmp\",\"env_keys\":[]}",
+      "expected_hash": "1ee8ba5448f6102d9edf607b312a5a60fd86134a878405716364dadaecc661e0"
+    },
+    {
+      "description": "Large sorted env_keys",
+      "input_obj": {
+        "args": [
+          "index.js"
+        ],
+        "command": "node",
+        "cwd": "/app",
+        "env_keys": [
+          "AWS_REGION",
+          "HOME",
+          "LANG",
+          "LC_ALL",
+          "NODE_ENV",
+          "PATH",
+          "PWD",
+          "SHELL",
+          "TERM",
+          "USER",
+          "XDG_RUNTIME_DIR"
+        ]
+      },
+      "expected_canonical_json": "{\"args\":[\"index.js\"],\"command\":\"node\",\"cwd\":\"/app\",\"env_keys\":[\"AWS_REGION\",\"HOME\",\"LANG\",\"LC_ALL\",\"NODE_ENV\",\"PATH\",\"PWD\",\"SHELL\",\"TERM\",\"USER\",\"XDG_RUNTIME_DIR\"]}",
+      "expected_hash": "3fcc01f531090e3fe7d132de6e74fce935ddfa4c8255bb7d408ce589ad012d7f"
+    }
+  ],
+  "cli_action_vectors": [
+    {
+      "description": "Successful execution",
+      "action_obj": {
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": "Already up to date.\n"
+      },
+      "expected_canonical_json": "{\"exit_code\":0,\"stderr\":\"\",\"stdout\":\"Already up to date.\\n\"}",
+      "expected_hash": "1dfac98977cb48c07835a1c58beef6835e14668c6e7d8bf3ec37a7a4483a65a9"
+    },
+    {
+      "description": "Failed execution",
+      "action_obj": {
+        "exit_code": 1,
+        "stderr": "error: failed to push some refs to 'origin'\n",
+        "stdout": ""
+      },
+      "expected_canonical_json": "{\"exit_code\":1,\"stderr\":\"error: failed to push some refs to 'origin'\\n\",\"stdout\":\"\"}",
+      "expected_hash": "062156fee0e9b8b9b21a1f12889871d0cc2cb60b58d499391fad11aaf42ea3a0"
+    },
+    {
+      "description": "Halted (never spawned)",
+      "action_obj": {
+        "exit_code": null,
+        "stderr": "",
+        "stdout": ""
+      },
+      "expected_canonical_json": "{\"exit_code\":null,\"stderr\":\"\",\"stdout\":\"\"}",
+      "expected_hash": "13a71368942de1868462bc420caedba78c14de622c0ce3d570eb20c826c63921"
+    },
+    {
+      "description": "Binary output (base64)",
+      "action_obj": {
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": "SGVsbG8gV29ybGQ="
+      },
+      "expected_canonical_json": "{\"exit_code\":0,\"stderr\":\"\",\"stdout\":\"SGVsbG8gV29ybGQ=\"}",
+      "expected_hash": "e3fe8c053304cb678dacd56a5b926ca6c68bf81f6290db81a696ea5c01c1261b"
+    },
+    {
+      "description": "Unicode in stdout",
+      "action_obj": {
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": "ファイルが見つかりました\n"
+      },
+      "expected_canonical_json": "{\"exit_code\":0,\"stderr\":\"\",\"stdout\":\"ファイルが見つかりました\\n\"}",
+      "expected_hash": "277da2468cbb4786445816928ff46d1abf581b650cb1e5b3f2aaba715f7f2d3c"
+    },
+    {
+      "description": "Empty output success",
+      "action_obj": {
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "expected_canonical_json": "{\"exit_code\":0,\"stderr\":\"\",\"stdout\":\"\"}",
+      "expected_hash": "834bd866d4de57d467f58d46ba410997908d107c3e81e4e8857b94199e1ea5c3"
+    }
+  ],
+  "api_input_vectors": [
+    {
+      "description": "Simple GET",
+      "input_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "headers_keys": [
+          "Accept",
+          "Authorization",
+          "Host"
+        ],
+        "method": "GET",
+        "url": "https://api.example.com/users"
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"headers_keys\":[\"Accept\",\"Authorization\",\"Host\"],\"method\":\"GET\",\"url\":\"https://api.example.com/users\"}",
+      "expected_hash": "3638454afa9636b466fce05f96c46c4ec38333713dec6379f7ac8b8501d00a0e"
+    },
+    {
+      "description": "POST with body",
+      "input_obj": {
+        "body_hash": "37f685ea6f236a7a9e8a79ba3ce2d6cb7c2a12adef1a93c5209414e5973ab1b4",
+        "headers_keys": [
+          "Authorization",
+          "Content-Type",
+          "Host"
+        ],
+        "method": "POST",
+        "url": "https://api.example.com/users"
+      },
+      "expected_canonical_json": "{\"body_hash\":\"37f685ea6f236a7a9e8a79ba3ce2d6cb7c2a12adef1a93c5209414e5973ab1b4\",\"headers_keys\":[\"Authorization\",\"Content-Type\",\"Host\"],\"method\":\"POST\",\"url\":\"https://api.example.com/users\"}",
+      "expected_hash": "c27c1c77e9eda769902499822479b9d635a00a6ad6e3b7addb415ff5bb2cc2f5"
+    },
+    {
+      "description": "Many sorted headers",
+      "input_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "headers_keys": [
+          "Accept",
+          "Accept-Encoding",
+          "Accept-Language",
+          "Authorization",
+          "Cache-Control",
+          "Host",
+          "User-Agent",
+          "X-Request-ID"
+        ],
+        "method": "GET",
+        "url": "https://api.example.com/data"
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"headers_keys\":[\"Accept\",\"Accept-Encoding\",\"Accept-Language\",\"Authorization\",\"Cache-Control\",\"Host\",\"User-Agent\",\"X-Request-ID\"],\"method\":\"GET\",\"url\":\"https://api.example.com/data\"}",
+      "expected_hash": "5d477cefe485f0ef3c333b0e0dca9aae3668f217c8ca2e228afb1777af9d50db"
+    },
+    {
+      "description": "No headers",
+      "input_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "headers_keys": [],
+        "method": "DELETE",
+        "url": "https://api.example.com/users/123"
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"headers_keys\":[],\"method\":\"DELETE\",\"url\":\"https://api.example.com/users/123\"}",
+      "expected_hash": "9d60b95d023ea1717f2abb918dfd4329793147db490130f266228eb165302e8c"
+    },
+    {
+      "description": "URL with query params",
+      "input_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "headers_keys": [
+          "Accept",
+          "Host"
+        ],
+        "method": "GET",
+        "url": "https://api.example.com/search?q=sanna&limit=10&offset=0"
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"headers_keys\":[\"Accept\",\"Host\"],\"method\":\"GET\",\"url\":\"https://api.example.com/search?q=sanna&limit=10&offset=0\"}",
+      "expected_hash": "05f9396ec3ef6fc909e6df8b4a7efddc1a445e21a8c70309e65f009548e9186f"
+    },
+    {
+      "description": "URL with unicode path",
+      "input_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "headers_keys": [
+          "Accept",
+          "Host"
+        ],
+        "method": "GET",
+        "url": "https://api.example.com/docs/日本語/readme"
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"headers_keys\":[\"Accept\",\"Host\"],\"method\":\"GET\",\"url\":\"https://api.example.com/docs/日本語/readme\"}",
+      "expected_hash": "54c60b331b7622c7e71b0ff44ddaac2d39fc61e1a6d79757b3b2bf5bbacf5679"
+    }
+  ],
+  "api_action_vectors": [
+    {
+      "description": "200 with body",
+      "action_obj": {
+        "body_hash": "5757d197ae2f024e247d7600bb6d8b0c84cf91a276fd53292fb0a7792405314c",
+        "response_headers_keys": [
+          "Content-Type",
+          "Date",
+          "Server"
+        ],
+        "status_code": 200
+      },
+      "expected_canonical_json": "{\"body_hash\":\"5757d197ae2f024e247d7600bb6d8b0c84cf91a276fd53292fb0a7792405314c\",\"response_headers_keys\":[\"Content-Type\",\"Date\",\"Server\"],\"status_code\":200}",
+      "expected_hash": "27216d841940a4ee73eb31d5e577c789a616672ea5fc0a49c7d71dc785dfcd81"
+    },
+    {
+      "description": "404 error",
+      "action_obj": {
+        "body_hash": "51d0a9e3bd9ffc25483790aaffe7a3597e642edd040dddb16aafc324e6e922ed",
+        "response_headers_keys": [
+          "Content-Type",
+          "Date"
+        ],
+        "status_code": 404
+      },
+      "expected_canonical_json": "{\"body_hash\":\"51d0a9e3bd9ffc25483790aaffe7a3597e642edd040dddb16aafc324e6e922ed\",\"response_headers_keys\":[\"Content-Type\",\"Date\"],\"status_code\":404}",
+      "expected_hash": "4f9d8702227e754126093311d113145bcc46d0d9f74a99ab5362ebe8bbabf2f0"
+    },
+    {
+      "description": "Halted (never sent)",
+      "action_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "response_headers_keys": [],
+        "status_code": null
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"response_headers_keys\":[],\"status_code\":null}",
+      "expected_hash": "cbe5315e53f1990397fa1a5b93485dc95fbb56ccc8c8ab7f12c0b0fe6ff95297"
+    },
+    {
+      "description": "No response body",
+      "action_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "response_headers_keys": [
+          "Date",
+          "Server"
+        ],
+        "status_code": 204
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"response_headers_keys\":[\"Date\",\"Server\"],\"status_code\":204}",
+      "expected_hash": "ef7c3a6453a470662efece84eb68085063e4f1c322d4375bb95ca4c286ccbe1a"
+    },
+    {
+      "description": "Many response headers",
+      "action_obj": {
+        "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "response_headers_keys": [
+          "Access-Control-Allow-Origin",
+          "Content-Encoding",
+          "Content-Length",
+          "Content-Type",
+          "Date",
+          "ETag",
+          "Server",
+          "X-Request-ID"
+        ],
+        "status_code": 200
+      },
+      "expected_canonical_json": "{\"body_hash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"response_headers_keys\":[\"Access-Control-Allow-Origin\",\"Content-Encoding\",\"Content-Length\",\"Content-Type\",\"Date\",\"ETag\",\"Server\",\"X-Request-ID\"],\"status_code\":200}",
+      "expected_hash": "7c69da5818fd9cdd0baefe9d85c91c90acef4822e2038135f35374dea837b3ac"
+    },
+    {
+      "description": "Large response (body hash only)",
+      "action_obj": {
+        "body_hash": "29c8126155890e34dffea74b8841acc66833f629dfc4bc962be8e4ee1c5602df",
+        "response_headers_keys": [
+          "Content-Type",
+          "Date",
+          "Transfer-Encoding"
+        ],
+        "status_code": 200
+      },
+      "expected_canonical_json": "{\"body_hash\":\"29c8126155890e34dffea74b8841acc66833f629dfc4bc962be8e4ee1c5602df\",\"response_headers_keys\":[\"Content-Type\",\"Date\",\"Transfer-Encoding\"],\"status_code\":200}",
+      "expected_hash": "d3f05f2e1f2e617362709db04130e5a3d1099258d99fcc9a0a76b73a9ab22863"
+    }
+  ]
+}

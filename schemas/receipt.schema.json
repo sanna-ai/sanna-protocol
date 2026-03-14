@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sanna.dev/schemas/receipt/v1.1.json",
+  "$id": "https://sanna.dev/schemas/receipt/v1.2.json",
   "title": "Sanna Reasoning Receipt",
-  "description": "Schema for Sanna reasoning receipts v1.1 — artifacts that capture AI reasoning provenance, constitution enforcement, and consistency check results",
+  "description": "Schema for Sanna reasoning receipts v1.2 — artifacts that capture AI reasoning provenance, constitution enforcement, and consistency check results",
   "type": "object",
   "required": [
     "spec_version",
@@ -25,9 +25,9 @@
   "properties": {
     "spec_version": {
       "type": "string",
-      "description": "Specification version. See spec/sanna-specification-v1.1.md",
+      "description": "Specification version. See spec/sanna-specification-v1.2.md",
       "pattern": "^[0-9]+\\.[0-9]+$",
-      "examples": ["1.1"]
+      "examples": ["1.2"]
     },
     "tool_version": {
       "type": "string",
@@ -346,6 +346,34 @@
       "description": "Origin of the content_mode value. Metadata only — does NOT participate in fingerprint computation. MUST be absent when content_mode is absent.",
       "type": ["string", "null"],
       "enum": ["local_config", "cloud_tenant", "override", null]
+    },
+    "event_type": {
+      "type": ["string", "null"],
+      "description": "Governance event type. Identifies the execution surface and enforcement outcome. Aligned with GCD Layer 4 (Enforcement) event schema.",
+      "enum": [
+        "invocation_allowed",
+        "invocation_halted",
+        "invocation_escalated",
+        "cli_invocation_allowed",
+        "cli_invocation_halted",
+        "cli_invocation_escalated",
+        "api_invocation_allowed",
+        "api_invocation_halted",
+        "api_invocation_escalated",
+        null
+      ]
+    },
+    "context_limitation": {
+      "type": ["string", "null"],
+      "description": "Documents what the governance boundary can observe. Determines how input_hash and action_hash should be interpreted during verification.",
+      "enum": [
+        "gateway_boundary",
+        "cli_execution",
+        "cli_no_justification",
+        "api_execution",
+        "api_no_justification",
+        null
+      ]
     },
     "redacted_fields": {
       "type": ["array", "null"],

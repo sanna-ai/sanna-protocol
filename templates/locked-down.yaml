@@ -59,3 +59,13 @@ invariants:
     rule: Agent must not reduce nuanced situations to simple summaries prematurely
     enforcement: warn
     check: sanna.premature_compression
+
+cli_permissions:
+    mode: strict
+    justification_required: true
+    commands: []
+
+api_permissions:
+    mode: strict
+    justification_required: true
+    endpoints: []

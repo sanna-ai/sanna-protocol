@@ -64,3 +64,43 @@ invariants:
     rule: Agent must not express certainty beyond what evidence supports
     enforcement: warn
     check: sanna.false_certainty
+
+cli_permissions:
+    mode: permissive
+    justification_required: false
+    commands:
+        - id: cli-001
+          binary: git
+          authority: can_execute
+          description: "Git operations"
+        - id: cli-002
+          binary: npm
+          authority: can_execute
+          description: "NPM package management"
+        - id: cli-003
+          binary: node
+          authority: can_execute
+          description: "Node.js execution"
+        - id: cli-004
+          binary: python
+          authority: can_execute
+          description: "Python execution"
+        - id: cli-005
+          binary: docker
+          authority: must_escalate
+          description: "Docker requires approval"
+
+api_permissions:
+    mode: permissive
+    justification_required: false
+    endpoints:
+        - id: api-001
+          url_pattern: "https://api.github.com/*"
+          methods: ["*"]
+          authority: can_execute
+          description: "GitHub API"
+        - id: api-002
+          url_pattern: "https://registry.npmjs.org/*"
+          methods: [GET]
+          authority: can_execute
+          description: "NPM registry reads"

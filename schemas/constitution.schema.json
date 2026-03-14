@@ -248,6 +248,126 @@
       },
       "additionalProperties": false
     },
+    "cli_permissions": {
+      "type": "object",
+      "description": "CLI subprocess governance rules. Controls which binaries an agent may execute.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["strict", "permissive"],
+          "description": "strict: unlisted binaries are denied (fail-closed). permissive: unlisted binaries are allowed with audit receipt.",
+          "default": "strict"
+        },
+        "justification_required": {
+          "type": "boolean",
+          "description": "Whether a justification string is required for CLI invocations.",
+          "default": true
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "binary", "authority"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique rule identifier (e.g., cli-001)",
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "binary": {
+                "type": "string",
+                "description": "Binary name to match. No path separators or wildcards.",
+                "pattern": "^[^/\\\\*?]+$"
+              },
+              "argv_pattern": {
+                "type": "string",
+                "description": "Glob pattern for argument vector. '*' matches everything.",
+                "default": "*"
+              },
+              "authority": {
+                "type": "string",
+                "enum": ["can_execute", "must_escalate", "cannot_execute"]
+              },
+              "description": { "type": "string" },
+              "escalation_target": {
+                "type": "string",
+                "description": "Named escalation target (for must_escalate rules)"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "invariants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "description", "verdict"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" },
+              "description": { "type": "string" },
+              "pattern": { "type": "string", "description": "Regex pattern to match against command + args" },
+              "condition": { "type": "string", "description": "Named condition for complex rules" },
+              "verdict": { "type": "string", "enum": ["halt", "warn"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "api_permissions": {
+      "type": "object",
+      "description": "HTTP/API governance rules. Controls which URLs and methods an agent may call.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["strict", "permissive"],
+          "description": "strict: unmatched URLs are denied. permissive: unmatched URLs are allowed with audit receipt.",
+          "default": "strict"
+        },
+        "justification_required": {
+          "type": "boolean",
+          "description": "Whether a justification string is required for API invocations.",
+          "default": true
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "url_pattern", "authority"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" },
+              "url_pattern": { "type": "string", "description": "URL glob pattern. * for wildcards. First match wins." },
+              "methods": {
+                "type": "array",
+                "items": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "*"] },
+                "description": "HTTP methods this rule applies to.",
+                "default": ["*"]
+              },
+              "authority": { "type": "string", "enum": ["can_execute", "must_escalate", "cannot_execute"] },
+              "description": { "type": "string" },
+              "escalation_target": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "invariants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "description", "verdict"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" },
+              "description": { "type": "string" },
+              "pattern": { "type": "string", "description": "Regex pattern to match against URL" },
+              "verdict": { "type": "string", "enum": ["halt", "warn"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "policy_hash": {
       "type": ["string", "null"],
       "description": "SHA-256 hash of canonical constitution content (set by sanna-sign-constitution or sanna-hash-constitution)",
