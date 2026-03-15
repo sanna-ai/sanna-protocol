@@ -55,11 +55,65 @@ const _require = createRequire(typeof import.meta?.url === "string" ? import.met
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function parseBinary(command: string): { binary: string; argv: string[] } {
-  const parts = command.split(/\s+/).filter(Boolean);
-  const binary = path.basename(parts[0] ?? "");
-  const argv = parts.slice(1);
-  return { binary, argv };
+const SHELL_OPERATORS = /[;|&`]|\$\(/;
+
+function parseBinary(command: string): { binary: string; argv: string[]; hasShellOperators: boolean } {
+  const hasShellOperators = SHELL_OPERATORS.test(command);
+
+  // Handle basic quoting (no shlex in Node, manual implementation)
+  const parts = command.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
+  const cleaned = parts.map(p => p.replace(/^["']|["']$/g, ""));
+
+  return {
+    binary: path.basename(cleaned[0] ?? ""),
+    argv: cleaned.slice(1),
+    hasShellOperators,
+  };
+}
+
+/**
+ * Evaluate a shell pipeline/chain: split on shell operators and check each
+ * sub-command independently. If ANY sub-command is halted, block the entire command.
+ */
+function extractSubCommands(command: string): string[] {
+  // Split on pipeline/chain operators
+  const mainParts = command.split(/\s*(?:;|&&|\|\||\|)\s*/).filter(Boolean);
+
+  // Also extract commands from backtick subshells: `cmd`
+  const backtickMatches = command.match(/`([^`]+)`/g) ?? [];
+  const backtickCmds = backtickMatches.map(m => m.slice(1, -1).trim());
+
+  // Also extract commands from $(...) subshells
+  const dollarParenMatches = command.match(/\$\(([^)]+)\)/g) ?? [];
+  const dollarCmds = dollarParenMatches.map(m => m.slice(2, -1).trim());
+
+  return [...mainParts, ...backtickCmds, ...dollarCmds];
+}
+
+function evaluateShellPipeline(
+  command: string,
+  constitution: Constitution,
+  mode: string,
+): { blocked: boolean; decision: ReturnType<typeof evaluateCliAuthority>; blockedBinary?: string } {
+  const subCommands = extractSubCommands(command);
+
+  for (const subCmd of subCommands) {
+    const { binary, argv } = parseBinary(subCmd);
+    if (!binary) continue;
+
+    const decision = evaluateCliAuthority(binary, argv, constitution);
+    if (decision.decision === "halt") {
+      return { blocked: true, decision, blockedBinary: binary };
+    }
+    if (decision.decision === "escalate" && mode === "enforce") {
+      return { blocked: true, decision, blockedBinary: binary };
+    }
+  }
+
+  return {
+    blocked: false,
+    decision: { decision: "allow", reason: "All commands in pipeline allowed", rule_id: undefined },
+  };
 }
 
 function makeEnoentError(binary: string): NodeJS.ErrnoException {
@@ -183,10 +237,34 @@ function patchedExecSync(command: string | Buffer, options?: Record<string, unkn
   _state.inIntercept = true;
   try {
     const cmdStr = typeof command === "string" ? command : command.toString();
-    const { binary, argv } = parseBinary(cmdStr);
+    const { binary, argv, hasShellOperators } = parseBinary(cmdStr);
     const { justification, cleanOpts } = extractJustification(options);
     const envKeys = getEnvKeys(cleanOpts);
     const cwd = getCwd(cleanOpts);
+
+    // Shell operator detection: evaluate each sub-command independently
+    if (hasShellOperators) {
+      const mode = _state.options?.mode ?? "enforce";
+      const pipeline = evaluateShellPipeline(cmdStr, _state.constitution!, mode);
+      if (pipeline.blocked) {
+        const blockedBin = pipeline.blockedBinary ?? binary;
+        const inputHash = computeInputHash(blockedBin, [], cwd, envKeys);
+        const reasoningHash = justification ? hashContent(justification) : EMPTY_HASH;
+        const actionHash = computeActionHash(null, "", "");
+        emitReceipt({
+          binary: blockedBin, argv: [],
+          inputHash, reasoningHash, actionHash,
+          decision: pipeline.decision.decision,
+          reason: pipeline.decision.reason,
+          ruleId: pipeline.decision.rule_id,
+          contextLimitation: justification ? "cli_execution" : "cli_no_justification",
+          eventType: determineEventType(pipeline.decision.decision),
+          exitCode: null, halted: true,
+        });
+        throw makeEnoentError(blockedBin);
+      }
+    }
+
     const ev = evaluate(binary, argv, justification, cwd, envKeys);
 
     if (!shouldExecute(ev.decision)) {
@@ -282,10 +360,37 @@ function patchedExec(
       callback = maybeCallback as Function | undefined;
     }
 
-    const { binary, argv } = parseBinary(command);
+    const { binary, argv, hasShellOperators } = parseBinary(command);
     const { justification, cleanOpts } = extractJustification(opts);
     const envKeys = getEnvKeys(cleanOpts);
     const cwd = getCwd(cleanOpts);
+
+    // Shell operator detection: evaluate each sub-command independently
+    if (hasShellOperators) {
+      const mode = _state.options?.mode ?? "enforce";
+      const pipeline = evaluateShellPipeline(command, _state.constitution!, mode);
+      if (pipeline.blocked) {
+        const blockedBin = pipeline.blockedBinary ?? binary;
+        const inputHash = computeInputHash(blockedBin, [], cwd, envKeys);
+        const reasoningHash = justification ? hashContent(justification) : EMPTY_HASH;
+        const actionHash = computeActionHash(null, "", "");
+        emitReceipt({
+          binary: blockedBin, argv: [],
+          inputHash, reasoningHash, actionHash,
+          decision: pipeline.decision.decision,
+          reason: pipeline.decision.reason,
+          ruleId: pipeline.decision.rule_id,
+          contextLimitation: justification ? "cli_execution" : "cli_no_justification",
+          eventType: determineEventType(pipeline.decision.decision),
+          exitCode: null, halted: true,
+        });
+        if (callback) {
+          process.nextTick(() => callback!(makeEnoentError(blockedBin), "", ""));
+        }
+        return (_state.originals["spawn"] as Function)("true", [], { stdio: "ignore" });
+      }
+    }
+
     const ev = evaluate(binary, argv, justification, cwd, envKeys);
 
     if (!shouldExecute(ev.decision)) {

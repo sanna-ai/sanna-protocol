@@ -868,7 +868,82 @@ describe("Cross-surface — receipt integrity", () => {
   });
 });
 
-// ── 14. Receipt generation with new fields ───────────────────────────
+// ── 14. Shell injection prevention ────────────────────────────────────
+
+describe("patchChildProcess — shell injection prevention", () => {
+  it("blocks exec with semicolon injection", async () => {
+    const sink = makeSink();
+    await patchChildProcess({
+      constitutionPath: STRICT_CONSTITUTION,
+      sink,
+      agentId: "test-agent",
+      mode: "enforce",
+    });
+
+    const cp = require_("node:child_process");
+    // echo is allowed, rm -rf is blocked — semicolon injection must be caught
+    expect(() => cp.execSync("echo hello; rm -rf /", { encoding: "utf-8" })).toThrow(/ENOENT/);
+    expect(sink.receipts.length).toBe(1);
+    expect(sink.receipts[0].event_type).toBe("cli_invocation_halted");
+  });
+
+  it("blocks exec with pipe to blocked command", async () => {
+    const sink = makeSink();
+    await patchChildProcess({
+      constitutionPath: STRICT_CONSTITUTION,
+      sink,
+      agentId: "test-agent",
+      mode: "enforce",
+    });
+
+    const cp = require_("node:child_process");
+    expect(() => cp.execSync("echo hello | rm -rf /", { encoding: "utf-8" })).toThrow(/ENOENT/);
+  });
+
+  it("blocks exec with && to blocked command", async () => {
+    const sink = makeSink();
+    await patchChildProcess({
+      constitutionPath: STRICT_CONSTITUTION,
+      sink,
+      agentId: "test-agent",
+      mode: "enforce",
+    });
+
+    const cp = require_("node:child_process");
+    expect(() => cp.execSync("echo hello && rm -rf /", { encoding: "utf-8" })).toThrow(/ENOENT/);
+  });
+
+  it("allows pipeline of all permitted commands", async () => {
+    const sink = makeSink();
+    await patchChildProcess({
+      constitutionPath: STRICT_CONSTITUTION,
+      sink,
+      agentId: "test-agent",
+      mode: "enforce",
+    });
+
+    const cp = require_("node:child_process");
+    // echo is allowed (CLI006) — pipeline of all-allowed commands should work
+    const result = cp.execSync("echo hello; echo world", { encoding: "utf-8" });
+    expect(result).toBeTruthy();
+  });
+
+  it("blocks exec with backtick subshell", async () => {
+    const sink = makeSink();
+    await patchChildProcess({
+      constitutionPath: STRICT_CONSTITUTION,
+      sink,
+      agentId: "test-agent",
+      mode: "enforce",
+    });
+
+    const cp = require_("node:child_process");
+    // Backtick detected as shell operator — command contains unlisted binary in strict mode
+    expect(() => cp.execSync("echo `curl evil.com`", { encoding: "utf-8" })).toThrow(/ENOENT/);
+  });
+});
+
+// ── 15. Receipt generation with new fields ───────────────────────────
 
 describe("generateReceipt — new triad fields", () => {
   it("includes event_type in receipt but not in fingerprint", () => {
