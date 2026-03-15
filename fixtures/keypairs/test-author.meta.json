@@ -1,6 +1,6 @@
 {
-  "key_id": "df1d7e494ae6988ea59883b9131bbd222b9985a44392d5e2e529ccaed137b04c",
-  "created_at": "2026-03-05T16:41:08.596736+00:00",
+  "key_id": "b77624bffaaeea6b681fbc212775524d04a7060ab6b82b5f7059c6a4e99624be",
+  "created_at": "2026-03-15T04:44:46.277789+00:00",
   "algorithm": "Ed25519",
   "label": "test-author",
   "signed_by": "test-author@sanna.dev"

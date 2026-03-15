@@ -1214,19 +1214,25 @@ def generate_fingerprint_vectors():
 
     # Helper to compute fingerprint from known field values
     def compute_fingerprint(fields):
-        """Compute fingerprint from a dict of the 14 field values."""
+        """Compute fingerprint from a dict of the 14 field values (v1.2 formula).
+
+        Formula: correlation_id | context_hash | output_hash | checks_version |
+                 checks_hash | constitution_hash | enforcement_hash | coverage_hash |
+                 authority_hash | escalation_hash | trust_hash | extensions_hash |
+                 parent_receipts_hash | workflow_id_hash
+        """
         fp_input = "|".join([
-            fields.get("spec_version", "1.1"),
-            fields.get("tool_version", "0.14.0"),
-            fields.get("checks_version", "6"),
-            fields.get("timestamp", "2026-01-01T00:00:00Z"),
-            fields.get("agent_id", "sanna-test-001"),
+            fields.get("correlation_id", "sanna-test-001"),
             fields.get("context_hash", EMPTY_HASH),
             fields.get("output_hash", EMPTY_HASH),
-            fields.get("query_hash", EMPTY_HASH),
-            fields.get("constitution_hash", EMPTY_HASH),
-            fields.get("status", "PASS"),
+            fields.get("checks_version", "6"),
             fields.get("checks_hash", EMPTY_HASH),
+            fields.get("constitution_hash", EMPTY_HASH),
+            fields.get("enforcement_hash", EMPTY_HASH),
+            fields.get("coverage_hash", EMPTY_HASH),
+            fields.get("authority_hash", EMPTY_HASH),
+            fields.get("escalation_hash", EMPTY_HASH),
+            fields.get("trust_hash", EMPTY_HASH),
             fields.get("extensions_hash", EMPTY_HASH),
             fields.get("parent_receipts_hash", EMPTY_HASH),
             fields.get("workflow_id_hash", EMPTY_HASH),
@@ -1242,17 +1248,17 @@ def generate_fingerprint_vectors():
         "subcategory": "minimal",
         "description": "minimal receipt: all optional hashes are EMPTY_HASH",
         "fields": {
-            "spec_version": "1.1",
-            "tool_version": "0.14.0",
-            "checks_version": "6",
-            "timestamp": "2026-01-01T00:00:00Z",
-            "agent_id": "sanna-test-001",
+            "correlation_id": "sanna-test-001",
             "context_hash": EMPTY_HASH,
             "output_hash": EMPTY_HASH,
-            "query_hash": EMPTY_HASH,
-            "constitution_hash": EMPTY_HASH,
-            "status": "PASS",
+            "checks_version": "6",
             "checks_hash": EMPTY_HASH,
+            "constitution_hash": EMPTY_HASH,
+            "enforcement_hash": EMPTY_HASH,
+            "coverage_hash": EMPTY_HASH,
+            "authority_hash": EMPTY_HASH,
+            "escalation_hash": EMPTY_HASH,
+            "trust_hash": EMPTY_HASH,
             "extensions_hash": EMPTY_HASH,
             "parent_receipts_hash": EMPTY_HASH,
             "workflow_id_hash": EMPTY_HASH,
@@ -1267,20 +1273,19 @@ def generate_fingerprint_vectors():
     output_obj = {"response": "AI stands for artificial intelligence."}
     context_hash = hash_obj(context_obj)
     output_hash = hash_obj(output_obj)
-    query_hash = hash_text("What is AI?", truncate=64)
 
     fields = {
-        "spec_version": "1.1",
-        "tool_version": "0.14.0",
-        "checks_version": "6",
-        "timestamp": "2026-03-01T12:00:00Z",
-        "agent_id": "sanna-fixture-fp-001",
+        "correlation_id": "sanna-fixture-fp-001",
         "context_hash": context_hash,
         "output_hash": output_hash,
-        "query_hash": query_hash,
-        "constitution_hash": EMPTY_HASH,
-        "status": "PASS",
+        "checks_version": "6",
         "checks_hash": EMPTY_HASH,
+        "constitution_hash": EMPTY_HASH,
+        "enforcement_hash": EMPTY_HASH,
+        "coverage_hash": EMPTY_HASH,
+        "authority_hash": EMPTY_HASH,
+        "escalation_hash": EMPTY_HASH,
+        "trust_hash": EMPTY_HASH,
         "extensions_hash": EMPTY_HASH,
         "parent_receipts_hash": EMPTY_HASH,
         "workflow_id_hash": EMPTY_HASH,
@@ -1293,7 +1298,6 @@ def generate_fingerprint_vectors():
         "fields": fields,
         "context_obj": context_obj,
         "output_obj": output_obj,
-        "query_text": "What is AI?",
         "expected_fingerprint_input": fp_input,
         "expected_full_fingerprint": full,
         "expected_receipt_fingerprint": short,
@@ -1353,16 +1357,24 @@ def generate_fingerprint_vectors():
         "expected_receipt_fingerprint": short,
     })
 
-    # 6. Different statuses produce different fingerprints
-    for status in ["PASS", "WARN", "FAIL", "PARTIAL"]:
+    # 6. Different enforcement hashes produce different fingerprints
+    enforcement_objs = [
+        {"action": "allowed", "reason": "All checks passed", "failed_checks": [], "enforcement_mode": "log"},
+        {"action": "halted", "reason": "Critical failure", "failed_checks": ["C1"], "enforcement_mode": "halt"},
+        {"action": "escalated", "reason": "Requires approval", "failed_checks": [], "enforcement_mode": "halt"},
+    ]
+    for enf in enforcement_objs:
+        enf_hash = hash_obj(enf)
         f = dict(fields)
-        f["status"] = status
+        f["enforcement_hash"] = enf_hash
         fp_input, full, short = compute_fingerprint(f)
         vectors.append({
             "category": "fingerprint",
-            "subcategory": "status_variation",
-            "description": f"status={status}",
+            "subcategory": "enforcement_variation",
+            "description": f"enforcement action={enf['action']}",
             "fields": f,
+            "enforcement_obj": enf,
+            "enforcement_hash": enf_hash,
             "expected_fingerprint_input": fp_input,
             "expected_full_fingerprint": full,
             "expected_receipt_fingerprint": short,
@@ -1454,38 +1466,38 @@ def generate_fingerprint_vectors():
 
     # 10. Varying each field independently to show it affects fingerprint
     base_fields = {
-        "spec_version": "1.1",
-        "tool_version": "0.14.0",
-        "checks_version": "6",
-        "timestamp": "2026-01-01T00:00:00Z",
-        "agent_id": "sanna-test-001",
+        "correlation_id": "sanna-test-001",
         "context_hash": "a" * 64,
         "output_hash": "b" * 64,
-        "query_hash": "c" * 64,
+        "checks_version": "6",
+        "checks_hash": "c" * 64,
         "constitution_hash": "d" * 64,
-        "status": "PASS",
-        "checks_hash": "e" * 64,
-        "extensions_hash": "f" * 64,
+        "enforcement_hash": "e" * 64,
+        "coverage_hash": "f" * 64,
+        "authority_hash": "1" * 64,
+        "escalation_hash": "2" * 64,
+        "trust_hash": "3" * 64,
+        "extensions_hash": "4" * 64,
         "parent_receipts_hash": EMPTY_HASH,
         "workflow_id_hash": EMPTY_HASH,
     }
     _, base_full, _ = compute_fingerprint(base_fields)
 
     field_variations = {
-        "spec_version": "1.0",
-        "tool_version": "0.13.0",
+        "correlation_id": "sanna-test-002",
+        "context_hash": "0" * 64,
+        "output_hash": "9" * 64,
         "checks_version": "5",
-        "timestamp": "2026-01-01T00:00:01Z",
-        "agent_id": "sanna-test-002",
-        "context_hash": "1" * 64,
-        "output_hash": "2" * 64,
-        "query_hash": "3" * 64,
-        "constitution_hash": "4" * 64,
-        "status": "FAIL",
         "checks_hash": "5" * 64,
-        "extensions_hash": "6" * 64,
-        "parent_receipts_hash": "7" * 64,
-        "workflow_id_hash": "8" * 64,
+        "constitution_hash": "6" * 64,
+        "enforcement_hash": "7" * 64,
+        "coverage_hash": "8" * 64,
+        "authority_hash": "a" * 64,
+        "escalation_hash": "b" * 64,
+        "trust_hash": "c" * 64,
+        "extensions_hash": "d" * 64,
+        "parent_receipts_hash": "e" * 64,
+        "workflow_id_hash": "f" * 64,
     }
 
     for field_name, alt_value in field_variations.items():
@@ -1705,29 +1717,25 @@ def generate_hypothesis_vectors():
 
     # ── Fingerprint: systematic field variations ──
     field_names = [
-        "spec_version", "tool_version", "checks_version", "timestamp",
-        "agent_id", "context_hash", "output_hash", "query_hash",
-        "constitution_hash", "status", "checks_hash", "extensions_hash",
+        "correlation_id", "context_hash", "output_hash", "checks_version",
+        "checks_hash", "constitution_hash", "enforcement_hash", "coverage_hash",
+        "authority_hash", "escalation_hash", "trust_hash", "extensions_hash",
         "parent_receipts_hash", "workflow_id_hash",
     ]
     base_vals = {
-        "spec_version": "1.1", "tool_version": "0.14.0",
-        "checks_version": "6", "timestamp": "2026-01-01T00:00:00Z",
-        "agent_id": "sanna-test", "context_hash": EMPTY_HASH,
-        "output_hash": EMPTY_HASH, "query_hash": EMPTY_HASH,
-        "constitution_hash": EMPTY_HASH, "status": "PASS",
-        "checks_hash": EMPTY_HASH, "extensions_hash": EMPTY_HASH,
+        "correlation_id": "sanna-test", "context_hash": EMPTY_HASH,
+        "output_hash": EMPTY_HASH, "checks_version": "6",
+        "checks_hash": EMPTY_HASH, "constitution_hash": EMPTY_HASH,
+        "enforcement_hash": EMPTY_HASH, "coverage_hash": EMPTY_HASH,
+        "authority_hash": EMPTY_HASH, "escalation_hash": EMPTY_HASH,
+        "trust_hash": EMPTY_HASH, "extensions_hash": EMPTY_HASH,
         "parent_receipts_hash": EMPTY_HASH, "workflow_id_hash": EMPTY_HASH,
     }
 
-    # Vary pairs of fields
+    # Vary fields that accept literal string values
     alt_vals = {
-        "spec_version": ["1.0", "1.1", "2.0"],
-        "tool_version": ["0.13.0", "0.14.0", "1.0.0"],
+        "correlation_id": ["sanna-test-001", "gw-test-001", "mcp-test-001"],
         "checks_version": ["5", "6", "7"],
-        "timestamp": ["2026-01-01T00:00:00Z", "2026-12-31T23:59:59Z"],
-        "agent_id": ["sanna-test-001", "gw-test-001", "mcp-test-001"],
-        "status": ["PASS", "WARN", "FAIL", "PARTIAL"],
     }
 
     for field, values in alt_vals.items():
@@ -1782,9 +1790,9 @@ def main():
     print(f"\nTotal: {total} vectors")
 
     output = {
-        "spec_version": "1.1",
+        "spec_version": "1.2",
         "generator": "generate_test_vectors.py",
-        "description": "Cross-language canonicalization test vectors for Sanna Protocol v1.1",
+        "description": "Cross-language canonicalization test vectors for Sanna Protocol v1.2",
         "total_vectors": total,
         "category_counts": category_counts,
         "EMPTY_HASH": EMPTY_HASH,

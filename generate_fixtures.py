@@ -289,55 +289,43 @@ def make_trace(correlation_id, query, context, response):
 def receipt_to_dict(r: SannaReceipt) -> dict:
     """Convert SannaReceipt dataclass to a JSON-serializable dict.
 
-    Overrides spec_version to 1.1 and checks_version to 6 for v1.1 receipts.
+    Overrides spec_version to 1.2 and checks_version to 6 for v1.2 receipts.
     """
     from dataclasses import asdict
     d = asdict(r)
     d = {k: v for k, v in d.items() if v is not None}
-    # Override for v1.1 protocol
-    d["spec_version"] = "1.1"
+    # Override for v1.2 protocol
+    d["spec_version"] = "1.2"
     d["checks_version"] = "6"
     return d
 
 
-# ── Fingerprint recomputation (v1.1: 14-field formula) ───────────────
+# ── Fingerprint recomputation (v1.2: 14-field formula) ───────────────
 
 def recompute_fingerprint(receipt_dict):
-    """Recompute fingerprint fields using the v1.1 14-field formula."""
-    # Field 1: spec_version
-    spec_version = receipt_dict["spec_version"]
-    # Field 2: tool_version
-    tool_version = receipt_dict["tool_version"]
-    # Field 3: checks_version
-    checks_version = receipt_dict["checks_version"]
-    # Field 4: timestamp
-    timestamp = receipt_dict["timestamp"]
-    # Field 5: agent_id (correlation_id)
-    agent_id = receipt_dict["correlation_id"]
-    # Field 6: context_hash
+    """Recompute fingerprint fields using the v1.2 14-field formula.
+
+    Formula:
+        correlation_id | context_hash | output_hash | checks_version |
+        checks_hash | constitution_hash | enforcement_hash | coverage_hash |
+        authority_hash | escalation_hash | trust_hash | extensions_hash |
+        parent_receipts_hash | workflow_id_hash
+
+    Fields 1 and 4 are literal strings; all others are 64-hex SHA-256 or EMPTY_HASH.
+    """
+    # Field 1: correlation_id (literal string)
+    correlation_id = receipt_dict["correlation_id"]
+
+    # Field 2: context_hash
     context_hash = receipt_dict["context_hash"]
-    # Field 7: output_hash
+
+    # Field 3: output_hash
     output_hash = receipt_dict["output_hash"]
 
-    # Field 8: query_hash — SHA-256 of inputs.query or EMPTY_HASH
-    query = receipt_dict.get("inputs", {}).get("query")
-    if query is not None:
-        query_hash = hash_text(query, truncate=64)
-    else:
-        query_hash = EMPTY_HASH
+    # Field 4: checks_version (literal string)
+    checks_version = receipt_dict["checks_version"]
 
-    # Field 9: constitution_hash
-    const_ref = receipt_dict.get("constitution_ref")
-    if const_ref:
-        stripped = {k: v for k, v in const_ref.items() if k != "constitution_approval"}
-        constitution_hash = hash_obj(stripped)
-    else:
-        constitution_hash = EMPTY_HASH
-
-    # Field 10: status
-    status = receipt_dict["status"]
-
-    # Field 11: checks_hash
+    # Field 5: checks_hash
     checks = receipt_dict.get("checks", [])
     has_enforcement_fields = any(c.get("triggered_by") is not None for c in checks)
     checks_data = []
@@ -363,18 +351,46 @@ def recompute_fingerprint(receipt_dict):
         checks_data.append(check_entry)
     checks_hash = hash_obj(checks_data) if checks_data else EMPTY_HASH
 
+    # Field 6: constitution_hash
+    const_ref = receipt_dict.get("constitution_ref")
+    if const_ref:
+        stripped = {k: v for k, v in const_ref.items() if k != "constitution_approval"}
+        constitution_hash = hash_obj(stripped)
+    else:
+        constitution_hash = EMPTY_HASH
+
+    # Field 7: enforcement_hash
+    enforcement = receipt_dict.get("enforcement")
+    enforcement_hash = hash_obj(enforcement) if enforcement else EMPTY_HASH
+
+    # Field 8: coverage_hash
+    coverage = receipt_dict.get("evaluation_coverage")
+    coverage_hash = hash_obj(coverage) if coverage else EMPTY_HASH
+
+    # Field 9: authority_hash
+    authority = receipt_dict.get("authority_decisions")
+    authority_hash = hash_obj(authority) if authority else EMPTY_HASH
+
+    # Field 10: escalation_hash
+    escalation = receipt_dict.get("escalation_events")
+    escalation_hash = hash_obj(escalation) if escalation else EMPTY_HASH
+
+    # Field 11: trust_hash
+    trust = receipt_dict.get("source_trust_evaluations")
+    trust_hash = hash_obj(trust) if trust else EMPTY_HASH
+
     # Field 12: extensions_hash
     extensions = receipt_dict.get("extensions")
     extensions_hash = hash_obj(extensions) if extensions else EMPTY_HASH
 
-    # Field 13: parent_receipts_hash (NEW in v1.1)
+    # Field 13: parent_receipts_hash
     parent_receipts = receipt_dict.get("parent_receipts")
     if parent_receipts is not None:
         parent_receipts_hash = hash_obj(parent_receipts)
     else:
         parent_receipts_hash = EMPTY_HASH
 
-    # Field 14: workflow_id_hash (NEW in v1.1)
+    # Field 14: workflow_id_hash
     workflow_id = receipt_dict.get("workflow_id")
     if workflow_id is not None:
         workflow_id_hash = hash_text(workflow_id, truncate=64)
@@ -382,20 +398,20 @@ def recompute_fingerprint(receipt_dict):
         workflow_id_hash = EMPTY_HASH
 
     fingerprint_input = "|".join([
-        spec_version,          # 1
-        tool_version,          # 2
-        checks_version,        # 3
-        timestamp,             # 4
-        agent_id,              # 5
-        context_hash,          # 6
-        output_hash,           # 7
-        query_hash,            # 8
-        constitution_hash,     # 9
-        status,                # 10
-        checks_hash,           # 11
-        extensions_hash,       # 12
-        parent_receipts_hash,  # 13
-        workflow_id_hash,      # 14
+        correlation_id,        # 1  — literal string
+        context_hash,          # 2  — hash
+        output_hash,           # 3  — hash
+        checks_version,        # 4  — literal string
+        checks_hash,           # 5  — hash
+        constitution_hash,     # 6  — hash
+        enforcement_hash,      # 7  — hash
+        coverage_hash,         # 8  — hash
+        authority_hash,        # 9  — hash
+        escalation_hash,       # 10 — hash
+        trust_hash,            # 11 — hash
+        extensions_hash,       # 12 — hash
+        parent_receipts_hash,  # 13 — hash
+        workflow_id_hash,      # 14 — hash
     ])
 
     receipt_dict["full_fingerprint"] = hash_text(fingerprint_input, truncate=64)
@@ -611,7 +627,7 @@ def generate_golden_hashes(receipts, key_id):
 
     golden = {
         "generated_with": f"sanna v{TOOL_VERSION}",
-        "spec_version": "1.1",
+        "spec_version": "1.2",
         "checks_version": "6",
         "fingerprint_fields": 14,
         "EMPTY_HASH": EMPTY_HASH,
