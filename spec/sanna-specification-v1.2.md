@@ -51,7 +51,7 @@ Every receipt MUST contain the following fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `spec_version` | string | Specification version (`"1.1"`) |
+| `spec_version` | string | Specification version (`"1.2"`) |
 | `tool_version` | string | Semver of the tool that generated this receipt |
 | `checks_version` | string | Integer string; increment when check semantics change |
 | `receipt_id` | string | UUID v4 (lowercase hex, dashes) |
