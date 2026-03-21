@@ -6,6 +6,7 @@ import {
   signReceipt,
   loadPrivateKey,
 } from "@sanna-ai/core";
+import type { CheckResult } from "@sanna-ai/core";
 
 export async function runGenerate(
   traceFile: string,
@@ -38,7 +39,7 @@ export async function runGenerate(
     correlation_id: correlationId,
     inputs: trace.inputs as Record<string, unknown>,
     outputs: trace.outputs as Record<string, unknown>,
-    checks: checks as any[],
+    checks: checks as CheckResult[],
     status: trace.status as string | undefined,
     constitution_ref: trace.constitution_ref as Record<string, unknown> | undefined,
     enforcement: trace.enforcement as Record<string, unknown> | undefined,
@@ -57,9 +58,9 @@ export async function runGenerate(
     writeFileSync(options.output, JSON.stringify(receipt, null, 2) + "\n");
     console.log(`Receipt written to ${options.output}`);
     console.log();
-    console.log(`  Receipt ID:    ${(receipt as any).receipt_id}`);
-    console.log(`  Fingerprint:   ${(receipt as any).receipt_fingerprint}`);
-    console.log(`  Status:        ${(receipt as any).status}`);
+    console.log(`  Receipt ID:    ${receipt.receipt_id}`);
+    console.log(`  Fingerprint:   ${receipt.receipt_fingerprint}`);
+    console.log(`  Status:        ${receipt.status}`);
     if (options.signingKey) {
       console.log(`  Signed:        yes`);
     }

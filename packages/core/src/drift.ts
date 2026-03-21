@@ -11,6 +11,7 @@ import type {
   AgentDriftSummary,
   DriftReport,
   DriftStatus,
+  ReceiptQueryFilters,
 } from "./types.js";
 
 // ── Pure linear regression helpers ───────────────────────────────────
@@ -121,10 +122,10 @@ export class DriftAnalyzer {
     const now = new Date();
     const since = new Date(now.getTime() - windowDays * 86_400_000);
 
-    const queryFilters: Record<string, unknown> = { since: since.toISOString() };
+    const queryFilters: ReceiptQueryFilters = { since: since.toISOString() };
     if (opts.agentId) queryFilters.agent_id = opts.agentId;
 
-    const receipts = this._store.query(queryFilters as any);
+    const receipts = this._store.query(queryFilters);
 
     // Group by agent
     const agentBuckets = new Map<string, Record<string, unknown>[]>();

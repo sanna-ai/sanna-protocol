@@ -8,6 +8,7 @@ import {
   verifyApproval,
   getKeyId,
 } from "@sanna-ai/core";
+import type { ApprovalRequest } from "@sanna-ai/core";
 import type { KeyObject } from "node:crypto";
 
 interface VerifyResult {
@@ -126,7 +127,7 @@ export async function runVerify(
         const keyMap = new Map<string, KeyObject>();
         keyMap.set(approverKeyId, approverPubKey);
 
-        const approvalResult = verifyApproval(approvalBlock as any, keyMap);
+        const approvalResult = verifyApproval(approvalBlock as ApprovalRequest, keyMap);
         if (approvalResult.valid) {
           result.approval_valid = true;
         } else {

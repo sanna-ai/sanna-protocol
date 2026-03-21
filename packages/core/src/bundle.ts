@@ -25,6 +25,7 @@ import { computeFingerprints } from "./receipt.js";
 import type {
   BundleCheck,
   BundleVerificationResult,
+  Constitution,
   CreateBundleOptions,
 } from "./types.js";
 
@@ -380,14 +381,14 @@ export function verifyBundle(
 
 // ── Internal helpers ─────────────────────────────────────────────────
 
-function loadConstitutionFromText(_text: string) {
-  // Placeholder type — actual implementation uses parseConstitution
-  return null as any;
+function loadConstitutionFromText(_text: string): Constitution | null {
+  // Placeholder — actual implementation uses parseConstitution
+  return null;
 }
 
 function verifyProvenanceChain(
   receipt: Record<string, unknown>,
-  constitution: any,
+  constitution: Constitution,
 ): string[] {
   const errs: string[] = [];
   const constRef = receipt.constitution_ref as Record<string, unknown> | undefined;
