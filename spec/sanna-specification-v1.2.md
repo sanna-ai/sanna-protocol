@@ -1857,3 +1857,134 @@ content (serialized as canonical JSON for signing), while `policy_hash`
 covers the full raw text. These serve complementary purposes:
 `policy_hash` ensures the receipt references a specific file,
 while the signature ensures the file hasn't been tampered with.
+
+## Appendix G: Event Type Naming Convention
+
+This appendix establishes the canonical event type naming convention
+defined by the Sanna Protocol and documents the relationship to
+alternative naming used in cloud backend systems.
+
+### G.1 Canonical Event Type Names
+
+The protocol-canonical event type values are defined in Section 2.15.1.
+All nine values follow the pattern `[surface_]invocation_[outcome]`:
+
+| Canonical event_type | Surface | Outcome |
+|----------------------|---------|---------|
+| `invocation_allowed` | MCP (gateway) | Permitted |
+| `invocation_halted` | MCP (gateway) | Blocked |
+| `invocation_escalated` | MCP (gateway) | Escalated |
+| `cli_invocation_allowed` | CLI | Permitted |
+| `cli_invocation_halted` | CLI | Blocked |
+| `cli_invocation_escalated` | CLI | Escalated |
+| `api_invocation_allowed` | API | Permitted |
+| `api_invocation_halted` | API | Blocked |
+| `api_invocation_escalated` | API | Escalated |
+
+These are the values that MUST appear in the `event_type` field of
+receipt JSON. SDKs MUST emit these values and MUST NOT emit
+alternative naming forms (e.g., `enforcement_allowed`).
+
+### G.2 Cloud-Internal Naming (Non-Canonical)
+
+Cloud backend systems (e.g., the Sanna Cloud ingestion pipeline) MAY
+use an internal event type taxonomy that differs from the canonical
+receipt `event_type` values. This is acceptable because the cloud
+`governance_events.event_type` column is a derived/internal field, not
+a copy of the receipt's `event_type` field.
+
+Known cloud-internal event types at the time of writing:
+
+| Cloud event_type | Derived from | Notes |
+|------------------|--------------|-------|
+| `enforcement_allowed` | `status` = PASS or WARN | Receipt passed governance checks |
+| `enforcement_denied` | `status` = FAIL | Receipt failed governance checks |
+| `enforcement_halted` | `enforcement.halted` = true | Overrides status-based mapping |
+| `enforcement_escalated` | `status` = PARTIAL | Action escalated for approval |
+| `constitution_uploaded` | (cloud-only event) | New constitution created |
+| `constitution_version_created` | (cloud-only event) | New constitution version |
+| `constitution_drift_detected` | (cloud-only event) | Constitution hash mismatch |
+
+**Key differences from canonical naming:**
+
+1. **Prefix:** Cloud uses `enforcement_*`; protocol uses `invocation_*`.
+   The cloud prefix reflects the internal concern (enforcement outcome),
+   while the protocol prefix reflects the external concern (invocation
+   governance).
+
+2. **`enforcement_denied` has no canonical equivalent.** The protocol
+   distinguishes `halted` (blocked) from `escalated` (deferred), but does
+   not define a `denied` outcome. Cloud maps `status=FAIL` to
+   `enforcement_denied`; the corresponding canonical event type would be
+   `*_invocation_halted`.
+
+3. **Cloud derives event type from `status`; SDKs set `event_type`
+   directly.** The cloud ingestion pipeline currently computes its own
+   event type from the receipt's `status` and `enforcement.halted` fields.
+   It does not read the receipt's `event_type` field.
+
+4. **Cloud has event types with no receipt equivalent.** Constitution
+   lifecycle events (`constitution_uploaded`, `constitution_version_created`,
+   `constitution_drift_detected`) are cloud platform events, not receipt
+   events. These have no canonical `event_type` value and do not appear
+   in receipts.
+
+### G.3 Mapping Convention
+
+When cloud systems ingest receipts that include the canonical
+`event_type` field (as multi-surface receipts will), the ingestion
+pipeline SHOULD:
+
+1. **Prefer the receipt's `event_type` field** when present and valid.
+   This is the authoritative governance event type set by the SDK at
+   the point of enforcement.
+
+2. **Fall back to status-based derivation** only when `event_type` is
+   absent or null (e.g., library-generated receipts that predate
+   multi-surface governance).
+
+3. **Store the canonical value** in the `governance_events.event_type`
+   column, OR maintain an explicit mapping table if the cloud-internal
+   taxonomy must be preserved for backward compatibility with existing
+   alert rules and dashboards.
+
+The recommended mapping from canonical to cloud-internal naming:
+
+| Canonical `event_type` | Cloud `event_type` | Cloud `outcome` |
+|------------------------|--------------------|-----------------|
+| `invocation_allowed` | `enforcement_allowed` | `allowed` |
+| `invocation_halted` | `enforcement_halted` | `halted` |
+| `invocation_escalated` | `enforcement_escalated` | `escalated` |
+| `cli_invocation_allowed` | `enforcement_allowed` | `allowed` |
+| `cli_invocation_halted` | `enforcement_halted` | `halted` |
+| `cli_invocation_escalated` | `enforcement_escalated` | `escalated` |
+| `api_invocation_allowed` | `enforcement_allowed` | `allowed` |
+| `api_invocation_halted` | `enforcement_halted` | `halted` |
+| `api_invocation_escalated` | `enforcement_escalated` | `escalated` |
+
+### G.4 Required Cloud Changes (SAN-25)
+
+The following changes are required in the cloud ingestion pipeline to
+support multi-surface receipts:
+
+1. **Read receipt `event_type` field** in `receipt_ingestion.py` and
+   `event_chain.py`. When present, use it as the authoritative event
+   type instead of deriving from `status`.
+
+2. **Add canonical-to-internal mapping** if the cloud retains
+   `enforcement_*` naming. Alternatively, migrate the cloud to canonical
+   `invocation_*` naming (breaking change for alert rules).
+
+3. **Preserve execution surface** in the governance event record.
+   The canonical `event_type` encodes the surface (MCP vs CLI vs API).
+   The cloud's `enforcement_*` naming collapses this distinction.
+   Consider adding a `surface` column or storing the canonical value
+   alongside the internal one.
+
+4. **Deduplicate mapping logic.** The status-to-event_type mapping
+   currently exists in both `event_chain.py` and
+   `receipt_ingestion.py`. Consolidate into a single function.
+
+5. **Validate event_type values.** The `governance_events.event_type`
+   column is an unconstrained TEXT field. Consider adding a CHECK
+   constraint or application-level validation.
