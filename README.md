@@ -4,7 +4,7 @@ Sanna checks reasoning during execution, halts when constraints are violated, an
 
 This is the **TypeScript implementation** of [Sanna Protocol v1.0](https://github.com/sanna-ai/sanna-protocol). For the Python reference implementation, see [sanna-ai/sanna](https://github.com/sanna-ai/sanna).
 
-## v1.0.0 Release Notes
+## v1.1.0 Release Notes
 
 **Receipt Schema v1.1** — 14-field fingerprint (up from 12), adding `parent_receipts` and `workflow_id` for receipt chaining and workflow correlation.
 
@@ -23,7 +23,7 @@ This is the **TypeScript implementation** of [Sanna Protocol v1.0](https://githu
 
 **Content mode attestation** — gateway records which `content_mode` is active and its source in receipt metadata.
 
-**771 tests across 44 files** (up from 653 across 37).
+**926 tests across 48 files** (up from 771 across 44).
 
 ## Quick Start — Library Mode
 
@@ -165,7 +165,7 @@ Every governed action produces a reasoning receipt — a JSON artifact that cryp
 | Field | Type | Description |
 |-------|------|-------------|
 | `spec_version` | string | Schema version, `"1.1"` |
-| `tool_version` | string | Package version, e.g. `"sanna-ts/1.0.0"` |
+| `tool_version` | string | Package version, e.g. `"sanna-ts/1.1.0"` |
 | `checks_version` | string | Check algorithm version, e.g. `"6"` |
 | `receipt_id` | string | UUID v4 unique identifier |
 | `correlation_id` | string | Path-prefixed identifier for grouping related receipts |
@@ -237,7 +237,7 @@ Minimal example receipt (abbreviated — production receipts typically contain 3
 ```json
 {
   "spec_version": "1.1",
-  "tool_version": "sanna-ts/1.0.0",
+  "tool_version": "sanna-ts/1.1.0",
   "checks_version": "6",
   "receipt_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
   "receipt_fingerprint": "7b4d06e836514eef",
@@ -683,7 +683,7 @@ cd sanna-ts
 git submodule update --init        # Pull sanna-protocol spec fixtures
 npm install                        # Workspaces auto-linked
 npm run build                      # Build all 4 packages
-npm test                           # 771 tests across 44 test files
+npm test                           # 926 tests across 48 test files
 ```
 
 The `spec/` git submodule points to [sanna-ai/sanna-protocol](https://github.com/sanna-ai/sanna-protocol) and provides golden fixtures, JSON schemas, and the protocol specification used by the cross-language test suite.

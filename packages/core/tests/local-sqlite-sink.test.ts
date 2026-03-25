@@ -8,7 +8,7 @@ import type { Receipt } from "../src/types.js";
 function makeReceipt(id = "test-001"): Receipt {
   return {
     spec_version: "1.1",
-    tool_version: "sanna-ts/1.0.0",
+    tool_version: "sanna-ts/1.1.0",
     checks_version: "6",
     receipt_id: id,
     receipt_fingerprint: "a".repeat(16),

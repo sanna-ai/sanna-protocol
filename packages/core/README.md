@@ -2,7 +2,7 @@
 
 TypeScript SDK for the [Sanna protocol](https://github.com/sanna-ai/sanna-protocol) — an open AI governance framework that enforces constitutional boundaries on AI agents through cryptographic receipts. Constitutions define what an agent can and cannot do; receipts provide tamper-evident proof that every action was evaluated against those rules.
 
-Implements **Sanna Protocol v1.0**.
+Implements **Sanna Protocol v1.1**.
 
 ## Install
 
@@ -98,9 +98,9 @@ const result = verifyReceipt(receipt as unknown as Record<string, unknown>, auth
 - `generateReceipt(params)` — create a complete receipt with hashes and fingerprints
 - `signReceipt(receipt, privateKey, signedBy)` — Ed25519 sign a receipt
 - `computeFingerprints(receipt)` — compute 16-hex and 64-hex fingerprints
-- `computeFingerprintInput(receipt)` — compute the 12-field pipe-delimited input
-- `SPEC_VERSION` — protocol version (`"1.0"`)
-- `CHECKS_VERSION` — checks schema version (`"5"`)
+- `computeFingerprintInput(receipt)` — compute the 14-field pipe-delimited input
+- `SPEC_VERSION` — protocol version (`"1.1"`)
+- `CHECKS_VERSION` — checks schema version (`"6"`)
 
 ### Verifier
 

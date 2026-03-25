@@ -1,6 +1,6 @@
 # CLAUDE.md — sanna-ts
 
-TypeScript monorepo for the Sanna protocol. AGPL-3.0. All packages at v1.0.0.
+TypeScript monorepo for the Sanna protocol. AGPL-3.0. Core at v1.1.0, other packages at v1.0.2.
 
 ## MANDATORY: Process & Branching Rules
 
@@ -25,7 +25,7 @@ TypeScript monorepo for the Sanna protocol. AGPL-3.0. All packages at v1.0.0.
 
 - npm install (from root, workspaces auto-linked)
 - npm run build (tsup, builds all 4 packages)
-- npm test (vitest, 771 tests across 44 files)
+- npm test (vitest, 926 tests across 48 files)
 
 ## Packages
 
@@ -127,7 +127,7 @@ New receipt fields (v1.1):
 - content_mode: 'full' | 'redacted' | 'hashes_only' | null — metadata only, NOT in fingerprint
 - content_mode_source: string | null — provenance of mode selection, NOT in fingerprint
 
-SPEC_VERSION = "1.1", CHECKS_VERSION = "6", tool_version = "sanna-ts/1.0.0"
+SPEC_VERSION = "1.1", CHECKS_VERSION = "6", tool_version = "sanna-ts/1.1.0"
 
 ## ReceiptSink Architecture
 

@@ -90,7 +90,7 @@ export function createBundle(opts: CreateBundleOptions): string {
   const metadata: Record<string, unknown> = {
     bundle_format_version: BUNDLE_FORMAT_VERSION,
     created_at: new Date().toISOString(),
-    tool_version: "sanna-ts/1.0.0",
+    tool_version: "sanna-ts/1.1.0",
     description: description ?? "",
   };
 

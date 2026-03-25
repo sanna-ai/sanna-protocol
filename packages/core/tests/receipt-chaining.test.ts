@@ -188,10 +188,10 @@ describe("CHECKS_VERSION is 6", () => {
   });
 });
 
-describe("tool_version defaults to sanna-ts/1.0.0", () => {
+describe("tool_version defaults to sanna-ts/1.1.0", () => {
   it("uses default tool_version when none provided", () => {
     const receipt = generateReceipt({ ...baseParams() });
-    expect(receipt.tool_version).toBe("sanna-ts/1.0.0");
+    expect(receipt.tool_version).toBe("sanna-ts/1.1.0");
   });
 });
 

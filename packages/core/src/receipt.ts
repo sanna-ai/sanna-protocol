@@ -294,7 +294,7 @@ export function generateReceipt(params: ReceiptParams): Receipt {
 
   const receiptBase: Record<string, unknown> = {
     spec_version: SPEC_VERSION,
-    tool_version: params.tool_version ?? "sanna-ts/1.0.0",
+    tool_version: params.tool_version ?? "sanna-ts/1.1.0",
     checks_version: CHECKS_VERSION,
     receipt_id: randomUUID(),
     correlation_id: params.correlation_id,
