@@ -8,6 +8,7 @@
 
 import { createRequire } from "node:module";
 import { randomUUID } from "node:crypto";
+import { resolve4, resolve6 } from "node:dns/promises";
 
 import type { ReceiptSink, Constitution } from "../types.js";
 import { hashObj, hashContent, hashBytes, EMPTY_HASH } from "../hashing.js";
@@ -60,6 +61,133 @@ const DEFAULT_EXCLUDES = [
   "https://*.sanna.cloud/*",
 ];
 
+// ── SSRF Protection ─────────────────────────────────────────────────
+
+const PRIVATE_IPV4_RANGES: Array<{ addr: number; mask: number }> = [
+  { addr: 0x7f000000, mask: 0xff000000 }, // 127.0.0.0/8
+  { addr: 0x0a000000, mask: 0xff000000 }, // 10.0.0.0/8
+  { addr: 0xac100000, mask: 0xfff00000 }, // 172.16.0.0/12
+  { addr: 0xc0a80000, mask: 0xffff0000 }, // 192.168.0.0/16
+  { addr: 0xa9fe0000, mask: 0xffff0000 }, // 169.254.0.0/16
+  { addr: 0x00000000, mask: 0xff000000 }, // 0.0.0.0/8
+];
+
+function parseIpv4(ip: string): number | null {
+  if (!ip) return null;
+  // Handle octal (0177.0.0.1) and decimal (2130706433) notation
+  const parts = ip.split(".");
+  if (parts.length === 1) {
+    // Decimal notation: e.g. "2130706433" → 127.0.0.1
+    if (!/^\d+$/.test(parts[0])) return null;
+    const n = Number(parts[0]);
+    if (!Number.isInteger(n) || n < 0 || n > 0xffffffff) return null;
+    return n >>> 0;
+  }
+  if (parts.length !== 4) return null;
+  let result = 0;
+  for (const part of parts) {
+    if (part === "") return null;
+    // Parse octal (leading 0) or decimal
+    const n = part.startsWith("0") && part.length > 1 ? parseInt(part, 8) : parseInt(part, 10);
+    if (!Number.isInteger(n) || n < 0 || n > 255) return null;
+    result = (result << 8) | n;
+  }
+  return result >>> 0;
+}
+
+function isPrivateIpv4(ip: string): boolean {
+  const num = parseIpv4(ip);
+  if (num === null) return false;
+  // >>> 0 ensures unsigned comparison (JS bitwise ops return signed 32-bit)
+  return PRIVATE_IPV4_RANGES.some(({ addr, mask }) => ((num & mask) >>> 0) === addr);
+}
+
+function isPrivateIpv6(ip: string): boolean {
+  const normalized = ip.toLowerCase();
+  if (normalized === "::1") return true;
+  // fc00::/7 (unique local)
+  if (/^f[cd]/i.test(normalized)) return true;
+  // fe80::/10 (link-local)
+  if (/^fe[89ab]/i.test(normalized)) return true;
+  // IPv4-mapped IPv6: ::ffff:x.x.x.x (dotted notation)
+  const mapped = normalized.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (mapped) return isPrivateIpv4(mapped[1]);
+  // IPv4-mapped IPv6: ::ffff:HHHH:HHHH (hex notation, as URL constructor normalizes)
+  const mappedHex = normalized.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (mappedHex) {
+    const hi = parseInt(mappedHex[1], 16);
+    const lo = parseInt(mappedHex[2], 16);
+    const ipv4 = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+    return isPrivateIpv4(ipv4);
+  }
+  // IPv4-compatible IPv6: ::x.x.x.x
+  const compat = normalized.match(/^::(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (compat) return isPrivateIpv4(compat[1]);
+  return false;
+}
+
+export function isPrivateIp(ip: string): boolean {
+  return isPrivateIpv4(ip) || isPrivateIpv6(ip);
+}
+
+function normalizeUrlForMatching(url: string): string {
+  try {
+    const parsed = new URL(url);
+    // Decode + lowercase hostname handles punycode/unicode normalization
+    // URL constructor already converts unicode hostnames to punycode
+    parsed.hostname = parsed.hostname.toLowerCase();
+    // Decode percent-encoding in path for consistent matching
+    parsed.pathname = decodeURIComponent(parsed.pathname);
+    return parsed.toString();
+  } catch {
+    // If URL parsing fails, lowercase the whole thing as fallback
+    return url.toLowerCase();
+  }
+}
+
+async function resolveHostIps(hostname: string): Promise<string[]> {
+  const ips: string[] = [];
+  try {
+    ips.push(...(await resolve4(hostname)));
+  } catch { /* no A records */ }
+  try {
+    ips.push(...(await resolve6(hostname)));
+  } catch { /* no AAAA records */ }
+  return ips;
+}
+
+async function validateNotPrivateHost(url: string): Promise<void> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return; // Not a valid URL — let the actual request fail
+  }
+
+  const hostname = parsed.hostname;
+
+  // Check if hostname is an IP literal
+  // Strip brackets for IPv6 literals like [::1]
+  const bare = hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
+
+  if (isPrivateIp(bare)) {
+    throw new TypeError(`fetch failed: request to private IP ${bare} blocked (SSRF protection)`);
+  }
+
+  // DNS resolution check — resolve hostname and verify no private IPs
+  if (!bare.match(/^[\d.]+$/) && !bare.includes(":")) {
+    // It's a hostname, not an IP literal — resolve it
+    const ips = await resolveHostIps(bare);
+    for (const ip of ips) {
+      if (isPrivateIp(ip)) {
+        throw new TypeError(`fetch failed: hostname ${hostname} resolves to private IP ${ip} (SSRF protection)`);
+      }
+    }
+  }
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function globMatch(str: string, pattern: string): boolean {
@@ -75,7 +203,10 @@ function globMatch(str: string, pattern: string): boolean {
 }
 
 function isExcluded(url: string): boolean {
-  return _state.excludePatterns.some((pattern) => globMatch(url, pattern));
+  const normalized = normalizeUrlForMatching(url);
+  return _state.excludePatterns.some(
+    (pattern) => globMatch(normalized, pattern) || globMatch(url, pattern),
+  );
 }
 
 function extractUrl(input: string | URL | Request): string {
@@ -198,6 +329,9 @@ async function patchedFetch(input: string | URL | Request, init?: RequestInit): 
   if (isExcluded(url)) {
     return (_state.originals["fetch"] as typeof globalThis.fetch)(input, init);
   }
+
+  // SSRF validation — must happen before any request is made
+  await validateNotPrivateHost(url);
 
   _state.inIntercept = true;
   try {
@@ -329,6 +463,23 @@ function createPatchedHttpRequest(protocol: string, originalKey: string): Functi
     const url = buildUrlFromHttpArgs(args, protocol);
     if (isExcluded(url)) {
       return (_state.originals[originalKey] as Function).apply(this, args);
+    }
+
+    // SSRF validation — synchronous check for IP literals
+    {
+      let parsed: URL | null = null;
+      try { parsed = new URL(url); } catch { /* let it fail later */ }
+      if (parsed) {
+        const hostname = parsed.hostname;
+        const bare = hostname.startsWith("[") && hostname.endsWith("]")
+          ? hostname.slice(1, -1)
+          : hostname;
+        if (isPrivateIp(bare)) {
+          const err = new Error(`connect ECONNREFUSED ${url}: request to private IP ${bare} blocked (SSRF protection)`) as NodeJS.ErrnoException;
+          err.code = "ECONNREFUSED";
+          throw err;
+        }
+      }
     }
 
     _state.inIntercept = true;
