@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   loadConstitution,
+  parseConstitution,
   verifyConstitutionSignature,
   computeFileContentHash,
   validateConstitutionData,
@@ -189,5 +190,104 @@ describe("validateConstitutionData", () => {
     };
     const errors = validateConstitutionData(data);
     expect(errors.some((e) => e.includes("Duplicate boundary ID"))).toBe(true);
+  });
+});
+
+describe("prototype pollution protection", () => {
+  const validData = {
+    identity: { agent_name: "test", domain: "test" },
+    provenance: {
+      authored_by: "x@test.com",
+      approved_by: ["x@test.com"],
+      approval_date: "2026-01-01",
+      approval_method: "manual",
+    },
+    boundaries: [
+      { id: "B001", description: "Test", category: "scope", severity: "high" },
+    ],
+  };
+
+  it("filters __proto__ from identity extensions", () => {
+    const data = {
+      ...validData,
+      identity: {
+        ...validData.identity,
+        __proto__: { polluted: true },
+        custom_field: "safe",
+      },
+    };
+    // Reconstruct with explicit key to bypass JS __proto__ handling
+    const identity: Record<string, unknown> = {
+      agent_name: "test",
+      domain: "test",
+      custom_field: "safe",
+    };
+    Object.defineProperty(identity, "__proto__", {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+    const dataWithProto = { ...validData, identity };
+
+    const pristine = ({} as Record<string, unknown>).polluted;
+    const c = parseConstitution(dataWithProto);
+    expect(({} as Record<string, unknown>).polluted).toBe(pristine);
+    expect(c.identity.extensions).not.toHaveProperty("__proto__");
+    expect(c.identity.extensions.custom_field).toBe("safe");
+  });
+
+  it("filters constructor from identity extensions", () => {
+    const identity: Record<string, unknown> = {
+      agent_name: "test",
+      domain: "test",
+      constructor: { malicious: true },
+      custom_field: "safe",
+    };
+    const data = { ...validData, identity };
+    const c = parseConstitution(data);
+    expect(c.identity.extensions).not.toHaveProperty("constructor");
+    expect(c.identity.extensions.custom_field).toBe("safe");
+  });
+
+  it("filters prototype from identity extensions", () => {
+    const identity: Record<string, unknown> = {
+      agent_name: "test",
+      domain: "test",
+      prototype: { malicious: true },
+    };
+    const data = { ...validData, identity };
+    const c = parseConstitution(data);
+    expect(c.identity.extensions).not.toHaveProperty("prototype");
+  });
+
+  it("filters keys starting with double underscore", () => {
+    const identity: Record<string, unknown> = {
+      agent_name: "test",
+      domain: "test",
+      __internal: "bad",
+      __defineGetter__: "bad",
+      custom_field: "safe",
+    };
+    const data = { ...validData, identity };
+    const c = parseConstitution(data);
+    expect(Object.prototype.hasOwnProperty.call(c.identity.extensions, "__internal")).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(c.identity.extensions, "__defineGetter__")).toBe(false);
+    expect(c.identity.extensions.custom_field).toBe("safe");
+  });
+
+  it("preserves normal identity extensions", () => {
+    const identity: Record<string, unknown> = {
+      agent_name: "test",
+      domain: "test",
+      version: "2.0",
+      org: "acme",
+      tags: ["a", "b"],
+    };
+    const data = { ...validData, identity };
+    const c = parseConstitution(data);
+    expect(c.identity.extensions.version).toBe("2.0");
+    expect(c.identity.extensions.org).toBe("acme");
+    expect(c.identity.extensions.tags).toEqual(["a", "b"]);
   });
 });

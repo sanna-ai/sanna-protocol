@@ -45,6 +45,11 @@ const BOUNDARY_ID_RE = /^B\d{3}$/;
 const HALT_ID_RE = /^H\d{3}$/;
 const ISO8601_RE = /^\d{4}-\d{2}-\d{2}/;
 
+const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+function isDangerousKey(key: string): boolean {
+  return DANGEROUS_KEYS.has(key) || key.startsWith("__");
+}
+
 // ── Validation ───────────────────────────────────────────────────────
 
 export function validateConstitutionData(data: Record<string, unknown>): string[] {
@@ -357,7 +362,7 @@ export function parseConstitution(data: Record<string, unknown>): Constitution {
   const knownIdentityKeys = new Set(["agent_name", "domain", "description", "identity_claims"]);
   const extensions: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(identityData)) {
-    if (!knownIdentityKeys.has(k)) extensions[k] = v;
+    if (!knownIdentityKeys.has(k) && !isDangerousKey(k)) extensions[k] = v;
   }
   const identity: AgentIdentity = {
     agent_name: String(identityData.agent_name),
@@ -621,7 +626,9 @@ function constitutionToSignableDict(c: Constitution): Record<string, unknown> {
     description: c.identity.description,
   };
   if (c.identity.extensions) {
-    Object.assign(identityDict, c.identity.extensions);
+    for (const [k, v] of Object.entries(c.identity.extensions)) {
+      if (!isDangerousKey(k)) identityDict[k] = v;
+    }
   }
 
   const result: Record<string, unknown> = {
