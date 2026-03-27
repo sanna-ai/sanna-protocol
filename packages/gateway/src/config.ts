@@ -66,6 +66,21 @@ export interface GatewayConfig {
   };
 }
 
+// ── Dangerous env var denylist ───────────────────────────────────────
+
+const DANGEROUS_ENV_VARS = new Set([
+  "LD_PRELOAD", "LD_LIBRARY_PATH",
+  "DYLD_INSERT_LIBRARIES", "DYLD_LIBRARY_PATH",
+  "NODE_OPTIONS", "NODE_DEBUG",
+  "ELECTRON_RUN_AS_NODE",
+  "PATH",
+  "PYTHONPATH", "RUBYLIB", "PERL5LIB", "CLASSPATH",
+]);
+
+export function isDangerousEnvVar(key: string): boolean {
+  return DANGEROUS_ENV_VARS.has(key.toUpperCase());
+}
+
 // ── Validation ───────────────────────────────────────────────────────
 
 export class GatewayConfigError extends Error {
@@ -314,11 +329,15 @@ export function loadGatewayConfig(configPath: string): GatewayConfig {
     const d = ds as Record<string, unknown>;
     const args = Array.isArray(d.args) ? d.args.map(String) : [];
 
-    // Parse env with interpolation
+    // Parse env with interpolation, filtering dangerous vars
     let env: Record<string, string> | undefined;
     if (d.env && typeof d.env === "object") {
       env = {};
       for (const [key, val] of Object.entries(d.env as Record<string, unknown>)) {
+        if (isDangerousEnvVar(key)) {
+          console.warn(`[sanna-gateway] WARNING: dangerous env var "${key}" in downstreams[${i}].env — skipped`);
+          continue;
+        }
         env[key] = String(val);
       }
     }
