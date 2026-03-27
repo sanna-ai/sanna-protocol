@@ -8,6 +8,7 @@ import {
   validateGatewayConfig,
   resolveToolPolicy,
   resolveEnvVar,
+  isDangerousEnvVar,
   GatewayConfigError,
 } from "../src/config.js";
 import type { GatewayConfig, DownstreamConfig } from "../src/config.js";
@@ -337,5 +338,67 @@ describe("loadGatewayConfig file permission warning", () => {
     const stderr = chunks.join("");
     expect(stderr).toContain("WARNING");
     expect(stderr).toContain("loose permissions");
+  });
+});
+
+describe("dangerous env var denylist", () => {
+  it("strips denied env vars from downstream config", () => {
+    const path = writeConfig({
+      constitution: "constitution.yaml",
+      downstreams: [{
+        name: "test",
+        command: "echo",
+        env: {
+          SAFE_VAR: "ok",
+          LD_PRELOAD: "/evil.so",
+          NODE_OPTIONS: "--require=/evil.js",
+          DYLD_INSERT_LIBRARIES: "/evil.dylib",
+          CUSTOM_KEY: "fine",
+        },
+      }],
+    });
+    const config = loadGatewayConfig(path);
+    const env = config.downstreams[0].env!;
+    expect(env.SAFE_VAR).toBe("ok");
+    expect(env.CUSTOM_KEY).toBe("fine");
+    expect(env).not.toHaveProperty("LD_PRELOAD");
+    expect(env).not.toHaveProperty("NODE_OPTIONS");
+    expect(env).not.toHaveProperty("DYLD_INSERT_LIBRARIES");
+  });
+
+  it("blocks case-insensitive variants", () => {
+    expect(isDangerousEnvVar("ld_preload")).toBe(true);
+    expect(isDangerousEnvVar("Ld_Preload")).toBe(true);
+    expect(isDangerousEnvVar("NODE_OPTIONS")).toBe(true);
+    expect(isDangerousEnvVar("node_options")).toBe(true);
+    expect(isDangerousEnvVar("Path")).toBe(true);
+  });
+
+  it("allows normal env vars", () => {
+    expect(isDangerousEnvVar("API_KEY")).toBe(false);
+    expect(isDangerousEnvVar("DATABASE_URL")).toBe(false);
+    expect(isDangerousEnvVar("MY_SERVICE_TOKEN")).toBe(false);
+  });
+
+  it("logs a warning when a denied var is found", () => {
+    const warnings: string[] = [];
+    const origWarn = console.warn;
+    console.warn = (...args: unknown[]) => warnings.push(args.join(" "));
+
+    try {
+      const path = writeConfig({
+        constitution: "constitution.yaml",
+        downstreams: [{
+          name: "test",
+          command: "echo",
+          env: { LD_PRELOAD: "/evil.so", SAFE: "ok" },
+        }],
+      });
+      loadGatewayConfig(path);
+    } finally {
+      console.warn = origWarn;
+    }
+
+    expect(warnings.some((w) => w.includes("LD_PRELOAD") && w.includes("skipped"))).toBe(true);
   });
 });

@@ -8,7 +8,7 @@
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import type { DownstreamConfig } from "./config.js";
+import { isDangerousEnvVar, type DownstreamConfig } from "./config.js";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -59,7 +59,7 @@ export class DownstreamConnection {
     const ENV_ALLOWLIST = new Set([
       "PATH", "HOME", "TMPDIR", "TEMP", "TMP",
       "USER", "LOGNAME", "SHELL", "LANG", "LC_ALL",
-      "NODE_ENV", "NODE_OPTIONS",
+      "NODE_ENV",
       "TERM", "COLORTERM",
     ]);
     const baseEnv: Record<string, string> = {};
@@ -68,9 +68,19 @@ export class DownstreamConnection {
         baseEnv[key] = process.env[key]!;
       }
     }
+    // Defense-in-depth: filter dangerous vars from config env even if
+    // config.ts already strips them (e.g. programmatic DownstreamConfig).
+    const configEnv: Record<string, string> = {};
+    if (this._config.env) {
+      for (const [key, val] of Object.entries(this._config.env)) {
+        if (!isDangerousEnvVar(key)) {
+          configEnv[key] = val;
+        }
+      }
+    }
     const env: Record<string, string> = {
       ...baseEnv,
-      ...(this._config.env ?? {}),
+      ...configEnv,
     };
 
     this._transport = new StdioClientTransport({
