@@ -1,0 +1,5 @@
+Contact: mailto:security@sanna.dev
+Expires: 2027-03-31T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://sanna.dev/.well-known/security.txt
+Policy: https://github.com/sanna-ai/sanna-protocol/blob/main/SECURITY.md
