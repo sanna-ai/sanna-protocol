@@ -182,9 +182,9 @@ describe("SPEC_VERSION is 1.1", () => {
   });
 });
 
-describe("CHECKS_VERSION is 6", () => {
-  it("equals '6'", () => {
-    expect(CHECKS_VERSION).toBe("6");
+describe("CHECKS_VERSION is 7", () => {
+  it("equals '7'", () => {
+    expect(CHECKS_VERSION).toBe("7");
   });
 });
 

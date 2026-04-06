@@ -212,7 +212,7 @@ describe("middleware sink integration", () => {
     });
 
     const result = governed({ query: "test" });
-    expect(result.receipt.checks_version).toBe("6");
+    expect(result.receipt.checks_version).toBe("7");
   });
 
   it("sink.store called even on halted receipts", async () => {

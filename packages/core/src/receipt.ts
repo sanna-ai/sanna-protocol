@@ -15,7 +15,7 @@ import type { Receipt, CheckResult, ReceiptSignature, ContentMode } from "./type
 // ── Constants ────────────────────────────────────────────────────────
 
 export const SPEC_VERSION = "1.1";
-export const CHECKS_VERSION = "6";
+export const CHECKS_VERSION = "7"; // SAN-27/SAN-48: match Python empty-checks normalization
 
 // ── Fingerprint computation ──────────────────────────────────────────
 

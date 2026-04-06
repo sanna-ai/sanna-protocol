@@ -852,7 +852,7 @@ describe("Cross-surface — receipt integrity", () => {
     const receipt = sink.receipts[0];
     expect(receipt.receipt_fingerprint).toHaveLength(16);
     expect(receipt.full_fingerprint).toHaveLength(64);
-    expect(receipt.checks_version).toBe("6");
+    expect(receipt.checks_version).toBe("7");
 
     // Verify fingerprint can be recomputed
     const fpInput = computeFingerprintInput(receipt as unknown as Record<string, unknown>);
