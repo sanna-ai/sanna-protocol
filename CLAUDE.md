@@ -127,7 +127,7 @@ New receipt fields (v1.1):
 - content_mode: 'full' | 'redacted' | 'hashes_only' | null — metadata only, NOT in fingerprint
 - content_mode_source: string | null — provenance of mode selection, NOT in fingerprint
 
-SPEC_VERSION = "1.1", CHECKS_VERSION = "6", tool_version = "sanna-ts/1.1.0"
+SPEC_VERSION = "1.1", CHECKS_VERSION = "7", tool_version = "sanna-ts/1.1.0"
 
 ## ReceiptSink Architecture
 
@@ -150,7 +150,7 @@ Gateway: constructor accepts optional ReceiptSink. Legacy receipts.store_path au
 ## Cross-Language Compatibility
 
 - v1.0 Python fixtures use 12-field fingerprint (checks_version "5")
-- v1.1 TypeScript uses 14-field fingerprint (checks_version "6")
+- v1.1 TypeScript uses 14-field fingerprint (checks_version "7")
 - cross-language.test.ts: v1.0 fixtures skip fingerprint recomputation (expected mismatch), still verify signatures and content hashes
 - v1.1 fixtures (when available) will verify full fingerprint + signature + content hashes
 
