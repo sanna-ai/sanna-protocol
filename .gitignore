@@ -1,3 +1,5 @@
 .hypothesis/
 CLAUDE.md
 .DS_Store
+security-audit-*.md
+security-review-*.md
