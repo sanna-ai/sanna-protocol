@@ -11,10 +11,10 @@ provenance:
   approval_method: fixture-generation
   change_history: []
   signature:
-    value: anrr5EVtIQ3l4n7dniy9gTNk4SmiNyFs28rIlQd5LyjFakojWD4K0hN3q9oxY+gWqKJUN8Ekcbt1J0QP7mBnDA==
-    key_id: b77624bffaaeea6b681fbc212775524d04a7060ab6b82b5f7059c6a4e99624be
+    value: MnyAJPrkvOKChgJoCsOhRGU1dICI3HiNeTANbFB1nacXrAObsTgjTO1t4uq6u8w21wjU75+P0L9Z28BmAb6vCw==
+    key_id: fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d
     signed_by: test-author@sanna.dev
-    signed_at: '2026-03-15T04:44:46.445041+00:00'
+    signed_at: '2026-04-19T05:25:17.897381+00:00'
     scheme: constitution_sig_v1
 boundaries:
 - id: B001

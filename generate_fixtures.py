@@ -287,29 +287,32 @@ def make_trace(correlation_id, query, context, response):
 
 
 def receipt_to_dict(r: SannaReceipt) -> dict:
-    """Convert SannaReceipt dataclass to a JSON-serializable dict.
-
-    Overrides spec_version to 1.2 and checks_version to 6 for v1.2 receipts.
-    """
+    """Convert SannaReceipt dataclass to a JSON-serializable dict."""
     from dataclasses import asdict
     d = asdict(r)
     d = {k: v for k, v in d.items() if v is not None}
-    # Override for v1.2 protocol
-    d["spec_version"] = "1.2"
-    d["checks_version"] = "6"
     return d
 
 
-# ── Fingerprint recomputation (v1.2: 14-field formula) ───────────────
+def _sync_enforcement_timestamp(receipt_dict):
+    """Set enforcement.timestamp to match receipt.timestamp if not already set."""
+    enf = receipt_dict.get("enforcement")
+    if enf and not enf.get("timestamp"):
+        enf["timestamp"] = receipt_dict["timestamp"]
+    return receipt_dict
+
+
+# ── Fingerprint recomputation (v1.3: 16-field formula) ───────────────
 
 def recompute_fingerprint(receipt_dict):
-    """Recompute fingerprint fields using the v1.2 14-field formula.
+    """Recompute fingerprint fields using the v1.3 16-field formula.
 
-    Formula:
+    Formula (matches sanna-repo/src/sanna/receipt.py:757):
         correlation_id | context_hash | output_hash | checks_version |
         checks_hash | constitution_hash | enforcement_hash | coverage_hash |
         authority_hash | escalation_hash | trust_hash | extensions_hash |
-        parent_receipts_hash | workflow_id_hash
+        parent_receipts_hash | workflow_id_hash |
+        enforcement_surface_hash | invariants_scope_hash
 
     Fields 1 and 4 are literal strings; all others are 64-hex SHA-256 or EMPTY_HASH.
     """
@@ -397,21 +400,31 @@ def recompute_fingerprint(receipt_dict):
     else:
         workflow_id_hash = EMPTY_HASH
 
+    # Field 15: enforcement_surface_hash (v1.3+)
+    enforcement_surface = receipt_dict.get("enforcement_surface", "")
+    enforcement_surface_hash = hash_text(enforcement_surface, truncate=64)
+
+    # Field 16: invariants_scope_hash (v1.3+)
+    invariants_scope = receipt_dict.get("invariants_scope", "")
+    invariants_scope_hash = hash_text(invariants_scope, truncate=64)
+
     fingerprint_input = "|".join([
-        correlation_id,        # 1  — literal string
-        context_hash,          # 2  — hash
-        output_hash,           # 3  — hash
-        checks_version,        # 4  — literal string
-        checks_hash,           # 5  — hash
-        constitution_hash,     # 6  — hash
-        enforcement_hash,      # 7  — hash
-        coverage_hash,         # 8  — hash
-        authority_hash,        # 9  — hash
-        escalation_hash,       # 10 — hash
-        trust_hash,            # 11 — hash
-        extensions_hash,       # 12 — hash
-        parent_receipts_hash,  # 13 — hash
-        workflow_id_hash,      # 14 — hash
+        correlation_id,            # 1  — literal string
+        context_hash,              # 2  — hash
+        output_hash,               # 3  — hash
+        checks_version,            # 4  — literal string
+        checks_hash,               # 5  — hash
+        constitution_hash,         # 6  — hash
+        enforcement_hash,          # 7  — hash
+        coverage_hash,             # 8  — hash
+        authority_hash,            # 9  — hash
+        escalation_hash,           # 10 — hash
+        trust_hash,                # 11 — hash
+        extensions_hash,           # 12 — hash
+        parent_receipts_hash,      # 13 — hash
+        workflow_id_hash,          # 14 — hash
+        enforcement_surface_hash,  # 15 — hash (v1.3+)
+        invariants_scope_hash,     # 16 — hash (v1.3+)
     ])
 
     receipt_dict["full_fingerprint"] = hash_text(fingerprint_input, truncate=64)
@@ -449,12 +462,20 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
         context="No meeting notes are available for yesterday.",
         response="In yesterday's meeting, the team decided to launch the product next week and approved the Q3 budget of $2.5 million.",
     )
-    receipt_fail = generate_receipt(trace_fail)
+    fail_enforcement = {
+        "action": "halted",
+        "reason": "Critical check failure: context contradiction detected",
+        "failed_checks": ["C1"],
+        "enforcement_mode": "halt",
+        "timestamp": None,  # synced below after generate_receipt provides the timestamp
+    }
+    receipt_fail = generate_receipt(trace_fail, enforcement=fail_enforcement)
     receipt_fail_dict = receipt_to_dict(receipt_fail)
 
-    # Ensure at least one critical failure for the halt scenario
+    # Ensure at least one critical failure for fixture realism (check results ALSO
+    # show failure, not just enforcement-forced status). The SDK's halted override
+    # already set status=FAIL, so no manual status assignment is needed.
     if receipt_fail_dict.get("status") != "FAIL":
-        # Force C1 to fail if it didn't naturally
         for c in receipt_fail_dict.get("checks", []):
             if c["check_id"] in ("C1", "sanna.context_contradiction"):
                 c["passed"] = False
@@ -463,24 +484,19 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
                 if c.get("status") == "NOT_CHECKED":
                     c["status"] = "FAILED"
                 break
-        # Recount
         evaluated = [c for c in receipt_fail_dict["checks"]
                      if c.get("status") not in ("NOT_CHECKED", "ERRORED")]
         receipt_fail_dict["checks_passed"] = sum(1 for c in evaluated if c["passed"])
         receipt_fail_dict["checks_failed"] = sum(1 for c in evaluated if not c["passed"])
-        receipt_fail_dict["status"] = "FAIL"
+        # status stays FAIL from SDK's halted override; no manual set needed
 
-    # Add enforcement block
+    # Update enforcement.failed_checks from actual check results
     failed_ids = [c["check_id"] for c in receipt_fail_dict["checks"]
                   if not c["passed"] and c.get("status") != "NOT_CHECKED"]
-    receipt_fail_dict["enforcement"] = {
-        "action": "halted",
-        "reason": "Critical check failure: context contradiction detected",
-        "failed_checks": failed_ids if failed_ids else ["C1"],
-        "enforcement_mode": "halt",
-        "timestamp": receipt_fail_dict["timestamp"],
-    }
+    if failed_ids:
+        receipt_fail_dict["enforcement"]["failed_checks"] = failed_ids
 
+    _sync_enforcement_timestamp(receipt_fail_dict)
     receipt_fail_dict = recompute_fingerprint(receipt_fail_dict)
     receipt_fail_signed = sign_receipt(receipt_fail_dict, priv_key_path, "test-author@sanna.dev")
 
@@ -495,17 +511,18 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
         context="User 12345: John Doe, account active since 2023-01-15.",
         response="This action requires approval. The delete operation has been escalated.",
     )
-    receipt_esc = generate_receipt(trace_esc)
-    receipt_esc_dict = receipt_to_dict(receipt_esc)
-
-    receipt_esc_dict["enforcement"] = {
+    esc_enforcement = {
         "action": "escalated",
         "reason": "Delete operation requires human approval per must_escalate policy",
         "failed_checks": [],
         "enforcement_mode": "halt",
-        "timestamp": receipt_esc_dict["timestamp"],
+        "timestamp": None,  # synced below
     }
+    receipt_esc = generate_receipt(trace_esc, enforcement=esc_enforcement)
+    receipt_esc_dict = receipt_to_dict(receipt_esc)
+    # SDK's escalated→WARN override fires at emit time; no manual status assignment needed.
 
+    _sync_enforcement_timestamp(receipt_esc_dict)
     receipt_esc_dict = recompute_fingerprint(receipt_esc_dict)
     receipt_esc_signed = sign_receipt(receipt_esc_dict, priv_key_path, "test-author@sanna.dev")
 
@@ -520,7 +537,14 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
         context="Q3 revenue: $4.2M (up 15% YoY). Operating expenses: $3.1M. Net income: $1.1M. Customer churn decreased to 2.3%. New enterprise contracts: 7.",
         response="Q3 shows strong growth with 15% revenue increase to $4.2M and healthy net income of $1.1M. Customer retention improved with churn dropping to 2.3%. I recommend focusing on enterprise expansion given the 7 new contracts this quarter.",
     )
-    receipt_full = generate_receipt(trace_full)
+    full_enforcement = {
+        "action": "allowed",
+        "reason": "All checks passed",
+        "failed_checks": [],
+        "enforcement_mode": "log",
+        "timestamp": None,  # synced below
+    }
+    receipt_full = generate_receipt(trace_full, enforcement=full_enforcement)
     receipt_full_dict = receipt_to_dict(receipt_full)
 
     # constitution_ref
@@ -534,15 +558,6 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
         "approval_method": "dual-review",
         "signature_verified": True,
         "scheme": "constitution_sig_v1",
-    }
-
-    # enforcement (allowed)
-    receipt_full_dict["enforcement"] = {
-        "action": "allowed",
-        "reason": "All checks passed",
-        "failed_checks": [],
-        "enforcement_mode": "log",
-        "timestamp": receipt_full_dict["timestamp"],
     }
 
     # evaluation_coverage
@@ -604,6 +619,7 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     receipt_full_dict["content_mode"] = "full"
     receipt_full_dict["content_mode_source"] = "local_config"
 
+    _sync_enforcement_timestamp(receipt_full_dict)
     receipt_full_dict = recompute_fingerprint(receipt_full_dict)
     receipt_full_signed = sign_receipt(receipt_full_dict, priv_key_path, "test-author@sanna.dev")
 
@@ -627,9 +643,9 @@ def generate_golden_hashes(receipts, key_id):
 
     golden = {
         "generated_with": f"sanna v{TOOL_VERSION}",
-        "spec_version": "1.2",
-        "checks_version": "6",
-        "fingerprint_fields": 14,
+        "spec_version": SPEC_VERSION,
+        "checks_version": CHECKS_VERSION,
+        "fingerprint_fields": 16,
         "EMPTY_HASH": EMPTY_HASH,
         "test_key_id": key_id,
         "receipts": {},
