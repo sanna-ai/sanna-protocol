@@ -1,0 +1,73 @@
+{
+  "spec_version": "1.3",
+  "tool_version": "1.3.0",
+  "checks_version": "8",
+  "receipt_id": "4bba20ba-68e8-49ee-a699-f864e73cc47a",
+  "receipt_fingerprint": "e99ca5003b3e07b4",
+  "full_fingerprint": "e99ca5003b3e07b41d9000c5e05072db3659ee9450ee9cefd57d3f63c1ea93f9",
+  "correlation_id": "sanna-fixture-pass-001",
+  "timestamp": "2026-04-19T05:25:17.914521+00:00",
+  "inputs": {
+    "query": "What is the capital of France?",
+    "context": "France is a country in Western Europe. Its capital is Paris."
+  },
+  "outputs": {
+    "response": "The capital of France is Paris."
+  },
+  "context_hash": "96f6c721339be5b85d75f466d025373180a4dac3c18e72003af339c63d15f190",
+  "output_hash": "5eebc757bbbe8b82b9962187595c7cb6c1accc2ec1e1fc3b69d76c2f38a69f89",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "PASS",
+  "enforcement_surface": "middleware",
+  "invariants_scope": "full",
+  "receipt_signature": {
+    "signature": "/7MHpBJGQ8ZQA0h7dUUFmwkqCoAgr7p3bKx8/fY6mN2fSriU3bfZna45gztuT3P5CHATqXaqxaiUXkEuHmqYDA==",
+    "key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-04-19T05:25:17.916188+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "spec_version": "1.3",
+  "tool_version": "1.3.0",
+  "checks_version": "8",
+  "receipt_id": "3cbae6da-7d93-4302-8e9f-aba3bbf60df5",
+  "receipt_fingerprint": "44101a6114e0ee2d",
+  "full_fingerprint": "44101a6114e0ee2dbc803f20ad19411d9f4bc115bd41cfe6d81c6ce3c6fd4d1e",
+  "correlation_id": "sanna-fixture-full-001",
+  "timestamp": "2026-04-19T05:25:17.920093+00:00",
+  "inputs": {
+    "query": "Summarize the Q3 financial report and recommend next steps.",
+    "context": "Q3 revenue: $4.2M (up 15% YoY). Operating expenses: $3.1M. Net income: $1.1M. Customer churn decreased to 2.3%. New enterprise contracts: 7."
+  },
+  "outputs": {
+    "response": "Q3 shows strong growth with 15% revenue increase to $4.2M and healthy net income of $1.1M. Customer retention improved with churn dropping to 2.3%. I recommend focusing on enterprise expansion given the 7 new contracts this quarter."
+  },
+  "context_hash": "9938ea588fe7ad27939576dfcf2f60256621e4b729471345089f946dcd393b0c",
+  "output_hash": "0c8c821cc1f88018f63f07c83e6353964a21a11a296244aaa753466e89b5024a",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "PASS",
+  "enforcement_surface": "middleware",
+  "invariants_scope": "full",
+  "enforcement": {
+    "action": "allowed",
+    "reason": "All checks passed",
+    "failed_checks": [],
+    "enforcement_mode": "log",
+    "timestamp": "2026-04-19T05:25:17.920093+00:00"
+  },
+  "constitution_ref": {
+    "document_id": "test-full-agent/1.0.0",
+    "policy_hash": "79c19406e93949f6388712dc355792c791774a1dc39dbac4812924f484d7615f",
+    "version": "1.0.0",
+    "source": "fixtures/constitutions/full-featured.yaml",
+    "approved_by": [
+      "test-author@sanna.dev",
+      "test-reviewer@sanna.dev"
+    ],
+    "approval_date": "2026-02-22",
+    "approval_method": "dual-review",
+    "signature_verified": true,
+    "scheme": "constitution_sig_v1"
+  },
+  "evaluation_coverage": {
+    "total_invariants": 5,
+    "evaluated": 5,
+    "not_checked": 0,
+    "coverage_basis_points": 10000
+  },
+  "authority_decisions": [
+    {
+      "action": "financial_report_read",
+      "params": {
+        "report_id": "Q3-2026"
+      },
+      "decision": "allow",
+      "reason": "Action matches can_execute pattern *_read",
+      "boundary_type": "can_execute",
+      "escalation_target": null,
+      "timestamp": "2026-04-19T05:25:17.920093+00:00"
+    }
+  ],
+  "escalation_events": [],
+  "source_trust_evaluations": [
+    {
+      "source_name": "internal-database",
+      "trust_tier": "tier_1",
+      "evaluated_at": "2026-04-19T05:25:17.920093+00:00",
+      "verification_flag": null,
+      "context_used": true
+    }
+  ],
+  "extensions": {
+    "com.sanna.test": {
+      "fixture": true,
+      "purpose": "golden-test-vector"
+    }
+  },
+  "parent_receipts": null,
+  "workflow_id": "sanna-fixture-workflow-001",
+  "content_mode": "full",
+  "content_mode_source": "local_config",
+  "receipt_signature": {
+    "signature": "ALuC7l045brkw7HajNnpijQqTQUeEqyWyAopilhumdAcDsHC00JBUp5aJOJkUfwlwdonGWfnRFM1vEeujuOxCQ==",
+    "key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-04-19T05:25:17.920395+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}
