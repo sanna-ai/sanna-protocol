@@ -6,6 +6,26 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-18
+
+### Added
+- `enforcement_surface` required top-level field: enum of four values (`middleware`, `gateway`, `cli_interceptor`, `http_interceptor`). Makes receipts self-describing about which governance surface produced them. Participates in fingerprint computation as field 15.
+- `invariants_scope` required top-level field: enum of four values (`full`, `authority_only`, `limited`, `none`). Makes receipts self-describing about which invariants actually ran. Participates in fingerprint computation as field 16.
+- Status derivation mapping (normative, Section 2.16.3): when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` — `halted`→`FAIL`, `warned`→`WARN`, `allowed`→`PASS`, `escalated`→`WARN`. Rationale for `escalated→WARN`: escalated actions are flagged-not-greenlit; approval is a downstream receipt. Reporting PASS would imply governance allowed this, which is false until approval lands.
+- Cross-field consistency rule (normative, Section 4.6): verifiers MUST assert that `status` matches `enforcement.action` per the derivation mapping. Mismatch MUST produce a verification error. A receipt that passes schema validation but violates this rule is cryptographically valid but semantically defective.
+- 16-field fingerprint formula: two new fields (`enforcement_surface_hash` at position 15, `invariants_scope_hash` at position 16) participate in fingerprint computation.
+- Architectural asymmetry note (non-normative, Section 2.16.4): Python `generate_receipt()` invokes C1-C5 by default with `skip_default_checks=True` opt-out for interceptor surfaces; TypeScript `generateReceipt()` does not invoke C1-C5 automatically (caller invokes `runCoherenceChecks()` separately). Both paths are spec-compliant at v1.3.
+- `checks_version` version history table (Section 4.4) documenting values `"5"` through `"8"` with per-version semantics.
+
+### Changed
+- `checks_version` incremented from `"7"` to `"8"` to reflect the fingerprint formula expansion from 14 to 16 fields.
+- JSON Schema `$id` bumped from `receipt/v1.2.json` to `receipt/v1.3.json`.
+- Spec file renamed `sanna-specification-v1.2.md` → `sanna-specification-v1.3.md`.
+- Fingerprint algorithm description updated: 14-field formula becomes 16-field formula at `checks_version="8"`. Verifiers MUST dispatch on `checks_version` to select field count.
+
+### Normative statement
+**v1.2 was never released in SDK form.** The v1.2 spec document was published but no SDK release implemented `spec_version="1.2"` semantics. Any receipt in the wild claiming `spec_version="1.2"` is spurious and MUST be treated as such by verifiers. SDKs skip directly from `"1.1"` to `"1.3"`.
+
 ## [1.2.0] - 2026-03-14
 
 ### Fixed

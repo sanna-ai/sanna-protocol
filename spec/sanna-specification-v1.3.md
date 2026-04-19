@@ -1,9 +1,9 @@
-# Sanna Reasoning Receipt Specification v1.2
+# Sanna Reasoning Receipt Specification v1.3
 
 **Status:** Released
-**Version:** 1.2.0
-**Date:** 2026-03-14
-**Reference implementation:** sanna v1.0.0
+**Version:** 1.3.0
+**Date:** 2026-04-18
+**Reference implementation:** sanna v1.1.0
 
 ---
 
@@ -51,7 +51,7 @@ Every receipt MUST contain the following fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `spec_version` | string | Specification version (`"1.2"`) |
+| `spec_version` | string | Specification version (`"1.3"`) |
 | `tool_version` | string | Semver of the tool that generated this receipt |
 | `checks_version` | string | Integer string; increment when check semantics change |
 | `receipt_id` | string | UUID v4 (lowercase hex, dashes) |
@@ -67,6 +67,8 @@ Every receipt MUST contain the following fields:
 | `checks_passed` | integer | Count of checks where `passed == true` |
 | `checks_failed` | integer | Count of checks where `passed == false` |
 | `status` | string | Overall status: `"PASS"`, `"WARN"`, `"FAIL"`, or `"PARTIAL"` |
+| `enforcement_surface` | string | Governance surface that produced this receipt (see Section 2.16.1). Participates in fingerprint computation (field 15). |
+| `invariants_scope` | string | Scope of invariants that ran during receipt generation (see Section 2.16.2). Participates in fingerprint computation (field 16). |
 
 ### 2.2 Optional Fields
 
@@ -318,7 +320,7 @@ MUST recompute:
    marker-bearing) `outputs` object.
 3. `receipt_fingerprint` and `full_fingerprint` -- recomputed from
    the updated `context_hash` and `output_hash` using the standard
-   14-field fingerprint formula (Section 4.1).
+   16-field fingerprint formula (Section 4.1).
 
 The receipt signature (if applied) MUST be computed AFTER redaction
 markers and hash recomputation are complete.
@@ -474,6 +476,68 @@ Documents what the governance boundary can observe about the action lifecycle. T
 
 When `context_limitation` is absent or null, verifiers SHOULD NOT make assumptions about what the governance boundary observed.
 
+### 2.16 Enforcement Surface and Invariants Scope (v1.3+)
+
+Two new **required** fields introduced in v1.3 make receipts self-describing about what governance actually ran. Together they eliminate the ambiguity that allowed interceptor receipts to claim `status="PASS"` with `checks_passed=5` by running C1-C5 trivially against empty context — indistinguishable on the wire from a genuine middleware receipt. Both fields participate in fingerprint computation (fields 15 and 16 at `checks_version="8"`).
+
+#### 2.16.1 enforcement_surface
+
+**REQUIRED at v1.3+.** Identifies which governance surface produced this receipt. Verifiers MUST reject receipts without this field.
+
+| Field | Type | Enum |
+|-------|------|------|
+| `enforcement_surface` | string | `"middleware"` \| `"gateway"` \| `"cli_interceptor"` \| `"http_interceptor"` |
+
+| Value | Meaning |
+|-------|---------|
+| `middleware` | SDK middleware (`@sanna_observe` / `sannaObserve`). Full reasoning context available. C1-C5 invariants run against actual inputs and outputs. |
+| `gateway` | MCP enforcement proxy (`sanna-gateway`). Observes tool calls at boundary; limited reasoning context. Authority decisions available; full reasoning trace may be absent. |
+| `cli_interceptor` | Subprocess patching (`patch_subprocess` / `patchChildProcess`). Observes binary name and argv only; no reasoning trace available. |
+| `http_interceptor` | Fetch/HTTP patching (`patch_http` / `patchFetch`). Observes method and URL only; no reasoning trace available. |
+
+Participates in fingerprint computation as `enforcement_surface_hash = hash_text(enforcement_surface, 64)` (field 15). `EMPTY_HASH` indicates a malformed v1.3 receipt.
+
+#### 2.16.2 invariants_scope
+
+**REQUIRED at v1.3+.** Identifies which invariants actually ran during receipt generation. Verifiers MUST reject receipts without this field.
+
+| Field | Type | Enum |
+|-------|------|------|
+| `invariants_scope` | string | `"full"` \| `"authority_only"` \| `"limited"` \| `"none"` |
+
+| Value | Meaning |
+|-------|---------|
+| `full` | All invariants configured in the constitution ran (C1-C5 + custom invariants + LLM evaluators if configured). |
+| `authority_only` | Only authority-boundary decisions were evaluated; custom invariants and C1-C5 did NOT execute. Typical for interceptor surfaces where no reasoning context is available. |
+| `limited` | A defined subset of invariants ran. The `extensions` object SHOULD describe the subset. |
+| `none` | No invariants ran; receipt is a pure authority-decision record. |
+
+Participates in fingerprint computation as `invariants_scope_hash = hash_text(invariants_scope, 64)` (field 16). `EMPTY_HASH` indicates a malformed v1.3 receipt.
+
+#### 2.16.3 Status Derivation for Surfaces Without Full Invariant Context
+
+When a governance surface produces a receipt without running C1-C5 (because the surface lacks the context required for those checks to be meaningful), `status` MUST be derived from `enforcement.action` according to the following normative mapping:
+
+| `enforcement.action` | Required `status` |
+|---------------------|------------------|
+| `halted` | `FAIL` |
+| `warned` | `WARN` |
+| `allowed` | `PASS` |
+| `escalated` | `WARN` |
+
+**Rationale for `escalated → WARN`:** An escalated action is flagged-not-greenlit; the action has been deferred pending human approval. The approval itself is a downstream receipt. Reporting `PASS` would imply governance permitted the action, which is false until approval lands. `WARN` accurately represents the unresolved state.
+
+This mapping applies when `invariants_scope` is `"authority_only"` or `"none"`. When `invariants_scope` is `"full"` or `"limited"`, `status` is derived from check results per Section 2.4 as normal.
+
+#### 2.16.4 Architectural Asymmetry Note (Non-Normative)
+
+The two SDK implementations invoke invariant checks differently:
+
+- **Python SDK:** `generate_receipt()` invokes C1-C5 by default. Surfaces without reasoning context MUST pass `skip_default_checks=True` to suppress C1-C5 execution. When `skip_default_checks=True`, the SDK uses the `enforcement.action` → `status` mapping above.
+- **TypeScript SDK:** `generateReceipt()` does not invoke C1-C5 automatically. The caller invokes `runCoherenceChecks()` separately and passes results in via the `checks` parameter. When no checks are passed, the status derivation mapping applies.
+
+Both paths produce spec-compliant v1.3 receipts. The difference is invocation style, not semantics.
+
 ---
 
 ## 3. Canonicalization
@@ -574,32 +638,34 @@ components:
 
 ```python
 fingerprint_input = '|'.join([
-    correlation_id,        # Field 1  — literal string
-    context_hash,          # Field 2  — hash_obj(inputs), 64-hex SHA-256
-    output_hash,           # Field 3  — hash_obj(outputs), 64-hex SHA-256
-    CHECKS_VERSION,        # Field 4  — literal string (currently "6")
-    checks_hash,           # Field 5  — hash_obj(checks_data), 64-hex SHA-256
-    constitution_hash,     # Field 6  — hash_obj(constitution_ref minus constitution_approval), or EMPTY_HASH
-    enforcement_hash,      # Field 7  — hash_obj(enforcement), or EMPTY_HASH
-    coverage_hash,         # Field 8  — hash_obj(evaluation_coverage), or EMPTY_HASH
-    authority_hash,        # Field 9  — hash_obj(authority_decisions), or EMPTY_HASH
-    escalation_hash,       # Field 10 — hash_obj(escalation_events), or EMPTY_HASH
-    trust_hash,            # Field 11 — hash_obj(source_trust_evaluations), or EMPTY_HASH
-    extensions_hash,       # Field 12 — hash_obj(extensions), or EMPTY_HASH
-    parent_receipts_hash,  # Field 13 — hash_obj(parent_receipts), or EMPTY_HASH
-    workflow_id_hash,      # Field 14 — hash_text(workflow_id), or EMPTY_HASH
+    correlation_id,              # Field 1  — literal string
+    context_hash,                # Field 2  — hash_obj(inputs), 64-hex SHA-256
+    output_hash,                 # Field 3  — hash_obj(outputs), 64-hex SHA-256
+    CHECKS_VERSION,              # Field 4  — literal string (currently "8")
+    checks_hash,                 # Field 5  — hash_obj(checks_data), 64-hex SHA-256
+    constitution_hash,           # Field 6  — hash_obj(constitution_ref minus constitution_approval), or EMPTY_HASH
+    enforcement_hash,            # Field 7  — hash_obj(enforcement), or EMPTY_HASH
+    coverage_hash,               # Field 8  — hash_obj(evaluation_coverage), or EMPTY_HASH
+    authority_hash,              # Field 9  — hash_obj(authority_decisions), or EMPTY_HASH
+    escalation_hash,             # Field 10 — hash_obj(escalation_events), or EMPTY_HASH
+    trust_hash,                  # Field 11 — hash_obj(source_trust_evaluations), or EMPTY_HASH
+    extensions_hash,             # Field 12 — hash_obj(extensions), or EMPTY_HASH
+    parent_receipts_hash,        # Field 13 — hash_obj(parent_receipts), or EMPTY_HASH
+    workflow_id_hash,            # Field 14 — hash_text(workflow_id), or EMPTY_HASH
+    enforcement_surface_hash,    # Field 15 — hash_text(enforcement_surface), or EMPTY_HASH (v1.3+)
+    invariants_scope_hash,       # Field 16 — hash_text(invariants_scope), or EMPTY_HASH (v1.3+)
 ])
 fingerprint = sha256(fingerprint_input)
 ```
 
-This is always exactly **14 pipe-separated fields**.
+At `checks_version="8"` (v1.3+) this is always exactly **16 pipe-separated fields**. Verifiers MUST dispatch on `checks_version` to determine field count (see Section 4.4).
 
 | # | Component | Source |
 |---|-----------|--------|
 | 1 | `correlation_id` | Receipt `correlation_id` field (literal string value). MUST NOT contain the pipe character. |
 | 2 | `context_hash` | Receipt `context_hash` field (64-hex SHA-256 of canonical JSON of `inputs` object) |
 | 3 | `output_hash` | Receipt `output_hash` field (64-hex SHA-256 of canonical JSON of `outputs` object) |
-| 4 | `checks_version` | Receipt `checks_version` field (literal string, currently `"6"`) |
+| 4 | `checks_version` | Receipt `checks_version` field (literal string, currently `"8"`) |
 | 5 | `checks_hash` | `hash_obj()` of checks data array. Each check includes: `check_id`, `passed`, `severity`, `evidence`. When enforcement fields are present (`triggered_by`, `enforcement_level`, `check_impl`, `replayable`), those are included too. `EMPTY_HASH` if checks array is empty. |
 | 6 | `constitution_hash` | `hash_obj()` of `constitution_ref` object with `constitution_approval` key removed. `EMPTY_HASH` if absent/null. |
 | 7 | `enforcement_hash` | `hash_obj()` of `enforcement` object. `EMPTY_HASH` if absent/null/empty. |
@@ -610,6 +676,8 @@ This is always exactly **14 pipe-separated fields**.
 | 12 | `extensions_hash` | `hash_obj()` of `extensions` object. `EMPTY_HASH` if absent/null/empty. |
 | 13 | `parent_receipts_hash` | `hash_obj()` of `parent_receipts` array, or `EMPTY_HASH` if null/absent. Note: `[]` and `null` produce different hashes. |
 | 14 | `workflow_id_hash` | `hash_text()` of `workflow_id` string. `EMPTY_HASH` if null/absent. |
+| 15 | `enforcement_surface_hash` | `hash_text()` of `enforcement_surface` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.3. |
+| 16 | `invariants_scope_hash` | `hash_text()` of `invariants_scope` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED). Added in v1.3. |
 
 `EMPTY_HASH` is the SHA-256 digest of zero bytes, used as sentinel for
 absent fields:
@@ -632,8 +700,8 @@ consistency.
 
 **v1.1 breaking change:** The fingerprint formula expanded from 12
 fields (v1.0) to 14 fields. There is no backward compatibility with
-the 12-field formula. All implementations MUST use the 14-field
-formula. Existing test vectors and golden receipts have been
+the 12-field formula. All implementations on v1.1+ MUST use the
+14-field formula. Existing test vectors and golden receipts have been
 regenerated. The `checks_version` constant has been incremented to
 `"6"` to indicate the algorithm change.
 
@@ -644,7 +712,14 @@ regenerated. The `checks_version` constant has been incremented to
 and `trust_hash`. The reference implementations (sanna v1.0.0, sanna-ts
 v1.0.2) have always computed the correct formula above. No third-party
 implementation used the incorrect formula. This correction is not a
-breaking change.
+breaking change. Note: v1.2 was never released in SDK form — see
+Section 14 and the normative statement in Section 4.4.
+
+**v1.3 breaking change:** The fingerprint formula expanded from 14
+fields to 16 fields. Fields 15 (`enforcement_surface_hash`) and 16
+(`invariants_scope_hash`) are added for the two new required top-level
+fields. `checks_version` incremented to `"8"`. Verifiers MUST dispatch
+on `checks_version` to select the correct field count.
 
 The `receipt_fingerprint` is `hash_text(fingerprint_input, truncate=16)` (16 hex chars).
 The `full_fingerprint` is `hash_text(fingerprint_input)` (64 hex chars).
@@ -697,15 +772,24 @@ canonical JSON, not `{...}` with the key omitted.
 
 ### 4.4 checks_version
 
-The current value of `checks_version` is `"6"`. This value was
-incremented from `"5"` in v1.1 to reflect the expansion of the
-fingerprint formula from 12 to 14 fields. It is incremented when the
-semantics of built-in checks change or the fingerprint algorithm
-changes in a way that alters fingerprints for identical inputs.
+The current value of `checks_version` is `"8"`. It is incremented when the
+semantics of built-in checks change or the fingerprint algorithm changes in a
+way that alters fingerprints for identical inputs.
 
-Verifiers MUST treat `checks_version` as an opaque string. They
-compare it for equality during fingerprint verification but MUST NOT
-interpret its numeric value or make behavioral decisions based on it.
+**Version history:**
+
+| Value | Protocol version | Change |
+|-------|-----------------|--------|
+| `"5"` | v1.0.x | Initial 12-field fingerprint formula |
+| `"6"` | v1.1.0 | 14-field fingerprint formula (added `parent_receipts_hash` field 13, `workflow_id_hash` field 14) |
+| `"7"` | (SDK-internal, post-v1.0.0) | Empty-checks fingerprint normalization (SAN-27/SAN-48). Bumped in SDK releases but not reflected in the v1.1 spec document. Any receipt in the wild with `checks_version="7"` uses the 14-field formula. |
+| `"8"` | v1.3.0 | 16-field fingerprint formula (added `enforcement_surface_hash` field 15, `invariants_scope_hash` field 16). Corresponds to two new required top-level fields. |
+
+Verifiers MUST treat `checks_version` as an opaque string for equality
+comparison during fingerprint verification. Verifiers MUST dispatch on
+`checks_version` to select the correct field count: `"8"` → 16 fields,
+`"6"` or `"7"` → 14 fields, `"5"` → 12 fields. Verifiers MUST NOT make
+behavioral decisions beyond field-count dispatch based on the numeric value.
 
 ### 4.5 Fields NOT in Fingerprint
 
@@ -724,10 +808,29 @@ The following fields are NOT included in fingerprint computation:
 - `context_limitation` (governance surface metadata — see Section 2.15)
 
 Note: `parent_receipts` and `workflow_id` ARE included in fingerprint
-computation (fields 13 and 14). `content_mode`, `content_mode_source`,
-`event_type`, and `context_limitation` are excluded because they describe
-how the receipt should be *interpreted*, not the receipt's cryptographic
+computation (fields 13 and 14). `enforcement_surface` and
+`invariants_scope` ARE included in fingerprint computation (fields 15
+and 16 at v1.3+). `content_mode`, `content_mode_source`, `event_type`,
+and `context_limitation` are excluded because they describe how the
+receipt should be *interpreted*, not the receipt's cryptographic
 identity.
+
+### 4.6 Cross-Field Consistency (v1.3+)
+
+Verifiers MUST assert that `status` is consistent with `enforcement.action` when the `enforcement` field is present. The following mapping is normative:
+
+| `enforcement.action` | Required `status` |
+|---------------------|------------------|
+| `halted` | `FAIL` |
+| `warned` | `WARN` |
+| `allowed` | `PASS` |
+| `escalated` | `WARN` |
+
+A mismatch between `enforcement.action` and `status` (e.g., `enforcement.action="halted"` with `status="PASS"`) MUST produce a verification error. The verifier MUST identify the receipt as having compromised integrity.
+
+A receipt that passes JSON schema validation but violates this cross-field rule is considered **cryptographically valid but semantically defective**. Its fingerprint and signature may verify, but the receipt's integrity claim is false: the audit trail misrepresents what governance actually did.
+
+When `enforcement` is absent or null, this check does not apply.
 
 ---
 
@@ -1539,7 +1642,8 @@ conformance.
 | 1.0.1 | 0.13.0 | 28 precision fixes from cross-platform security review. Key ID uses raw Ed25519 bytes (not DER). NFC normalization documented. Float rejection in signing contexts. hash_text default truncation corrected to 64. Status computation handles all severity levels. Receipt Triad hashing byte-precise. HMAC token format documented. Threat model added. Schemas for authority_decisions, escalation_events, source_trust_evaluations, identity_verification documented. Key file encoding specified. correlation_id pipe constraint. checks_hash ordering and null key rules. |
 | 1.0.2 | 0.13.2 | 7 cross-platform review fixes. Redaction Marker schema (Section 2.11): marker structure, original_hash computation, pre-existing marker injection guard, file naming convention, hash recomputation rules. Authority Name Normalization algorithm (Appendix D): NFKC + camelCase splitting + separator normalization + casefold + dot-join, with 16 test vectors, matching semantics, and separatorless fallback. HMAC token binding corrections (Section 8.2): `esc_` prefix on escalation IDs, Python-default separators for args_digest (not Sanna Canonical JSON), original tool name (not normalized). Canonical JSON cross-language guidance (Section 3.1): Go HTML-escaping warning, float rejection clarified for Go/Rust number parsing. Base64 pinned to RFC 4648 standard with padding (Section 5.1), whitespace stripping scope clarified. Exit code accumulation rule: highest-priority code wins (Section 9.2). |
 | 1.1.0 | 0.13.7 | **Breaking change:** Fingerprint formula expanded from 12 fields to 14 fields. No backward compatibility with 12-field formula. New first-class fields: `parent_receipts` (receipt chaining, fingerprint field 13), `workflow_id` (workflow grouping, fingerprint field 14). New metadata fields: `content_mode`, `content_mode_source` (Cloud content handling, NOT in fingerprint). `checks_version` incremented to `"6"`. Gateway extension namespace (`com.sanna.gateway`) documented (Appendix E). Canonical YAML hash specification (Appendix F). 1,000+ cross-language canonicalization test vectors. Golden receipts regenerated for 14-field formula. |
-| 1.2.0 | 1.0.0 | **Fingerprint formula correction:** Section 4.1 corrected to match reference implementations (sanna v1.0.0, sanna-ts v1.0.2). Not a breaking change. **Multi-surface governance:** `event_type` field (9 values), `context_limitation` field (5 values). Receipt Triad for CLI boundary (Section 7.6) and API boundary (Section 7.7). Constitution blocks: `cli_permissions`, `api_permissions`. Multi-surface test vectors. |
+| 1.2.0 | 1.0.0 | **Fingerprint formula correction:** Section 4.1 corrected to match reference implementations (sanna v1.0.0, sanna-ts v1.0.2). Not a breaking change. **Multi-surface governance:** `event_type` field (9 values), `context_limitation` field (5 values). Receipt Triad for CLI boundary (Section 7.6) and API boundary (Section 7.7). Constitution blocks: `cli_permissions`, `api_permissions`. Multi-surface test vectors. **NOTE: v1.2 was never released in SDK form. Any receipt claiming `spec_version="1.2"` is spurious and MUST be treated as such by verifiers. SDKs skip directly from "1.1" to "1.3".** |
+| 1.3.0 | 1.1.0 | **Two new required top-level fields:** `enforcement_surface` (enum: `middleware`, `gateway`, `cli_interceptor`, `http_interceptor`) and `invariants_scope` (enum: `full`, `authority_only`, `limited`, `none`). Both participate in fingerprint computation (fields 15 and 16). **Status derivation mapping (normative):** when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` (halted→FAIL, warned→WARN, allowed→PASS, escalated→WARN). **Cross-field consistency rule (normative):** verifiers MUST assert `status` matches `enforcement.action` per the derivation mapping; mismatch is a verification error indicating compromised receipt integrity. **`checks_version` incremented to `"8"`**, fingerprint formula expanded from 14 to 16 fields. **JSON Schema `$id` bumped to `receipt/v1.3.json`.** Architectural asymmetry note for C1-C5 invocation across Python vs TypeScript SDKs documented (non-normative, Section 2.16.4). |
 
 ---
 
