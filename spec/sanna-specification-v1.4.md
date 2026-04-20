@@ -69,6 +69,7 @@ Every receipt MUST contain the following fields:
 | `status` | string | Overall status: `"PASS"`, `"WARN"`, `"FAIL"`, or `"PARTIAL"` |
 | `enforcement_surface` | string | Governance surface that produced this receipt (see Section 2.16.1). Participates in fingerprint computation (field 15). |
 | `invariants_scope` | string | Scope of invariants that ran during receipt generation (see Section 2.16.2). Participates in fingerprint computation (field 16). |
+| `tool_name` | string | Canonical SDK identifier (see Section 2.17.1). REQUIRED at checks_version >= 9 (v1.4+). Participates in fingerprint computation (field 17). |
 
 ### 2.2 Optional Fields
 
@@ -91,6 +92,9 @@ Every receipt MUST contain the following fields:
 | `content_mode_source` | string/null | Origin of the content_mode value: `"local_config"`, `"cloud_tenant"`, or `"override"` (see Section 2.14). Metadata only — does NOT participate in fingerprint computation. |
 | `extensions` | object | Reverse-domain-namespaced vendor metadata |
 | `identity_verification` | object/null | Identity claim verification results (see Section 2.10) |
+| `agent_model` | string/null | LLM model identifier (see Section 2.18.1). Nullable for explicit opt-out; absent = not captured. Participates in fingerprint (field 18 at v1.4+). |
+| `agent_model_provider` | string/null | LLM model provider (see Section 2.18.2). Nullable. Participates in fingerprint (field 19 at v1.4+). |
+| `agent_model_version` | string/null | LLM model snapshot/revision identifier (see Section 2.18.3). Nullable. Participates in fingerprint (field 20 at v1.4+). |
 
 Receipts MUST NOT contain fields not defined in the schema
 (`additionalProperties: false`).
@@ -536,7 +540,106 @@ The two SDK implementations invoke invariant checks differently:
 - **Python SDK:** `generate_receipt()` invokes C1-C5 by default. Surfaces without reasoning context MUST pass `skip_default_checks=True` to suppress C1-C5 execution. When `skip_default_checks=True`, the SDK uses the `enforcement.action` → `status` mapping above.
 - **TypeScript SDK:** `generateReceipt()` does not invoke C1-C5 automatically. The caller invokes `runCoherenceChecks()` separately and passes results in via the `checks` parameter. When no checks are passed, the status derivation mapping applies.
 
-Both paths produce spec-compliant v1.3 receipts. The difference is invocation style, not semantics.
+Both paths produce spec-compliant v1.4 receipts. The difference is invocation style, not semantics.
+
+### 2.17 Tool Identity Field (v1.4+)
+
+#### 2.17.1 tool_name
+
+**REQUIRED at v1.4+ (checks_version >= 9).** Identifies which SDK or implementation emitted this receipt. Separates SDK identity from SDK version — `tool_version` carries the bare semver (e.g., `"1.4.0"`); `tool_name` carries the canonical SDK identifier.
+
+| Field | Type | Enum |
+|-------|------|------|
+| `tool_name` | string | `"sanna"` \| `"sanna-ts"` |
+
+| Value | Meaning |
+|-------|---------|
+| `"sanna"` | Python reference SDK (`sanna` package on PyPI). |
+| `"sanna-ts"` | TypeScript reference SDK (`@sanna-ai/core` package on npm). |
+
+Participates in fingerprint computation as `tool_name_hash = hash_text(tool_name, 64)` (field 17). `EMPTY_HASH` indicates a malformed v1.4 receipt.
+
+**Registered values extensible via spec PR.** Third-party SDK implementers who wish to use a `tool_name` value not listed above MUST submit a pull request to `sanna-protocol` adding the value to the enum in `schemas/receipt.schema.json` and to this section. Third-party implementations MUST NOT use unregistered values — doing so causes receipts to fail schema validation and undermines cross-implementation interoperability.
+
+**Example:** A Go SDK implementation would register `"sanna-go"` via spec PR before emitting receipts with that value. Until registered, `tool_name: "sanna-go"` fails schema validation.
+
+**Design rationale:** Prior to v1.4, `tool_version` was the only SDK identity signal — an unqualified semver like `"1.3.0"`. This coupled identity and version: a verifier trying to select verification logic based on SDK identity had to infer it from context. `tool_name` makes identity explicit and allows verifiers to dispatch on both SDK identity and version independently.
+
+### 2.18 Agent Model Fields (v1.4+)
+
+Three new **optional** fields capture the LLM model the agent was running on when the receipt was generated. These fields address an audit-metadata gap: receipts have never captured model identity, yet model behavior is governance-relevant (different models may have different failure modes, and receipts from a compromised or retracted model version warrant heightened scrutiny).
+
+#### 2.18.1 agent_model
+
+| Field | Type | Optional |
+|-------|------|---------|
+| `agent_model` | string or null | Yes (optional at cv >= 9) |
+
+Canonical identifier of the LLM model (e.g., `"claude-opus-4-7"`, `"gpt-5-4"`, `"gemini-2.5-pro"`). Implementations SHOULD use the provider's canonical model identifier string.
+
+Participates in fingerprint computation as `agent_model_hash = hash_text(agent_model, 64)`, or `EMPTY_HASH` if null or absent (field 18).
+
+#### 2.18.2 agent_model_provider
+
+| Field | Type | Optional |
+|-------|------|---------|
+| `agent_model_provider` | string or null | Yes (optional at cv >= 9) |
+
+Provider of the agent model (e.g., `"anthropic"`, `"openai"`, `"google"`). SHOULD use the provider's canonical lowercase identifier.
+
+Participates in fingerprint computation as `agent_model_provider_hash = hash_text(agent_model_provider, 64)`, or `EMPTY_HASH` if null or absent (field 19).
+
+#### 2.18.3 agent_model_version
+
+| Field | Type | Optional |
+|-------|------|---------|
+| `agent_model_version` | string or null | Yes (optional at cv >= 9) |
+
+Revision or snapshot identifier of the agent model, for providers that expose one (e.g., OpenAI date-suffixed model strings like `"2026-04-15"`). SHOULD be absent when the provider does not expose a distinct version string beyond the model identifier in `agent_model`.
+
+Participates in fingerprint computation as `agent_model_version_hash = hash_text(agent_model_version, 64)`, or `EMPTY_HASH` if null or absent (field 20).
+
+#### 2.18.4 Opt-Out Semantics (Normative)
+
+The `agent_model`, `agent_model_provider`, and `agent_model_version` fields support tri-valued opt-out semantics:
+
+| JSON representation | Meaning |
+|--------------------|---------|
+| Field absent (key not present) | Not captured — the generator did not supply this information (e.g., legacy receipt, generator before v1.4, or generator without model access) |
+| `"field": null` | Explicit opt-out — the generator had access to the information but the operator or user chose not to disclose the model identity in this receipt |
+| `"field": "some-string"` | Captured and disclosed |
+
+**Normative rules for aggregators and verifiers:**
+
+1. Aggregators MUST NOT conflate absent with null. A receipt with `agent_model` absent is categorically different from one with `"agent_model": null`. The former comes from a generator that did not supply model identity (possibly a pre-v1.4 SDK); the latter is an active governance decision to withhold model identity.
+
+2. Aggregators that provide model-based filtering or analytics MUST document how they handle each of the three states for each `agent_model*` field.
+
+3. Verifiers MUST NOT reject receipts with null `agent_model*` fields. Null is a valid and explicitly supported value.
+
+**Fingerprint layer vs. JSON layer:** For fingerprint computation (fields 18-20), both null and absent produce `EMPTY_HASH`. The fingerprint does not preserve the absent/null distinction — it captures only whether a string value was present and what that value was. The absent/null distinction is preserved at the JSON layer only. This is intentional: the fingerprint captures content-affecting facts (what model produced this receipt), not metadata-layer disclosure decisions (whether the operator disclosed the model). Two receipts — one with `agent_model: null` and one without the `agent_model` key — produce identical fingerprints for fields 18-20.
+
+**Example (absent vs null):**
+
+Receipt A (absent — not captured):
+```json
+{
+  "tool_name": "sanna",
+  "checks_version": "9"
+  // agent_model key not present
+}
+```
+
+Receipt B (null — explicit opt-out):
+```json
+{
+  "tool_name": "sanna",
+  "checks_version": "9",
+  "agent_model": null
+}
+```
+
+These two receipts produce different JSON bytes (Receipt B has the `agent_model` key; Receipt A does not). However, both produce `EMPTY_HASH` for fingerprint field 18. A verifier comparing fingerprints cannot distinguish them. A verifier or aggregator reading the JSON CAN distinguish them — and MUST treat them differently per rule 1 above.
 
 ---
 
