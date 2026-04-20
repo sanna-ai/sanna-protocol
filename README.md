@@ -6,7 +6,7 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 
 | Path | Description |
 |------|-------------|
-| [`spec/`](spec/sanna-specification-v1.2.md) | Protocol specification v1.2 — receipt format, 14-field fingerprint, multi-surface governance, canonicalization, signing, verification |
+| [`spec/`](spec/sanna-specification-v1.4.md) | Protocol specification v1.4 — receipt format, 20-field fingerprint (cv=9), tool identity, agent-model audit fields, multi-surface governance, canonicalization, signing, verification |
 | [`schemas/`](schemas/) | JSON Schema (2020-12) for [constitutions](schemas/constitution.schema.json) and [receipts](schemas/receipt.schema.json) |
 | [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes, 1,296 canonicalization test vectors, 24 multi-surface (CLI/API) test vectors |
 | [`templates/`](templates/) | Starter constitutions: [privacy-focused](templates/privacy-focused.yaml), [developer](templates/developer.yaml), [locked-down](templates/locked-down.yaml) |
@@ -18,14 +18,14 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 | Language | Package | Install |
 |----------|---------|---------|
 | Python | [`sanna`](https://pypi.org/project/sanna/) | `pip install sanna` |
-| TypeScript | [`@sanna/core`](https://www.npmjs.com/package/@sanna/core) | `npm install @sanna/core` |
+| TypeScript | [`@sanna-ai/core`](https://www.npmjs.com/package/@sanna-ai/core) | `npm install @sanna-ai/core` |
 
 ## Conformance Verification
 
 A conformant implementation must produce identical hashes and fingerprints for identical inputs. The [`fixtures/`](fixtures/) directory contains everything needed to verify:
 
 1. Load the test keypair from `fixtures/keypairs/`
-2. For each receipt in `fixtures/receipts/`, recompute `context_hash`, `output_hash`, and the 14-field fingerprint
+2. For each receipt in `fixtures/receipts/`, recompute `context_hash`, `output_hash`, and the cv-appropriate fingerprint (20-field at cv=9, 16-field at cv=8, 14-field at cv=6/7, 12-field at cv=5)
 3. Compare all computed values against `fixtures/golden-hashes.json`
 4. Verify Ed25519 signatures using the test public key
 
