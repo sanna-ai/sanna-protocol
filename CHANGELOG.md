@@ -6,6 +6,53 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-20
+
+### Added
+- Required top-level field `tool_name` (enum: `"sanna"`, `"sanna-ts"`).
+  Identifies the SDK implementation that emitted the receipt. Required
+  at checks_version >= 9. Registered values extensible via spec PR for
+  third-party SDKs. Participates in fingerprint as field 17 at cv=9.
+- Optional top-level fields `agent_model`, `agent_model_provider`,
+  `agent_model_version`. Capture the LLM model the agent was running
+  on when the receipt was generated. Nullable for explicit opt-out.
+  Absent-vs-null distinction is normative per Section 2.18.4 (see spec).
+  Participate in fingerprint at positions 18-20 as
+  `hash_text(value)` or `EMPTY_HASH` if null/absent.
+- Section 2.17: documents `tool_name` field — purpose, enum values,
+  registration process for third-party SDKs (submit a spec PR),
+  design rationale (identity/version separation).
+- Section 2.18: documents `agent_model*` fields — purpose, opt-out
+  semantics (absent vs null vs string), normative requirement that
+  aggregators MUST respect the three-way distinction, concrete
+  absent-vs-null JSON example.
+- Section 13 rewritten to describe cv-based dispatch correctly (closes
+  a Codex review finding where Section 13 referenced a stale 14-field
+  formula despite Section 4.1 having updated to cv=8 → 16 fields).
+
+### Changed
+- `CHECKS_VERSION` incremented from `"8"` to `"9"` to reflect the
+  fingerprint formula expansion from 16 to 20 fields.
+- JSON Schema `$id` bumped from `receipt/v1.3.json` to
+  `receipt/v1.4.json`.
+- Spec file renamed `sanna-specification-v1.3.md` →
+  `sanna-specification-v1.4.md`.
+- Fingerprint algorithm description updated: 16-field formula at
+  cv=8 becomes 20-field formula at cv=9. Verifiers MUST dispatch on
+  `checks_version` to select field count. Legacy cv values (5, 6, 7,
+  8) unchanged.
+
+### Normative additions
+**Tool-name enum:** valid values for `tool_name` at cv >= 9 are
+registered in the spec. Current values: `"sanna"`, `"sanna-ts"`.
+Third-party implementers MUST NOT use unregistered values; register
+via spec PR.
+
+**Agent-model opt-out semantics:** the tri-valued absent/null/string
+distinction for `agent_model` fields is normative. Aggregators MUST
+NOT conflate absent with null. Implementers who provide aggregation
+features MUST document how each value is treated.
+
 ## [1.3.0] - 2026-04-18
 
 ### Added
