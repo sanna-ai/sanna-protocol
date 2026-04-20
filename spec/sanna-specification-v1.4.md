@@ -1,9 +1,9 @@
-# Sanna Reasoning Receipt Specification v1.3
+# Sanna Reasoning Receipt Specification v1.4
 
 **Status:** Released
-**Version:** 1.3.0
-**Date:** 2026-04-18
-**Reference implementation:** sanna v1.1.0
+**Version:** 1.4.0
+**Date:** 2026-04-20
+**Reference implementation:** sanna v1.4.0 (pending v1.4-B merge)
 
 ---
 
@@ -51,7 +51,7 @@ Every receipt MUST contain the following fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `spec_version` | string | Specification version (`"1.3"`) |
+| `spec_version` | string | Specification version (`"1.4"`) |
 | `tool_version` | string | Semver of the tool that generated this receipt |
 | `checks_version` | string | Integer string; increment when check semantics change |
 | `receipt_id` | string | UUID v4 (lowercase hex, dashes) |
@@ -319,8 +319,8 @@ MUST recompute:
 2. `output_hash` -- SHA-256 of Sanna Canonical JSON of the (now
    marker-bearing) `outputs` object.
 3. `receipt_fingerprint` and `full_fingerprint` -- recomputed from
-   the updated `context_hash` and `output_hash` using the standard
-   16-field fingerprint formula (Section 4.1).
+   the updated `context_hash` and `output_hash` using the cv-appropriate
+   fingerprint formula (Section 4.1); 20-field at cv=9, 16-field at cv=8.
 
 The receipt signature (if applied) MUST be computed AFTER redaction
 markers and hash recomputation are complete.
@@ -641,7 +641,7 @@ fingerprint_input = '|'.join([
     correlation_id,              # Field 1  — literal string
     context_hash,                # Field 2  — hash_obj(inputs), 64-hex SHA-256
     output_hash,                 # Field 3  — hash_obj(outputs), 64-hex SHA-256
-    CHECKS_VERSION,              # Field 4  — literal string (currently "8")
+    CHECKS_VERSION,              # Field 4  — literal string (currently "9")
     checks_hash,                 # Field 5  — hash_obj(checks_data), 64-hex SHA-256
     constitution_hash,           # Field 6  — hash_obj(constitution_ref minus constitution_approval), or EMPTY_HASH
     enforcement_hash,            # Field 7  — hash_obj(enforcement), or EMPTY_HASH
@@ -654,18 +654,22 @@ fingerprint_input = '|'.join([
     workflow_id_hash,            # Field 14 — hash_text(workflow_id), or EMPTY_HASH
     enforcement_surface_hash,    # Field 15 — hash_text(enforcement_surface), or EMPTY_HASH (v1.3+)
     invariants_scope_hash,       # Field 16 — hash_text(invariants_scope), or EMPTY_HASH (v1.3+)
+    tool_name_hash,              # Field 17 — hash_text(tool_name), or EMPTY_HASH (v1.4+)
+    agent_model_hash,            # Field 18 — hash_text(agent_model) or EMPTY_HASH if null/absent (v1.4+)
+    agent_model_provider_hash,   # Field 19 — hash_text(agent_model_provider) or EMPTY_HASH if null/absent (v1.4+)
+    agent_model_version_hash,    # Field 20 — hash_text(agent_model_version) or EMPTY_HASH if null/absent (v1.4+)
 ])
 fingerprint = sha256(fingerprint_input)
 ```
 
-At `checks_version="8"` (v1.3+) this is always exactly **16 pipe-separated fields**. Verifiers MUST dispatch on `checks_version` to determine field count (see Section 4.4).
+At `checks_version="9"` (v1.4+) this is always exactly **20 pipe-separated fields**. Verifiers MUST dispatch on `checks_version` to determine field count (see Section 4.4).
 
 | # | Component | Source |
 |---|-----------|--------|
 | 1 | `correlation_id` | Receipt `correlation_id` field (literal string value). MUST NOT contain the pipe character. |
 | 2 | `context_hash` | Receipt `context_hash` field (64-hex SHA-256 of canonical JSON of `inputs` object) |
 | 3 | `output_hash` | Receipt `output_hash` field (64-hex SHA-256 of canonical JSON of `outputs` object) |
-| 4 | `checks_version` | Receipt `checks_version` field (literal string, currently `"8"`) |
+| 4 | `checks_version` | Receipt `checks_version` field (literal string, currently `"9"`) |
 | 5 | `checks_hash` | `hash_obj()` of checks data array. Each check includes: `check_id`, `passed`, `severity`, `evidence`. When enforcement fields are present (`triggered_by`, `enforcement_level`, `check_impl`, `replayable`), those are included too. `EMPTY_HASH` if checks array is empty. |
 | 6 | `constitution_hash` | `hash_obj()` of `constitution_ref` object with `constitution_approval` key removed. `EMPTY_HASH` if absent/null. |
 | 7 | `enforcement_hash` | `hash_obj()` of `enforcement` object. `EMPTY_HASH` if absent/null/empty. |
@@ -678,6 +682,10 @@ At `checks_version="8"` (v1.3+) this is always exactly **16 pipe-separated field
 | 14 | `workflow_id_hash` | `hash_text()` of `workflow_id` string. `EMPTY_HASH` if null/absent. |
 | 15 | `enforcement_surface_hash` | `hash_text()` of `enforcement_surface` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.3. |
 | 16 | `invariants_scope_hash` | `hash_text()` of `invariants_scope` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED). Added in v1.3. |
+| 17 | `tool_name_hash` | `hash_text()` of `tool_name` string. `EMPTY_HASH` if absent/null (but at v1.4+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.4. |
+| 18 | `agent_model_hash` | `hash_text()` of `agent_model` string, or `EMPTY_HASH` if null or absent. Both null and absent produce `EMPTY_HASH` — the fingerprint does not distinguish opt-out from not-captured (see Section 2.17.2). Added in v1.4. |
+| 19 | `agent_model_provider_hash` | `hash_text()` of `agent_model_provider` string, or `EMPTY_HASH` if null or absent. Added in v1.4. |
+| 20 | `agent_model_version_hash` | `hash_text()` of `agent_model_version` string, or `EMPTY_HASH` if null or absent. Added in v1.4. |
 
 `EMPTY_HASH` is the SHA-256 digest of zero bytes, used as sentinel for
 absent fields:
@@ -720,6 +728,13 @@ fields to 16 fields. Fields 15 (`enforcement_surface_hash`) and 16
 (`invariants_scope_hash`) are added for the two new required top-level
 fields. `checks_version` incremented to `"8"`. Verifiers MUST dispatch
 on `checks_version` to select the correct field count.
+
+**v1.4 breaking change:** The fingerprint formula expanded from 16
+fields to 20 fields. Fields 17 (`tool_name_hash`), 18
+(`agent_model_hash`), 19 (`agent_model_provider_hash`), and 20
+(`agent_model_version_hash`) are added for the new v1.4 fields.
+`checks_version` incremented to `"9"`. Verifiers MUST dispatch on
+`checks_version` to select the correct field count.
 
 The `receipt_fingerprint` is `hash_text(fingerprint_input, truncate=16)` (16 hex chars).
 The `full_fingerprint` is `hash_text(fingerprint_input)` (64 hex chars).
@@ -772,7 +787,7 @@ canonical JSON, not `{...}` with the key omitted.
 
 ### 4.4 checks_version
 
-The current value of `checks_version` is `"8"`. It is incremented when the
+The current value of `checks_version` is `"9"`. It is incremented when the
 semantics of built-in checks change or the fingerprint algorithm changes in a
 way that alters fingerprints for identical inputs.
 
@@ -784,12 +799,14 @@ way that alters fingerprints for identical inputs.
 | `"6"` | v1.1.0 | 14-field fingerprint formula (added `parent_receipts_hash` field 13, `workflow_id_hash` field 14) |
 | `"7"` | (SDK-internal, post-v1.0.0) | Empty-checks fingerprint normalization (SAN-27/SAN-48). Bumped in SDK releases but not reflected in the v1.1 spec document. Any receipt in the wild with `checks_version="7"` uses the 14-field formula. |
 | `"8"` | v1.3.0 | 16-field fingerprint formula (added `enforcement_surface_hash` field 15, `invariants_scope_hash` field 16). Corresponds to two new required top-level fields. |
+| `"9"` | v1.4.0 | 20-field fingerprint formula (added `tool_name_hash` field 17, `agent_model_hash` field 18, `agent_model_provider_hash` field 19, `agent_model_version_hash` field 20). Corresponds to new `tool_name` required field and optional `agent_model*` fields. |
 
 Verifiers MUST treat `checks_version` as an opaque string for equality
 comparison during fingerprint verification. Verifiers MUST dispatch on
-`checks_version` to select the correct field count: `"8"` → 16 fields,
-`"6"` or `"7"` → 14 fields, `"5"` → 12 fields. Verifiers MUST NOT make
-behavioral decisions beyond field-count dispatch based on the numeric value.
+`checks_version` to select the correct field count: `"9"` or higher → 20 fields,
+`"8"` → 16 fields, `"6"` or `"7"` → 14 fields, `"5"` → 12 fields. Verifiers
+MUST NOT make behavioral decisions beyond field-count dispatch based on the
+numeric value.
 
 ### 4.5 Fields NOT in Fingerprint
 
@@ -810,10 +827,19 @@ The following fields are NOT included in fingerprint computation:
 Note: `parent_receipts` and `workflow_id` ARE included in fingerprint
 computation (fields 13 and 14). `enforcement_surface` and
 `invariants_scope` ARE included in fingerprint computation (fields 15
-and 16 at v1.3+). `content_mode`, `content_mode_source`, `event_type`,
+and 16 at v1.3+). `tool_name`, `agent_model`, `agent_model_provider`,
+and `agent_model_version` ARE included in fingerprint computation (fields
+17-20 at v1.4+). `content_mode`, `content_mode_source`, `event_type`,
 and `context_limitation` are excluded because they describe how the
-receipt should be *interpreted*, not the receipt's cryptographic
-identity.
+receipt should be *interpreted*, not the receipt's cryptographic identity.
+
+**Agent-model fields and EMPTY_HASH:** For fields 18-20, both null and
+absent produce `EMPTY_HASH`. The fingerprint does not distinguish between
+explicit opt-out (null) and not-captured (absent). The distinction IS
+preserved at the JSON layer — a receipt with `"agent_model": null` and
+one with no `agent_model` key are different JSON objects. Verifiers and
+aggregators MUST use the JSON layer to distinguish these cases; see
+Section 2.17.2 for normative rules on this three-way distinction.
 
 ### 4.6 Cross-Field Consistency (v1.3+)
 
