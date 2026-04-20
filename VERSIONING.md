@@ -6,13 +6,41 @@ How the Sanna Protocol and its reference SDKs are versioned, bumped, and kept in
 
 | Layer | Version |
 |---|---|
-| Protocol `SPEC_VERSION` | `1.3` |
-| Protocol `CHECKS_VERSION` | `8` |
-| Python SDK (`sanna`) | `1.3.0` |
-| TypeScript SDK (`@sanna-ai/core`) | `1.3.0` |
+| Protocol `SPEC_VERSION` | `1.4` |
+| Protocol `CHECKS_VERSION` | `9` |
+| Python SDK (`sanna`) | `1.4.0` (pending v1.4-B merge) |
+| TypeScript SDK (`@sanna-ai/core`) | `1.4.0` (pending v1.4-C merge) |
 | Skipped versions | `1.2` (spec doc-only; never shipped in SDK) |
 
-Last coordinated release: Sprint 15, SAN-211 / SAN-213 / SAN-214 / SAN-216, landed across all three repos 2026-04-18 → 2026-04-19.
+Last protocol release: SAN-222, protocol-only v1.4-A, 2026-04-20. SDK releases (v1.4-B Python, v1.4-C TypeScript) follow after SDK implementations are complete and round-trip validated against the new protocol goldens.
+
+Last coordinated full release: Sprint 15, SAN-211 / SAN-213 / SAN-214 / SAN-216, landed across all three repos 2026-04-18 → 2026-04-19.
+
+## v1.4 release (2026-04-20)
+
+Two new governance-relevant additions:
+
+1. **`tool_name` field (required at cv>=9).** Separates SDK identity from
+   SDK version. `tool_version` stays bare semver; `tool_name` is a
+   registered enum (`"sanna"`, `"sanna-ts"`). Future third-party SDKs
+   register values via spec PR. Rationale: avoid overloading `tool_version`
+   with identity+version (v1.3 had this coupling).
+
+2. **Agent-model fields (optional, nullable).** New fields `agent_model`,
+   `agent_model_provider`, `agent_model_version` capture which LLM model
+   the agent was running on when the receipt was generated. Opt-out via
+   null (absent-vs-null is normatively distinct per Section 2.18.4 of the
+   spec). Fingerprint extends to 20 fields; all four new fields participate
+   at cv=9.
+
+Fingerprint formula: cv=9 uses 20 pipe-delimited fields. Positions 17-20
+are `tool_name_hash`, `agent_model_hash`, `agent_model_provider_hash`,
+`agent_model_version_hash`. Legacy dispatch unchanged (cv=8 → 16,
+cv=6/7 → 14, cv≤5 → 12).
+
+SDK package versions bump coordinated: Python sanna `1.3.0` → `1.4.0`; TS
+all four packages bump to `1.4.0` (closing the SAN-217-flagged version lag
+where `@sanna-ai/core` was at `1.1.1`). No version skip.
 
 ## Scope
 
@@ -40,7 +68,7 @@ Bumps are rare and always coordinated with SDK releases. See "Coordinated bumps"
 
 Monotonic integer tracking the fingerprint formula. Appears in every receipt as `checks_version`. Controls:
 
-- Field count in the fingerprint formula (12 at `cv="5"`, 14 at `cv="6"`/`"7"`, 16 at `cv="8"`)
+- Field count in the fingerprint formula (12 at `cv="5"`, 14 at `cv="6"`/`"7"`, 16 at `cv="8"`, 20 at `cv="9"`)
 - Field ordering in the fingerprint string
 - Which hashes participate in the fingerprint
 
@@ -219,7 +247,7 @@ For SDK-only bumps (patch/minor, no protocol change):
 
 ## References
 
-- `spec/sanna-specification-v1.3.md` — current normative spec
+- `spec/sanna-specification-v1.4.md` — current normative spec
 - `schemas/receipt.schema.json` — current receipt schema
 - `schemas/constitution.schema.json` — current constitution schema
 - `CHANGELOG.md` — version history for the protocol
