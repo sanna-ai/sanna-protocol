@@ -1700,9 +1700,15 @@ An implementation claiming to be a compatible generator MUST:
 
 1. Produce receipts that validate against the normative receipt JSON
    schema (`receipt.schema.json`).
-2. Compute fingerprints using the 14-field formula specified in
-   Section 4.1, producing identical fingerprints for identical receipt
-   content.
+2. Compute fingerprints using the field count appropriate for the
+   receipt's `checks_version` as specified in Section 4.1 and Section 4.4:
+   - `checks_version` = `"9"` or higher → 20-field formula
+   - `checks_version` = `"8"` → 16-field formula
+   - `checks_version` = `"6"` or `"7"` → 14-field formula
+   - `checks_version` = `"5"` → 12-field formula
+   Generators producing v1.4 receipts MUST use `checks_version="9"` and
+   the 20-field formula. Generators MUST produce identical fingerprints
+   for identical receipt content.
 3. Use Sanna Canonical JSON (Section 3.1) for all hash computations,
    including content hashes, checks hash, and fingerprint components.
 4. Generate UUID v4 `receipt_id` values (RFC 4122, lowercase hex with
@@ -1717,26 +1723,45 @@ An implementation claiming to be a compatible generator MUST:
    canonicalization (Section 3.1).
 9. Validate that `correlation_id` does not contain the pipe character
    `|` (Section 2.1).
+10. At `checks_version >= 9` (v1.4+): emit `tool_name` as a required
+    field with a registered enum value (Section 2.17.1).
+11. At `checks_version >= 9` (v1.4+): when emitting `agent_model`,
+    `agent_model_provider`, or `agent_model_version`, honor the tri-valued
+    semantics defined in Section 2.18.4. Use null for explicit opt-out;
+    omit the key entirely when the information was not captured.
 
 ### 13.2 Compatible Verifier
 
 An implementation claiming to be a compatible verifier MUST:
 
-1. Verify the receipt fingerprint by recomputing it from receipt fields
-   using the 14-field formula and comparing against the stored
+1. Dispatch on `checks_version` to select the correct fingerprint field
+   count before recomputing fingerprints (Section 4.4). A verifier that
+   uses a fixed field count regardless of `checks_version` is NOT
+   conformant. Specifically:
+   - Integer value of `checks_version` >= 9 → use 20-field formula
+   - Integer value = 8 → use 16-field formula
+   - Integer value = 6 or 7 → use 14-field formula
+   - Integer value = 5 → use 12-field formula
+2. Verify the receipt fingerprint by recomputing it from receipt fields
+   using the formula selected in step 1 and comparing against the stored
    `full_fingerprint`.
-2. Verify content hashes (`context_hash`, `output_hash`) by
+3. Verify content hashes (`context_hash`, `output_hash`) by
    recomputing them from the `inputs` and `outputs` fields.
-3. Verify status consistency: the `status` field matches the result of
+4. Verify status consistency: the `status` field matches the result of
    applying the rules in Section 2.4 to the `checks` array.
-4. Verify check count consistency: `checks_passed` and `checks_failed`
+5. Verify check count consistency: `checks_passed` and `checks_failed`
    match the actual counts of evaluated checks.
+6. At `checks_version >= 9`: verify the cross-field consistency rule
+   (Section 4.6) and verify that `tool_name` is present and is a
+   registered enum value.
 
 A compatible verifier MUST NOT:
 
 1. Reject receipts solely because they contain unknown keys within the
    `extensions` object. The `extensions` field is designed for vendor
    metadata and forward compatibility.
+2. Conflate absent `agent_model*` fields with null `agent_model*` fields
+   when reporting or aggregating receipt metadata (Section 2.18.4).
 
 A compatible verifier SHOULD:
 
@@ -1747,6 +1772,9 @@ A compatible verifier SHOULD:
 3. Report warnings (not errors) for unverifiable optional fields such
    as identity claims without provider keys or approval records without
    approver keys.
+4. At `checks_version >= 9`: report `agent_model`, `agent_model_provider`,
+   and `agent_model_version` presence/absence distinctly in verification
+   output, distinguishing null from absent.
 
 ### 13.3 Legacy Receipt Handling
 
@@ -1761,6 +1789,12 @@ verification by implementing the field migration mapping (Appendix A)
 and the legacy fingerprint algorithm, but this is not required for
 conformance.
 
+For receipts at any `checks_version` value, verifiers MUST use the
+cv-dispatched field count from Section 4.4 rather than assuming a
+fixed number of fingerprint fields. This rule applies retroactively:
+a v1.3 verifier handling a v1.3 receipt MUST use 16 fields (cv=8),
+not 14 fields from the v1.1 formula.
+
 ---
 
 ## 14. Version History
@@ -1773,6 +1807,7 @@ conformance.
 | 1.1.0 | 0.13.7 | **Breaking change:** Fingerprint formula expanded from 12 fields to 14 fields. No backward compatibility with 12-field formula. New first-class fields: `parent_receipts` (receipt chaining, fingerprint field 13), `workflow_id` (workflow grouping, fingerprint field 14). New metadata fields: `content_mode`, `content_mode_source` (Cloud content handling, NOT in fingerprint). `checks_version` incremented to `"6"`. Gateway extension namespace (`com.sanna.gateway`) documented (Appendix E). Canonical YAML hash specification (Appendix F). 1,000+ cross-language canonicalization test vectors. Golden receipts regenerated for 14-field formula. |
 | 1.2.0 | 1.0.0 | **Fingerprint formula correction:** Section 4.1 corrected to match reference implementations (sanna v1.0.0, sanna-ts v1.0.2). Not a breaking change. **Multi-surface governance:** `event_type` field (9 values), `context_limitation` field (5 values). Receipt Triad for CLI boundary (Section 7.6) and API boundary (Section 7.7). Constitution blocks: `cli_permissions`, `api_permissions`. Multi-surface test vectors. **NOTE: v1.2 was never released in SDK form. Any receipt claiming `spec_version="1.2"` is spurious and MUST be treated as such by verifiers. SDKs skip directly from "1.1" to "1.3".** |
 | 1.3.0 | 1.1.0 | **Two new required top-level fields:** `enforcement_surface` (enum: `middleware`, `gateway`, `cli_interceptor`, `http_interceptor`) and `invariants_scope` (enum: `full`, `authority_only`, `limited`, `none`). Both participate in fingerprint computation (fields 15 and 16). **Status derivation mapping (normative):** when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` (halted→FAIL, warned→WARN, allowed→PASS, escalated→WARN). **Cross-field consistency rule (normative):** verifiers MUST assert `status` matches `enforcement.action` per the derivation mapping; mismatch is a verification error indicating compromised receipt integrity. **`checks_version` incremented to `"8"`**, fingerprint formula expanded from 14 to 16 fields. **JSON Schema `$id` bumped to `receipt/v1.3.json`.** Architectural asymmetry note for C1-C5 invocation across Python vs TypeScript SDKs documented (non-normative, Section 2.16.4). |
+| 1.4.0 | 1.4.0 | **New required field `tool_name`** (required at cv>=9): enum `"sanna"` \| `"sanna-ts"`. Separates SDK identity from SDK version — `tool_version` stays bare semver; `tool_name` is a registered enum. Third-party SDKs register values via spec PR. Participates in fingerprint (field 17). **New optional agent-model fields** `agent_model`, `agent_model_provider`, `agent_model_version` (all string or null): capture the LLM model running when the receipt was generated. Nullable for explicit opt-out; absent = not captured. Tri-valued absent/null/string semantics are normative (Section 2.18.4); aggregators MUST NOT conflate absent with null. Participate in fingerprint at fields 18-20 (EMPTY_HASH for null or absent). **`checks_version` incremented to `"9"`**, fingerprint formula expanded from 16 to 20 fields. **JSON Schema `$id` bumped to `receipt/v1.4.json`.** **Section 13 rewritten** to describe cv-based dispatch for both generators and verifiers (closes stale 14-field reference — Codex F-013). SAN-222. |
 
 ---
 
