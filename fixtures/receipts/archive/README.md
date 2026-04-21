@@ -8,7 +8,7 @@ This directory contains golden receipt fixtures from prior protocol versions, pr
 
 ## Do not reference archived receipts in new tests
 
-Archived receipts MUST NOT be used as expected outputs for new test cases. They do not satisfy v1.3 schema requirements (missing `enforcement_surface` and `invariants_scope`). Use them only for backward-compatibility verification paths.
+Archived receipts MUST NOT be used as expected outputs for new test cases. Use them only for backward-compatibility verification paths.
 
 ## Subdirectory notes
 
@@ -25,3 +25,13 @@ Files:
 - `pass-single-check.json` — minimal receipt with a single passing check
 
 New v1.3 golden fixtures are regenerated via `generate_fixtures.py` in the `sanna-repo` branch and committed back to `fixtures/receipts/` at the top level of this directory.
+
+### v1.3/
+
+Receipts from protocol version 1.3 (`spec_version="1.3"`, `checks_version="8"`). Generated against the v1.3 spec and JSON schema. Archived when v1.4 fixtures were regenerated using Python SDK v1.4.0.
+
+Files:
+- `escalated.json` — receipt with `enforcement.action="escalated"`
+- `fail-halted.json` — receipt with `status="FAIL"` and `enforcement.action="halted"`
+- `full-featured.json` — receipt exercising all optional fields
+- `pass-single-check.json` — minimal receipt with a single passing check
