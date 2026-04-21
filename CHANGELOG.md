@@ -6,7 +6,7 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0] - 2026-04-20
+## [1.4.0] - 2026-04-20 (fixtures regenerated 2026-04-20)
 
 ### Added
 - Required top-level field `tool_name` (enum: `"sanna"`, `"sanna-ts"`).
@@ -31,6 +31,13 @@ Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   formula despite Section 4.1 having updated to cv=8 → 16 fields).
 
 ### Changed
+- Canonical fixtures `fixtures/receipts/*.json` regenerated at v1.4
+  shape using `sanna` Python SDK v1.4.0 (SAN-222 v1.4-B2). Fixtures
+  now include `tool_name`, `agent_model`, `agent_model_provider`,
+  `agent_model_version`. `full-featured.json` exercises the
+  captured-model path (`agent_model="claude-opus-4-7"`); other three
+  fixtures use `agent_model=null` for explicit opt-out coverage.
+  Old v1.3 fixtures archived under `fixtures/receipts/archive/v1.3/`.
 - `CHECKS_VERSION` incremented from `"8"` to `"9"` to reflect the
   fingerprint formula expansion from 16 to 20 fields.
 - JSON Schema `$id` bumped from `receipt/v1.3.json` to
