@@ -1,77 +1,77 @@
 {
-  "generated_with": "sanna v1.3.0",
-  "spec_version": "1.3",
-  "checks_version": "8",
-  "fingerprint_fields": 16,
+  "generated_with": "sanna v1.4.0",
+  "spec_version": "1.4",
+  "checks_version": "9",
+  "fingerprint_fields": 20,
   "EMPTY_HASH": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "test_key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+  "test_key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
   "receipts": {
     "pass-single-check": {
-      "receipt_id": "4bba20ba-68e8-49ee-a699-f864e73cc47a",
+      "receipt_id": "87063eb3-596c-4c95-a752-e1db771ad4a4",
       "correlation_id": "sanna-fixture-pass-001",
       "context_hash": "96f6c721339be5b85d75f466d025373180a4dac3c18e72003af339c63d15f190",
       "output_hash": "5eebc757bbbe8b82b9962187595c7cb6c1accc2ec1e1fc3b69d76c2f38a69f89",
-      "receipt_fingerprint": "e99ca5003b3e07b4",
-      "full_fingerprint": "e99ca5003b3e07b41d9000c5e05072db3659ee9450ee9cefd57d3f63c1ea93f9",
+      "receipt_fingerprint": "d3dbcafdbd5f2eb8",
+      "full_fingerprint": "d3dbcafdbd5f2eb89a6ed8bdb73e6609dd8206036dd5139331bafbfb1fa03953",
       "status": "PASS",
       "checks_passed": 5,
       "checks_failed": 0,
-      "signature_key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+      "signature_key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
       "signature_scheme": "receipt_sig_v1",
-      "canonical_json_sha256": "141f27c91a93d7dd2ae3da97470c14f52869d09a6ae40744cbbe87a882e3709a"
+      "canonical_json_sha256": "a010df99a9f8effaaa3fb842affa95701fd81eea3a554f3ea40faaeedf47b276"
     },
     "fail-halted": {
-      "receipt_id": "8a7ddfce-ad02-4fbf-818f-10b8d2be4b6c",
+      "receipt_id": "5cd295d5-1ede-43da-a5b6-c4a6d42bd411",
       "correlation_id": "sanna-fixture-fail-001",
       "context_hash": "5f8adb95c0e655c8735992b70b4b91c8bad2bda602c217963d389a6f4737685b",
       "output_hash": "35b1a0b4b8b0da19e0405e85fa079efde4ea7022124c1c462625aacf2411d920",
-      "receipt_fingerprint": "d375e19cae5572f7",
-      "full_fingerprint": "d375e19cae5572f714aa60cd25b85e13dbffebefe5ee97b79ac44e44ce2791e5",
+      "receipt_fingerprint": "129c14d0cd871cb2",
+      "full_fingerprint": "129c14d0cd871cb2042cde73be2e559443b87f59ce3df505257e1424d15b5c94",
       "status": "FAIL",
       "checks_passed": 5,
       "checks_failed": 0,
       "enforcement_action": "halted",
-      "signature_key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+      "signature_key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
       "signature_scheme": "receipt_sig_v1",
-      "canonical_json_sha256": "e96c411ae3b4da3cdd385fe885bbcdc647b2e840f6a72e71ccaa58069b23f51f"
+      "canonical_json_sha256": "18cb04546d4c868ac8c7628955fe96b4d2e5c6ab7523e5275ab8fff3214e469f"
     },
     "escalated": {
-      "receipt_id": "50fcd613-c642-4e26-a326-dd00ca0ea2c8",
+      "receipt_id": "60246126-eff1-447c-a3cb-0e852e0ddd66",
       "correlation_id": "sanna-fixture-escalated-001",
       "context_hash": "10b47a9c2dfc1a0ab0710fd1cb240b3c61e0557776083a7f7e35bb314ccdc392",
       "output_hash": "0d3831dba589e7d9673687ac518561411b253215dc6dd434ccc097933c80a817",
-      "receipt_fingerprint": "09a7a874f353be17",
-      "full_fingerprint": "09a7a874f353be174957dc365d9ac34e21f2ca9242a06fdb9d64e34504290beb",
+      "receipt_fingerprint": "d9932331b4897505",
+      "full_fingerprint": "d9932331b489750573907c49604e0ced0cc61afc5eba1563c2b861d58a9a2958",
       "status": "WARN",
       "checks_passed": 5,
       "checks_failed": 0,
       "enforcement_action": "escalated",
-      "signature_key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+      "signature_key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
       "signature_scheme": "receipt_sig_v1",
-      "canonical_json_sha256": "41c38789be07c1d13fc13d7147361700c2efd5cf399cee59020180ca2567085f"
+      "canonical_json_sha256": "2d1bd122405eeb1678ec1651494d8f20265a891207052577c6a5e73952c8f7dd"
     },
     "full-featured": {
-      "receipt_id": "3cbae6da-7d93-4302-8e9f-aba3bbf60df5",
+      "receipt_id": "8ba01c6d-980d-4158-8a98-6f30de2416dc",
       "correlation_id": "sanna-fixture-full-001",
       "context_hash": "9938ea588fe7ad27939576dfcf2f60256621e4b729471345089f946dcd393b0c",
       "output_hash": "0c8c821cc1f88018f63f07c83e6353964a21a11a296244aaa753466e89b5024a",
-      "receipt_fingerprint": "44101a6114e0ee2d",
-      "full_fingerprint": "44101a6114e0ee2dbc803f20ad19411d9f4bc115bd41cfe6d81c6ce3c6fd4d1e",
+      "receipt_fingerprint": "dc4b6846543caa60",
+      "full_fingerprint": "dc4b6846543caa60715d4b72455e8634a5a9a6b5be73dabec78b2db1f24a87cd",
       "status": "PASS",
       "checks_passed": 5,
       "checks_failed": 0,
       "enforcement_action": "allowed",
-      "signature_key_id": "fec1f24fc9f1240ccba3820b2dabc6f3222efe21e127f95c5202834f851f643d",
+      "signature_key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
       "signature_scheme": "receipt_sig_v1",
       "constitution_policy_hash": "79c19406e93949f6388712dc355792c791774a1dc39dbac4812924f484d7615f",
       "workflow_id": "sanna-fixture-workflow-001",
       "content_mode": "full",
-      "canonical_json_sha256": "74b9ab9eca7eb7a642f357ce0e89c910cbe00733de5855d2b774f3ab9cef7cc8"
+      "canonical_json_sha256": "5d6b003c928773b4ab0351202430e4db69d6cba2526be43fcd0303e87cb02fd2"
     }
   },
   "constitutions": {
     "minimal": {
-      "content_hash": "7e783040da6bb07741105e993ba7f9c8dc296a0f92a1b86eda2eb026f2a52968"
+      "content_hash": "df41c1d78ec968d36cbe23bc523000c2d1501738de104db8c982d4907e1ab7a0"
     },
     "full-featured": {
       "content_hash": "00a9d0f73ff8063233b89f045fd983ba01411a06dc1cc28854474c6204f09835"

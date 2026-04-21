@@ -1,0 +1,137 @@
+{
+  "spec_version": "1.4",
+  "tool_version": "1.4.0",
+  "checks_version": "9",
+  "receipt_id": "8ba01c6d-980d-4158-8a98-6f30de2416dc",
+  "receipt_fingerprint": "dc4b6846543caa60",
+  "full_fingerprint": "dc4b6846543caa60715d4b72455e8634a5a9a6b5be73dabec78b2db1f24a87cd",
+  "correlation_id": "sanna-fixture-full-001",
+  "timestamp": "2026-04-21T06:57:34.801186+00:00",
+  "inputs": {
+    "query": "Summarize the Q3 financial report and recommend next steps.",
+    "context": "Q3 revenue: $4.2M (up 15% YoY). Operating expenses: $3.1M. Net income: $1.1M. Customer churn decreased to 2.3%. New enterprise contracts: 7."
+  },
+  "outputs": {
+    "response": "Q3 shows strong growth with 15% revenue increase to $4.2M and healthy net income of $1.1M. Customer retention improved with churn dropping to 2.3%. I recommend focusing on enterprise expansion given the 7 new contracts this quarter."
+  },
+  "context_hash": "9938ea588fe7ad27939576dfcf2f60256621e4b729471345089f946dcd393b0c",
+  "output_hash": "0c8c821cc1f88018f63f07c83e6353964a21a11a296244aaa753466e89b5024a",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "PASS",
+  "enforcement_surface": "middleware",
+  "invariants_scope": "full",
+  "tool_name": "sanna",
+  "agent_model": "claude-opus-4-7",
+  "agent_model_provider": "anthropic",
+  "agent_model_version": "20250514",
+  "enforcement": {
+    "action": "allowed",
+    "reason": "All checks passed",
+    "failed_checks": [],
+    "enforcement_mode": "log",
+    "timestamp": "2026-04-21T06:57:34.801186+00:00"
+  },
+  "constitution_ref": {
+    "document_id": "test-full-agent/1.0.0",
+    "policy_hash": "79c19406e93949f6388712dc355792c791774a1dc39dbac4812924f484d7615f",
+    "version": "1.0.0",
+    "source": "fixtures/constitutions/full-featured.yaml",
+    "approved_by": [
+      "test-author@sanna.dev",
+      "test-reviewer@sanna.dev"
+    ],
+    "approval_date": "2026-02-22",
+    "approval_method": "dual-review",
+    "signature_verified": true,
+    "scheme": "constitution_sig_v1"
+  },
+  "evaluation_coverage": {
+    "total_invariants": 5,
+    "evaluated": 5,
+    "not_checked": 0,
+    "coverage_basis_points": 10000
+  },
+  "authority_decisions": [
+    {
+      "action": "financial_report_read",
+      "params": {
+        "report_id": "Q3-2026"
+      },
+      "decision": "allow",
+      "reason": "Action matches can_execute pattern *_read",
+      "boundary_type": "can_execute",
+      "escalation_target": null,
+      "timestamp": "2026-04-21T06:57:34.801186+00:00"
+    }
+  ],
+  "escalation_events": [],
+  "source_trust_evaluations": [
+    {
+      "source_name": "internal-database",
+      "trust_tier": "tier_1",
+      "evaluated_at": "2026-04-21T06:57:34.801186+00:00",
+      "verification_flag": null,
+      "context_used": true
+    }
+  ],
+  "extensions": {
+    "com.sanna.test": {
+      "fixture": true,
+      "purpose": "golden-test-vector"
+    }
+  },
+  "parent_receipts": null,
+  "workflow_id": "sanna-fixture-workflow-001",
+  "content_mode": "full",
+  "content_mode_source": "local_config",
+  "receipt_signature": {
+    "signature": "Y50DIiMN7JphdIPWHoKZikSgCbs2WxhOs8eA03sPVCdfIGPhsGbLawIIh04XMb36KGIHi6xZYztpjg6Mxu+vCQ==",
+    "key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-04-21T06:57:34.801433+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}
