@@ -1,0 +1,86 @@
+{
+  "spec_version": "1.4",
+  "tool_version": "1.4.0",
+  "checks_version": "9",
+  "receipt_id": "5cd295d5-1ede-43da-a5b6-c4a6d42bd411",
+  "receipt_fingerprint": "129c14d0cd871cb2",
+  "full_fingerprint": "129c14d0cd871cb2042cde73be2e559443b87f59ce3df505257e1424d15b5c94",
+  "correlation_id": "sanna-fixture-fail-001",
+  "timestamp": "2026-04-21T06:57:34.799784+00:00",
+  "inputs": {
+    "query": "What happened in the meeting yesterday?",
+    "context": "No meeting notes are available for yesterday."
+  },
+  "outputs": {
+    "response": "In yesterday's meeting, the team decided to launch the product next week and approved the Q3 budget of $2.5 million."
+  },
+  "context_hash": "5f8adb95c0e655c8735992b70b4b91c8bad2bda602c217963d389a6f4737685b",
+  "output_hash": "35b1a0b4b8b0da19e0405e85fa079efde4ea7022124c1c462625aacf2411d920",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "FAIL",
+  "enforcement_surface": "middleware",
+  "invariants_scope": "full",
+  "tool_name": "sanna",
+  "enforcement": {
+    "action": "halted",
+    "reason": "Critical check failure: context contradiction detected",
+    "failed_checks": [
+      "C1"
+    ],
+    "enforcement_mode": "halt",
+    "timestamp": "2026-04-21T06:57:34.799784+00:00"
+  },
+  "agent_model": null,
+  "agent_model_provider": null,
+  "agent_model_version": null,
+  "receipt_signature": {
+    "signature": "e8IWWTh3FLlGucd9ejl6LEQ6m189R2/euf0jYTbtYkqaD+ltWZtaiyrvn1qCdk8lpJ1cp4gwszkzDFD0POvEAg==",
+    "key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-04-21T06:57:34.800058+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}

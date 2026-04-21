@@ -1,0 +1,77 @@
+{
+  "spec_version": "1.4",
+  "tool_version": "1.4.0",
+  "checks_version": "9",
+  "receipt_id": "87063eb3-596c-4c95-a752-e1db771ad4a4",
+  "receipt_fingerprint": "d3dbcafdbd5f2eb8",
+  "full_fingerprint": "d3dbcafdbd5f2eb89a6ed8bdb73e6609dd8206036dd5139331bafbfb1fa03953",
+  "correlation_id": "sanna-fixture-pass-001",
+  "timestamp": "2026-04-21T06:57:34.798175+00:00",
+  "inputs": {
+    "query": "What is the capital of France?",
+    "context": "France is a country in Western Europe. Its capital is Paris."
+  },
+  "outputs": {
+    "response": "The capital of France is Paris."
+  },
+  "context_hash": "96f6c721339be5b85d75f466d025373180a4dac3c18e72003af339c63d15f190",
+  "output_hash": "5eebc757bbbe8b82b9962187595c7cb6c1accc2ec1e1fc3b69d76c2f38a69f89",
+  "checks": [
+    {
+      "check_id": "C1",
+      "name": "Context Contradiction",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious contradiction detected (heuristic check)"
+    },
+    {
+      "check_id": "C2",
+      "name": "Mark Inferences",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Inference marking appears adequate (heuristic check)"
+    },
+    {
+      "check_id": "C3",
+      "name": "No False Certainty",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Certainty level appears appropriate (heuristic check)"
+    },
+    {
+      "check_id": "C4",
+      "name": "Preserve Tensions",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "No obvious conflict collapse detected (heuristic check)"
+    },
+    {
+      "check_id": "C5",
+      "name": "No Premature Compression",
+      "passed": true,
+      "severity": "info",
+      "evidence": null,
+      "details": "Compression level appears appropriate (heuristic check)"
+    }
+  ],
+  "checks_passed": 5,
+  "checks_failed": 0,
+  "status": "PASS",
+  "enforcement_surface": "middleware",
+  "invariants_scope": "full",
+  "tool_name": "sanna",
+  "agent_model": null,
+  "agent_model_provider": null,
+  "agent_model_version": null,
+  "receipt_signature": {
+    "signature": "Xtx6iac4nbfaYsrtfExLwwdSsvVu/0K3CIiVelOqFrqAYoRtlmHxiR6IExUlWCTHV1xKo+hqmrUFTc3yFBx4CQ==",
+    "key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
+    "signed_by": "test-author@sanna.dev",
+    "signed_at": "2026-04-21T06:57:34.798850+00:00",
+    "scheme": "receipt_sig_v1"
+  }
+}
