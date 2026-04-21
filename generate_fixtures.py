@@ -302,18 +302,21 @@ def _sync_enforcement_timestamp(receipt_dict):
     return receipt_dict
 
 
-# ── Fingerprint recomputation (v1.3: 16-field formula) ───────────────
+# ── Fingerprint recomputation (v1.4: 20-field formula at cv=9) ───────
 
 def recompute_fingerprint(receipt_dict):
-    """Recompute fingerprint fields using the v1.3 16-field formula.
+    """Recompute fingerprint fields using the cv-dispatched formula.
 
-    Formula (matches sanna-repo/src/sanna/receipt.py:757):
+    cv=9 (v1.4): 20-field formula
         correlation_id | context_hash | output_hash | checks_version |
         checks_hash | constitution_hash | enforcement_hash | coverage_hash |
         authority_hash | escalation_hash | trust_hash | extensions_hash |
         parent_receipts_hash | workflow_id_hash |
-        enforcement_surface_hash | invariants_scope_hash
+        enforcement_surface_hash | invariants_scope_hash |
+        tool_name_hash | agent_model_hash |
+        agent_model_provider_hash | agent_model_version_hash
 
+    cv=8 (v1.3): 16-field formula (fields 1-16 only).
     Fields 1 and 4 are literal strings; all others are 64-hex SHA-256 or EMPTY_HASH.
     """
     # Field 1: correlation_id (literal string)
@@ -408,7 +411,7 @@ def recompute_fingerprint(receipt_dict):
     invariants_scope = receipt_dict.get("invariants_scope", "")
     invariants_scope_hash = hash_text(invariants_scope, truncate=64)
 
-    fingerprint_input = "|".join([
+    fields = [
         correlation_id,            # 1  — literal string
         context_hash,              # 2  — hash
         output_hash,               # 3  — hash
@@ -425,7 +428,30 @@ def recompute_fingerprint(receipt_dict):
         workflow_id_hash,          # 14 — hash
         enforcement_surface_hash,  # 15 — hash (v1.3+)
         invariants_scope_hash,     # 16 — hash (v1.3+)
-    ])
+    ]
+
+    # cv=9 (v1.4+): extend to 20 fields
+    if int(checks_version) >= 9:
+        tool_name = receipt_dict.get("tool_name") or ""
+        tool_name_hash = hash_text(tool_name, truncate=64) if tool_name else EMPTY_HASH
+
+        agent_model = receipt_dict.get("agent_model")
+        agent_model_hash = hash_text(agent_model, truncate=64) if agent_model is not None else EMPTY_HASH
+
+        agent_model_provider = receipt_dict.get("agent_model_provider")
+        agent_model_provider_hash = hash_text(agent_model_provider, truncate=64) if agent_model_provider is not None else EMPTY_HASH
+
+        agent_model_version = receipt_dict.get("agent_model_version")
+        agent_model_version_hash = hash_text(agent_model_version, truncate=64) if agent_model_version is not None else EMPTY_HASH
+
+        fields.extend([
+            tool_name_hash,              # 17 — hash (v1.4+)
+            agent_model_hash,            # 18 — hash or EMPTY_HASH if null/absent (v1.4+)
+            agent_model_provider_hash,   # 19 — hash or EMPTY_HASH if null/absent (v1.4+)
+            agent_model_version_hash,    # 20 — hash or EMPTY_HASH if null/absent (v1.4+)
+        ])
+
+    fingerprint_input = "|".join(fields)
 
     receipt_dict["full_fingerprint"] = hash_text(fingerprint_input, truncate=64)
     receipt_dict["receipt_fingerprint"] = hash_text(fingerprint_input, truncate=16)
@@ -448,6 +474,10 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     )
     receipt_pass = generate_receipt(trace_pass)
     receipt_pass_dict = receipt_to_dict(receipt_pass)
+    # Explicit null for agent_model fields: opt-out coverage per v1.4 tri-valued semantics
+    receipt_pass_dict["agent_model"] = None
+    receipt_pass_dict["agent_model_provider"] = None
+    receipt_pass_dict["agent_model_version"] = None
     receipt_pass_dict = recompute_fingerprint(receipt_pass_dict)
     receipt_pass_signed = sign_receipt(receipt_pass_dict, priv_key_path, "test-author@sanna.dev")
 
@@ -471,6 +501,10 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     }
     receipt_fail = generate_receipt(trace_fail, enforcement=fail_enforcement)
     receipt_fail_dict = receipt_to_dict(receipt_fail)
+    # Explicit null: opt-out coverage
+    receipt_fail_dict["agent_model"] = None
+    receipt_fail_dict["agent_model_provider"] = None
+    receipt_fail_dict["agent_model_version"] = None
 
     # Ensure at least one critical failure for fixture realism (check results ALSO
     # show failure, not just enforcement-forced status). The SDK's halted override
@@ -521,6 +555,10 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     receipt_esc = generate_receipt(trace_esc, enforcement=esc_enforcement)
     receipt_esc_dict = receipt_to_dict(receipt_esc)
     # SDK's escalated→WARN override fires at emit time; no manual status assignment needed.
+    # Explicit null: opt-out coverage
+    receipt_esc_dict["agent_model"] = None
+    receipt_esc_dict["agent_model_provider"] = None
+    receipt_esc_dict["agent_model_version"] = None
 
     _sync_enforcement_timestamp(receipt_esc_dict)
     receipt_esc_dict = recompute_fingerprint(receipt_esc_dict)
@@ -544,7 +582,13 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
         "enforcement_mode": "log",
         "timestamp": None,  # synced below
     }
-    receipt_full = generate_receipt(trace_full, enforcement=full_enforcement)
+    receipt_full = generate_receipt(
+        trace_full,
+        enforcement=full_enforcement,
+        agent_model="claude-opus-4-7",
+        agent_model_provider="anthropic",
+        agent_model_version="20250514",
+    )
     receipt_full_dict = receipt_to_dict(receipt_full)
 
     # constitution_ref
@@ -645,7 +689,7 @@ def generate_golden_hashes(receipts, key_id):
         "generated_with": f"sanna v{TOOL_VERSION}",
         "spec_version": SPEC_VERSION,
         "checks_version": CHECKS_VERSION,
-        "fingerprint_fields": 16,
+        "fingerprint_fields": 20,
         "EMPTY_HASH": EMPTY_HASH,
         "test_key_id": key_id,
         "receipts": {},
