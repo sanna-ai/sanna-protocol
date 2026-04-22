@@ -1938,20 +1938,41 @@ normalizes to ASCII `F` (U+0046) before camelCase splitting.
 
 ### D.3 Matching Semantics
 
-After normalizing both the action name `a` and the pattern `p`:
+After normalizing both the action name `a` and the pattern `p`,
+a match is determined as follows:
 
-1. **Exact or substring match:** `a` matches `p` if `a == p` OR
-   `p` is a substring of `a` OR `a` is a substring of `p`.
+1. **Non-glob branch (no `*` in pattern):** If `p` contains no `*`
+   character, then `a` matches `p` iff `p == a` (exact equality after
+   normalization). Additionally, if no exact match is found,
+   implementations MUST apply the **separatorless fallback**: strip all
+   `.` characters from both `a` and `p` (producing `a_stripped` and
+   `p_stripped`), then check `a_stripped == p_stripped` (exact equality
+   after stripping). The separatorless fallback compensates for edge
+   cases where separator placement differs between the action name and
+   the pattern, but it is an exact comparison — it is NOT substring
+   containment.
 
-2. **Separatorless fallback:** If no match is found in step 1,
-   strip all non-alphanumeric characters from both `a` and `p`,
-   then check substring containment in both directions. This
-   catches edge cases where separator placement differs between
-   the action name and the pattern.
+2. **Glob branch (one or more `*` in pattern):** If `p` contains one
+   or more `*` characters, then `a` matches `p` iff the full normalized
+   action string matches `p` as a shell-style glob. Matching rules:
+   - `*` matches zero or more characters (any characters, including `.`).
+   - Matching is **anchored at both ends** — the entire action string
+     must match the pattern, not just a substring of it.
+   - Only `*` is a recognized glob metacharacter. The characters `?`,
+     `[`, `]`, `{`, `}`, and `\` have no special meaning and are
+     matched literally.
+   - `**` is treated as two consecutive `*` wildcards; it is NOT a
+     recursive wildcard and behaves identically to a single `*`.
+   - Implementations SHOULD convert the glob pattern to a regex by:
+     (a) escaping all regex metacharacters except `*`, then
+     (b) replacing each run of one or more `*` with `.*`, then
+     (c) anchoring with `^` and `$`.
+   - The separatorless fallback does NOT apply in the glob branch.
 
 3. **Empty name rejection:** Empty action names (empty string or
    whitespace-only) MUST NOT match any pattern. Implementations
-   MUST return "no match" (not "match") for empty actions.
+   MUST return "no match" (not "match") for empty actions, even
+   if the pattern is `*`.
 
 4. **Empty pattern rejection:** Empty patterns (empty string or
    whitespace-only) MUST NOT match any action. An empty pattern
@@ -1960,14 +1981,54 @@ After normalizing both the action name `a` and the pattern `p`:
 
 ### D.4 Match Examples
 
+#### Exact matches (no glob)
+
+| Action | Pattern | Normalized action | Normalized pattern | Match? | Reason |
+|--------|---------|-------------------|--------------------|--------|--------|
+| `deleteFile` | `delete_file` | `delete.file` | `delete.file` | Yes | Both normalize to `delete.file`; exact match |
+| `delete-file` | `DELETE_FILE` | `delete.file` | `delete.file` | Yes | Case and separator differences collapse in normalization |
+| `HTTPSClient` | `https_client` | `https.client` | `https.client` | Yes | camelCase abbreviation expands correctly |
+| `send_email` | `sendEmail` | `send.email` | `send.email` | Yes | snake_case and camelCase normalize identically |
+
+#### Exact non-matches (substring does NOT match)
+
+| Action | Pattern | Normalized action | Normalized pattern | Match? | Reason |
+|--------|---------|-------------------|--------------------|--------|--------|
+| `delete_user` | `delete` | `delete.user` | `delete` | **No** | `delete` ≠ `delete.user`; substring is not a match |
+| `bread` | `read` | `bread` | `read` | **No** | F-005 repro: `read` ≠ `bread`; exact only, no substring |
+| `API-patch-page` | `patch` | `api.patch.page` | `patch` | **No** | `patch` ≠ `api.patch.page`; partial word is not a match without glob |
+| `deleteFile` | `createFile` | `delete.file` | `create.file` | **No** | Normalized strings are not equal |
+
+#### Glob matches
+
 | Action | Pattern | Match? | Reason |
 |--------|---------|--------|--------|
-| `deleteFile` | `delete_file` | Yes | Both normalize to `delete.file` |
-| `API-patch-page` | `patch` | Yes | `patch` is substring of `api.patch.page` |
-| `send_email` | `Send email or post external message` | Yes | Word-boundary matching on significant words |
-| `deleteFile` | `createFile` | No | `delete.file` does not contain `create.file` or vice versa |
-| `` (empty) | `delete` | No | Empty action always rejected |
-| `delete` | `` (empty) | No | Empty pattern always rejected |
+| `read_user_profile` | `read_*` | Yes | `read.user.profile` matches glob `read.*` |
+| `user_delete` | `*_delete` | Yes | `user.delete` matches glob `*.delete` |
+| `anything` | `*` | Yes | `*` matches any non-empty string |
+| `user_delete_file` | `*delete*` | Yes | `user.delete.file` matches glob `*delete*` |
+
+#### Glob non-matches
+
+| Action | Pattern | Match? | Reason |
+|--------|---------|--------|--------|
+| `read` | `read_*` | **No** | `read` does not satisfy `read.*` (requires at least one char after `read.`) |
+| `delete_user` | `read_*` | **No** | `delete.user` does not start with `read.` |
+
+#### Separatorless fallback (non-glob only)
+
+| Action | Pattern | Stripped action | Stripped pattern | Match? | Reason |
+|--------|---------|-----------------|------------------|--------|--------|
+| `file_delete` | `filedelete` | `filedelete` | `filedelete` | Yes | Fallback: stripped forms are equal |
+| `send-email` | `sendemail` | `sendemail` | `sendemail` | Yes | Fallback: stripped forms are equal |
+
+#### Empty and degenerate cases
+
+| Action | Pattern | Match? | Reason |
+|--------|---------|--------|--------|
+| `` (empty) | `delete` | **No** | Empty action is always rejected |
+| `delete` | `` (empty) | **No** | Empty pattern is always rejected |
+| `` (empty) | `*` | **No** | Even `*` does not match an empty action |
 
 ### D.5 Relationship to Gateway Policy Cascade
 
@@ -1982,14 +2043,15 @@ reference implementation's gateway documentation):
    downstream server entry. No name matching is involved.
 3. **Constitution authority boundaries:** `evaluate_authority()` uses
    the normalization algorithm described in this appendix for
-   bidirectional substring matching against `cannot_execute`,
+   exact-or-glob matching against `cannot_execute`,
    `must_escalate`, and `can_execute` lists.
 
 Per-tool overrides use exact string matching on the original tool name
 because the config author controls both the tool name and the override
-entry. Constitution authority boundaries use normalized matching
-because the constitution author may not know the exact tool naming
-convention of every downstream server.
+entry. Constitution authority boundaries use normalized exact-or-glob
+matching because the constitution author may not know the exact tool
+naming convention of every downstream server; glob patterns (with `*`)
+are available when broad-match behavior is needed.
 
 ## Appendix E: Gateway Extension Namespace (`com.sanna.gateway`)
 
