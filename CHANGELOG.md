@@ -6,6 +6,41 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0-errata-A] - 2026-04-21
+
+### Changed (Breaking: Appendix D authority matching semantics)
+
+- **Appendix D §D.3 authority matching rule changed from bidirectional
+  substring to exact + opt-in glob.** The original §D.3 specified that
+  action `a` matches pattern `p` if `p` is a substring of `a` OR `a` is
+  a substring of `p`. This is replaced by: (a) if `p` contains no `*`,
+  match iff `p == a` after normalization (with separatorless fallback for
+  exact stripped comparison only — NOT substring containment); (b) if `p`
+  contains `*`, match iff the normalized `a` satisfies the shell-style
+  glob `p` (anchored full match, `*` only).
+
+  **Breaking for third-party implementers who read the original 1.4 spec
+  Appendix D:** If you implemented bidirectional substring matching, update
+  your implementation to exact + glob matching. Substring matches that were
+  not exact will now return false unless covered by a glob pattern.
+
+  **Migration:** To restore broad-match behavior for a pattern `p` that
+  previously relied on substring matching, replace `p` with `*p*` (or the
+  appropriate prefix/suffix glob) in the constitution's authority
+  boundaries. Example: `patch` → `*patch*` to match `api.patch.page`.
+
+- **New fixture file `fixtures/authority-matching-vectors.json`** (21
+  vectors): normative cross-SDK contract for authority matching. Both
+  Python and TypeScript SDKs MUST return the same decision for every
+  vector. Vector categories: exact match (E-001–E-004), exact non-match
+  including F-005 repro (N-001–N-004), glob match (G-001–G-004), glob
+  non-match (G-005–G-006), normalization robustness (R-001–R-002),
+  separatorless fallback (S-001–S-002), degenerate/empty (D-001–D-003).
+
+- **VERSIONING.md**: new "Errata for appendix-level behavioral
+  clarifications" section documents the convention under which this
+  errata is published. SAN-224 is the first application.
+
 ## [1.4.0] - 2026-04-20 (fixtures regenerated 2026-04-20)
 
 ### Added
