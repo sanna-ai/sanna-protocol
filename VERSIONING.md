@@ -42,6 +42,36 @@ SDK package versions bump coordinated: Python sanna `1.3.0` → `1.4.0`; TS
 all four packages bump to `1.4.0` (closing the SAN-217-flagged version lag
 where `@sanna-ai/core` was at `1.1.1`). No version skip.
 
+## Errata for appendix-level behavioral clarifications
+
+Spec corrections that meet ALL of the following criteria may be published
+as a CHANGELOG entry without bumping `SPEC_VERSION` or `CHECKS_VERSION`:
+
+1. **No wire format change.** The receipt JSON shape, required fields,
+   enum values, and JSON Schema are unchanged.
+2. **No fingerprint formula change.** Field count, field ordering, and
+   hash functions at every `checks_version` are unchanged.
+3. **No `CHECKS_VERSION` change.** The monotonic integer is unchanged.
+4. **Scope is appendix-level or normative-prose-only.** The correction
+   affects algorithm description, matching semantics, or worked examples
+   — not field definitions, schema constraints, or fingerprint mechanics.
+
+Such corrections MUST be documented in `CHANGELOG.md` with a
+`[SPEC_VERSION-errata-N]` header (e.g., `[1.4.0-errata-A]`), including:
+- A clear statement of what changed
+- A breaking-change note if prior spec text was implementable in a way
+  that differs from the corrected text
+- Migration guidance for third-party implementers
+
+Third-party implementers SHOULD check `CHANGELOG.md` for errata entries
+against each `SPEC_VERSION` they target, in addition to the spec document
+itself. An errata entry indicates that the behavior described in
+CHANGELOG supersedes the original spec text for that section.
+
+SAN-224 is the first application of this convention: Appendix D authority
+matching semantics changed from bidirectional substring to exact + opt-in
+glob. The `SPEC_VERSION` remains `1.4` and `CHECKS_VERSION` remains `9`.
+
 ## Scope
 
 Three independently versioned artifacts:
