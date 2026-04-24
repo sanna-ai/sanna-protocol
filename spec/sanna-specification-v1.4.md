@@ -1719,8 +1719,15 @@ An implementation claiming to be a compatible generator MUST:
    absent fingerprint components.
 7. Strip `constitution_approval` from `constitution_ref` before
    computing the constitution hash (Section 4.2).
-8. Apply NFC Unicode normalization to all string values before
-   canonicalization (Section 3.1).
+8. Apply NFC Unicode normalization at the `hash_text()` boundary
+   (fingerprint construction and text-mode hashing) per Section 3.1.
+   Strings within `hash_obj()` / `canonical_json_bytes()` inputs are NOT
+   recursively NFC-normalized; implementations MUST preserve the original
+   string encoding at that layer. Callers are responsible for providing
+   consistent string representations at the application layer. This scope
+   decision is documented in ADR-004 (NFC Normalization Scope in Canonical
+   JSON). Implementations that eagerly NFC-normalize all strings within
+   `hash_obj()` inputs are non-conforming.
 9. Validate that `correlation_id` does not contain the pipe character
    `|` (Section 2.1).
 10. At `checks_version >= 9` (v1.4+): emit `tool_name` as a required

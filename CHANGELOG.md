@@ -41,6 +41,18 @@ Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   clarifications" section documents the convention under which this
   errata is published. SAN-224 is the first application.
 
+### Documentation (SAN-225)
+
+- **Section 13.1 item 8 narrowed:** NFC normalization applies at the
+  `hash_text()` boundary (fingerprint construction and text-mode
+  hashing), not recursively within `hash_obj()` /
+  `canonical_json_bytes()` inputs. Matches Section 3.1 and ADR-004
+  (decided 2026-02-18). Not a breaking change — reference SDKs
+  (sanna v1.3.0, sanna-ts 1.4.0) have always implemented this scope.
+  Third-party implementers building to the previous Section 13 text
+  should verify their canonical JSON paths do not eagerly NFC-normalize
+  strings inside nested objects.
+
 ## [1.4.0] - 2026-04-20 (fixtures regenerated 2026-04-20)
 
 ### Added
