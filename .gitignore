@@ -1,5 +1,5 @@
 .hypothesis/
-CLAUDE.md
+CLAUDE.local.md
 .DS_Store
 security-audit-*.md
 security-review-*.md
