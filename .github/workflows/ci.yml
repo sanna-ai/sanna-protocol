@@ -18,6 +18,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Validate state doc (SAN-326)
+        # Fails if docs/state.md is stale relative to its sources of truth
+        # (spec version, checks_version, schema list, fixture count, changelog).
+        # Fix: run `python3 tools/generate_state_doc.py` and commit the result.
+        run: python3 tools/generate_state_doc.py --check
+
       - name: Validate JSON schemas parse cleanly
         run: |
           python3 -c "
