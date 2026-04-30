@@ -1,9 +1,9 @@
-# Sanna Reasoning Receipt Specification v1.4
+# Sanna Reasoning Receipt Specification v1.5
 
-**Status:** Released
-**Version:** 1.4.0
-**Date:** 2026-04-20
-**Reference implementation:** sanna v1.4.0 (pending v1.4-B merge)
+**Status:** Draft
+**Version:** 1.5.0
+**Date:** 2026-04-30
+**Reference implementation:** sanna v1.5.0 (pending SAN-370 cv=10 implementation)
 
 ---
 
@@ -88,8 +88,8 @@ Every receipt MUST contain the following fields:
 | `assurance` | string/null | Receipt Triad assurance level (`"full"`, `"partial"`) (see Section 7) |
 | `parent_receipts` | array/null | Array of `full_fingerprint` strings from parent receipts for receipt chaining (see Section 2.12). Participates in fingerprint computation. |
 | `workflow_id` | string/null | Opaque string grouping related receipts into a workflow (see Section 2.13). Participates in fingerprint computation. |
-| `content_mode` | string/null | Content handling mode: `"full"`, `"redacted"`, or `"hashes_only"` (see Section 2.14). Metadata only — does NOT participate in fingerprint computation. |
-| `content_mode_source` | string/null | Origin of the content_mode value: `"local_config"`, `"cloud_tenant"`, or `"override"` (see Section 2.14). Metadata only — does NOT participate in fingerprint computation. |
+| `content_mode` | string/null | Content handling mode: `"full"`, `"redacted"`, or `"hashes_only"` (see Section 2.14). Metadata only -- does NOT participate in fingerprint computation. |
+| `content_mode_source` | string/null | Origin of the content_mode value: `"local_config"`, `"cloud_tenant"`, or `"override"` (see Section 2.14). Metadata only -- does NOT participate in fingerprint computation. |
 | `extensions` | object | Reverse-domain-namespaced vendor metadata |
 | `identity_verification` | object/null | Identity claim verification results (see Section 2.10) |
 | `agent_model` | string/null | LLM model identifier (see Section 2.18.1). Nullable for explicit opt-out; absent = not captured. Participates in fingerprint (field 18 at v1.4+). |
@@ -194,11 +194,21 @@ Each element of the `authority_decisions` array MUST contain:
 |-------|------|----------|-------------|
 | `action` | string | Yes | Tool name or action that was evaluated |
 | `params` | object/null | No | Tool parameters (additionalProperties allowed) |
-| `decision` | string | Yes | `"halt"`, `"allow"`, `"escalate"` |
+| `decision` | string | Yes | `"halt"`, `"allow"`, `"escalate"`, `"modify_with_constraints"` |
 | `reason` | string | Yes | Human-readable reason for the decision |
 | `boundary_type` | string | Yes | `"cannot_execute"`, `"must_escalate"`, `"can_execute"`, `"uncategorized"` |
 | `escalation_target` | object/null | No | Target configuration with `type` field (`"log"`, `"webhook"`, `"callback"`) |
 | `timestamp` | string | Yes | ISO 8601 date-time |
+| `tool_input_original` | string or object | Conditional | Input the agent submitted before transformation. REQUIRED when `decision` is `"modify_with_constraints"`. |
+| `tool_input_transformed` | string or object | Conditional | Input actually passed to the tool after transformation. REQUIRED when `decision` is `"modify_with_constraints"`. |
+| `transformations_applied` | array of objects | Conditional | Each object: `{type: string, target_field: string, rationale: string}`. REQUIRED when `decision` is `"modify_with_constraints"`. |
+
+**MODIFY parameter recording (v1.5+, normative):** Receipts using
+`modify_with_constraints` MUST record both the original and transformed
+inputs plus the list of applied transformations. Without these fields,
+a runtime parameter rewrite is not auditable -- the auditor sees the
+transformed input and cannot reconstruct the original input the agent
+intended.
 
 ### 2.8 Escalation Events
 
@@ -339,7 +349,7 @@ handle this by:
 1. Serializing the entire dict to a JSON string using
    `json.dumps(value, sort_keys=True)`. Cross-language implementations
    MUST replicate Python's default serialization with separators
-   `(', ', ': ')` — i.e., one space after each comma and one space
+   `(', ', ': ')` -- i.e., one space after each comma and one space
    after each colon.
 2. Applying a fresh redaction marker to the serialized JSON string.
 
@@ -386,6 +396,17 @@ via their full fingerprints.
 - When `parent_receipts` is null or absent, `EMPTY_HASH` is used
   as the fingerprint component, consistent with other absent-field
   handling.
+
+**Invocation anomaly binding (v1.5+, normative):** When `event_type`
+is `invocation_anomaly` (or a surface variant `cli_invocation_anomaly`
+/ `api_invocation_anomaly`), the receipt MUST have non-empty
+`parent_receipts` containing the `full_fingerprint` of the active
+`session_manifest` receipt. This binding lets verifiers reconstruct
+the relationship between attempted enumeration and the manifest that
+suppressed the tool. Verifiers MUST reject anomaly receipts with no
+`parent_receipts` or with `parent_receipts` that do not resolve
+(within the verified set) to a `session_manifest` receipt with the
+attempted tool name in `tools_suppressed`.
 
 ### 2.13 Workflow ID
 
@@ -436,6 +457,18 @@ in fingerprint computation.
   of Cloud configuration. Including content_mode in the fingerprint
   would break verification when Cloud settings change.
 
+**Content mode and the com.sanna.manifest extension (v1.5+, normative):**
+When `content_mode` is `redacted`, tool names and patterns inside
+`extensions["com.sanna.manifest"]` MUST be replaced with `<redacted>`
+markers; `rule_id` and `suppression_reason` fields remain visible.
+When `content_mode` is `hashes_only`, tool names and patterns MUST be
+replaced with their SHA-256 hex strings (lowercase). The fingerprint is
+computed over the redacted/hashed content; signature verification
+proceeds normally regardless of `content_mode`. Verifiers MUST accept
+`<redacted>` markers in capability surface fields when
+`content_mode=redacted` is set; cryptographic integrity (fingerprint +
+signature) is the conformance test, not visible-content presence.
+
 ### 2.15 Governance Surface Metadata
 
 Two optional metadata fields identify the execution surface and enforcement outcome for a receipt.
@@ -455,14 +488,45 @@ Identifies the governance event. The prefix indicates the execution surface. Unp
 | `api_invocation_allowed` | API | HTTP request permitted |
 | `api_invocation_halted` | API | HTTP request blocked |
 | `api_invocation_escalated` | API | HTTP request escalated |
+| `session_manifest` | session-init | Session-initialization capability surface receipt; describes delivered/suppressed capabilities |
+| `invocation_anomaly` | MCP | Agent attempted invocation of a non-delivered tool (anti-enumeration signal) |
+| `invocation_modified` | MCP | Tool invocation permitted with parameter transformation applied (AARM MODIFY) |
+| `invocation_deferred` | MCP | Tool invocation deferred pending additional context (AARM DEFER) |
+| `cli_invocation_anomaly` | CLI | Agent attempted invocation of a non-delivered CLI pattern (only when constitution opts in to CLI anomaly tracking) |
+| `cli_invocation_modified` | CLI | Subprocess invocation permitted with argument transformation |
+| `cli_invocation_deferred` | CLI | Subprocess invocation deferred |
+| `api_invocation_anomaly` | API | Agent attempted invocation of a non-delivered HTTP pattern (only when constitution opts in to HTTP anomaly tracking) |
+| `api_invocation_modified` | API | HTTP request permitted with parameter transformation |
+| `api_invocation_deferred` | API | HTTP request deferred |
 
 The `event_type` field is OPTIONAL. Receipts generated by the library middleware (non-gateway, non-interceptor) MAY omit this field. When present, it MUST be one of the enumerated values.
 
 `event_type` does NOT participate in fingerprint computation.
 
-**GCD alignment:** The unprefixed event types (`invocation_allowed`, `invocation_halted`, `invocation_escalated`) correspond directly to GCD Layer 4 (Enforcement) event types defined in the GCD specification. `invocation_anomaly` (attempted invocation of a non-delivered capability) is reserved for GCD Phase 4 and is not included in this version.
+**GCD alignment:** The unprefixed event types (`invocation_allowed`,
+`invocation_halted`, `invocation_escalated`) correspond directly to
+GCD Layer 4 (Enforcement) event types defined in the GCD specification.
+The new event types `session_manifest`, `invocation_anomaly`,
+`invocation_modified`, `invocation_deferred`, and their CLI/API surface
+variants are now active in v1.5 and MUST be used as specified in this
+section. The previous "reserved for GCD Phase 4" restriction on
+`invocation_anomaly` is lifted; it is now a required emission for
+anti-enumeration governance.
 
-GCD Layer 3 (Composition) event types (`capability_delivered`, `capability_suppressed`, `capability_withdrawn`, `composition_changed`) and Layer 1-2 event types (`identity_verified`, `entitlement_granted`, `entitlement_denied`, `entitlement_revoked`) are reserved for future protocol versions and MUST NOT be used in the `event_type` field.
+GCD Layer 3 (Composition) event types (`capability_delivered`,
+`capability_suppressed`, `capability_withdrawn`, `composition_changed`)
+and Layer 1-2 event types (`identity_verified`, `entitlement_granted`,
+`entitlement_denied`, `entitlement_revoked`) remain reserved for future
+protocol versions and MUST NOT be used in the `event_type` field.
+
+**Cross-field rules (normative, v1.5+):**
+
+- If `extensions["com.sanna.manifest"]` is present, `event_type` MUST
+  be `session_manifest`.
+- Receipts with `event_type` of `invocation_modified` (or surface
+  variants `cli_invocation_modified` / `api_invocation_modified`) MUST
+  include the MODIFY recording fields specified in Section 2.7 inside
+  `authority_decisions[i]` for the modified decision.
 
 #### 2.15.2 context_limitation
 
@@ -482,7 +546,7 @@ When `context_limitation` is absent or null, verifiers SHOULD NOT make assumptio
 
 ### 2.16 Enforcement Surface and Invariants Scope (v1.3+)
 
-Two new **required** fields introduced in v1.3 make receipts self-describing about what governance actually ran. Together they eliminate the ambiguity that allowed interceptor receipts to claim `status="PASS"` with `checks_passed=5` by running C1-C5 trivially against empty context — indistinguishable on the wire from a genuine middleware receipt. Both fields participate in fingerprint computation (fields 15 and 16 at `checks_version="8"`).
+Two new **required** fields introduced in v1.3 make receipts self-describing about what governance actually ran. Together they eliminate the ambiguity that allowed interceptor receipts to claim `status="PASS"` with `checks_passed=5` by running C1-C5 trivially against empty context -- indistinguishable on the wire from a genuine middleware receipt. Both fields participate in fingerprint computation (fields 15 and 16 at `checks_version="8"`).
 
 #### 2.16.1 enforcement_surface
 
@@ -490,7 +554,7 @@ Two new **required** fields introduced in v1.3 make receipts self-describing abo
 
 | Field | Type | Enum |
 |-------|------|------|
-| `enforcement_surface` | string | `"middleware"` \| `"gateway"` \| `"cli_interceptor"` \| `"http_interceptor"` |
+| `enforcement_surface` | string | `"middleware"` \| `"gateway"` \| `"cli_interceptor"` \| `"http_interceptor"` \| `"mixed"` |
 
 | Value | Meaning |
 |-------|---------|
@@ -498,6 +562,7 @@ Two new **required** fields introduced in v1.3 make receipts self-describing abo
 | `gateway` | MCP enforcement proxy (`sanna-gateway`). Observes tool calls at boundary; limited reasoning context. Authority decisions available; full reasoning trace may be absent. |
 | `cli_interceptor` | Subprocess patching (`patch_subprocess` / `patchChildProcess`). Observes binary name and argv only; no reasoning trace available. |
 | `http_interceptor` | Fetch/HTTP patching (`patch_http` / `patchFetch`). Observes method and URL only; no reasoning trace available. |
+| `mixed` | Cross-surface receipt covering MCP + CLI + HTTP from a single emission point. Used when a `session_manifest` spans multiple surfaces in one receipt. Verifiers MUST reject `mixed` receipts whose `extensions["com.sanna.manifest"].surfaces` has fewer than 2 sub-objects. |
 
 Participates in fingerprint computation as `enforcement_surface_hash = hash_text(enforcement_surface, 64)` (field 15). `EMPTY_HASH` indicates a malformed v1.3 receipt.
 
@@ -529,9 +594,30 @@ When a governance surface produces a receipt without running C1-C5 (because the 
 | `allowed` | `PASS` |
 | `escalated` | `WARN` |
 
-**Rationale for `escalated → WARN`:** An escalated action is flagged-not-greenlit; the action has been deferred pending human approval. The approval itself is a downstream receipt. Reporting `PASS` would imply governance permitted the action, which is false until approval lands. `WARN` accurately represents the unresolved state.
+**Rationale for `escalated -> WARN`:** An escalated action is flagged-not-greenlit; the action has been deferred pending human approval. The approval itself is a downstream receipt. Reporting `PASS` would imply governance permitted the action, which is false until approval lands. `WARN` accurately represents the unresolved state.
 
 This mapping applies when `invariants_scope` is `"authority_only"` or `"none"`. When `invariants_scope` is `"full"` or `"limited"`, `status` is derived from check results per Section 2.4 as normal.
+
+**Status derivation for session_manifest receipts (v1.5+, normative):**
+When `event_type` is `session_manifest`, the receipt MUST have
+`invariants_scope = none` AND the `enforcement` field MUST be absent
+(or null). `status` MUST be `PASS` when manifest generation succeeded,
+or `FAIL` when the receipt was emitted as a fail-closed record under
+enforce-mode failure. Verifiers MUST reject `session_manifest` receipts
+that violate any of these constraints.
+
+**Status for invocation_modified and invocation_deferred (v1.5+, normative):**
+`invocation_modified` MUST have `enforcement.action = allowed` and
+`status = PASS` (the action was permitted, with transformation).
+`invocation_deferred` MUST have `enforcement.action = escalated` and
+`status = WARN` (the action was deferred for context, equivalent to
+soft-halt pending more information).
+
+**Status for invocation_anomaly (v1.5+, normative):**
+`invocation_anomaly` receipts MUST have `enforcement.action = halted`
+and `status = FAIL` (the action was blocked-by-absence). The
+distinguishing field from `invocation_halted` is `event_type`, not
+`status`.
 
 #### 2.16.4 Architectural Asymmetry Note (Non-Normative)
 
@@ -546,7 +632,7 @@ Both paths produce spec-compliant v1.4 receipts. The difference is invocation st
 
 #### 2.17.1 tool_name
 
-**REQUIRED at v1.4+ (checks_version >= 9).** Identifies which SDK or implementation emitted this receipt. Separates SDK identity from SDK version — `tool_version` carries the bare semver (e.g., `"1.4.0"`); `tool_name` carries the canonical SDK identifier.
+**REQUIRED at v1.4+ (checks_version >= 9).** Identifies which SDK or implementation emitted this receipt. Separates SDK identity from SDK version -- `tool_version` carries the bare semver (e.g., `"1.4.0"`); `tool_name` carries the canonical SDK identifier.
 
 | Field | Type | Enum |
 |-------|------|------|
@@ -559,11 +645,11 @@ Both paths produce spec-compliant v1.4 receipts. The difference is invocation st
 
 Participates in fingerprint computation as `tool_name_hash = hash_text(tool_name, 64)` (field 17). `EMPTY_HASH` indicates a malformed v1.4 receipt.
 
-**Registered values extensible via spec PR.** Third-party SDK implementers who wish to use a `tool_name` value not listed above MUST submit a pull request to `sanna-protocol` adding the value to the enum in `schemas/receipt.schema.json` and to this section. Third-party implementations MUST NOT use unregistered values — doing so causes receipts to fail schema validation and undermines cross-implementation interoperability.
+**Registered values extensible via spec PR.** Third-party SDK implementers who wish to use a `tool_name` value not listed above MUST submit a pull request to `sanna-protocol` adding the value to the enum in `schemas/receipt.schema.json` and to this section. Third-party implementations MUST NOT use unregistered values -- doing so causes receipts to fail schema validation and undermines cross-implementation interoperability.
 
 **Example:** A Go SDK implementation would register `"sanna-go"` via spec PR before emitting receipts with that value. Until registered, `tool_name: "sanna-go"` fails schema validation.
 
-**Design rationale:** Prior to v1.4, `tool_version` was the only SDK identity signal — an unqualified semver like `"1.3.0"`. This coupled identity and version: a verifier trying to select verification logic based on SDK identity had to infer it from context. `tool_name` makes identity explicit and allows verifiers to dispatch on both SDK identity and version independently.
+**Design rationale:** Prior to v1.4, `tool_version` was the only SDK identity signal -- an unqualified semver like `"1.3.0"`. This coupled identity and version: a verifier trying to select verification logic based on SDK identity had to infer it from context. `tool_name` makes identity explicit and allows verifiers to dispatch on both SDK identity and version independently.
 
 ### 2.18 Agent Model Fields (v1.4+)
 
@@ -605,8 +691,8 @@ The `agent_model`, `agent_model_provider`, and `agent_model_version` fields supp
 
 | JSON representation | Meaning |
 |--------------------|---------|
-| Field absent (key not present) | Not captured — the generator did not supply this information (e.g., legacy receipt, generator before v1.4, or generator without model access) |
-| `"field": null` | Explicit opt-out — the generator had access to the information but the operator or user chose not to disclose the model identity in this receipt |
+| Field absent (key not present) | Not captured -- the generator did not supply this information (e.g., legacy receipt, generator before v1.4, or generator without model access) |
+| `"field": null` | Explicit opt-out -- the generator had access to the information but the operator or user chose not to disclose the model identity in this receipt |
 | `"field": "some-string"` | Captured and disclosed |
 
 **Normative rules for aggregators and verifiers:**
@@ -617,11 +703,11 @@ The `agent_model`, `agent_model_provider`, and `agent_model_version` fields supp
 
 3. Verifiers MUST NOT reject receipts with null `agent_model*` fields. Null is a valid and explicitly supported value.
 
-**Fingerprint layer vs. JSON layer:** For fingerprint computation (fields 18-20), both null and absent produce `EMPTY_HASH`. The fingerprint does not preserve the absent/null distinction — it captures only whether a string value was present and what that value was. The absent/null distinction is preserved at the JSON layer only. This is intentional: the fingerprint captures content-affecting facts (what model produced this receipt), not metadata-layer disclosure decisions (whether the operator disclosed the model). Two receipts — one with `agent_model: null` and one without the `agent_model` key — produce identical fingerprints for fields 18-20.
+**Fingerprint layer vs. JSON layer:** For fingerprint computation (fields 18-20), both null and absent produce `EMPTY_HASH`. The fingerprint does not preserve the absent/null distinction -- it captures only whether a string value was present and what that value was. The absent/null distinction is preserved at the JSON layer only. This is intentional: the fingerprint captures content-affecting facts (what model produced this receipt), not metadata-layer disclosure decisions (whether the operator disclosed the model). Two receipts -- one with `agent_model: null` and one without the `agent_model` key -- produce identical fingerprints for fields 18-20.
 
 **Example (absent vs null):**
 
-Receipt A (absent — not captured):
+Receipt A (absent -- not captured):
 ```json
 {
   "tool_name": "sanna",
@@ -630,7 +716,7 @@ Receipt A (absent — not captured):
 }
 ```
 
-Receipt B (null — explicit opt-out):
+Receipt B (null -- explicit opt-out):
 ```json
 {
   "tool_name": "sanna",
@@ -639,7 +725,111 @@ Receipt B (null — explicit opt-out):
 }
 ```
 
-These two receipts produce different JSON bytes (Receipt B has the `agent_model` key; Receipt A does not). However, both produce `EMPTY_HASH` for fingerprint field 18. A verifier comparing fingerprints cannot distinguish them. A verifier or aggregator reading the JSON CAN distinguish them — and MUST treat them differently per rule 1 above.
+These two receipts produce different JSON bytes (Receipt B has the `agent_model` key; Receipt A does not). However, both produce `EMPTY_HASH` for fingerprint field 18. A verifier comparing fingerprints cannot distinguish them. A verifier or aggregator reading the JSON CAN distinguish them -- and MUST treat them differently per rule 1 above.
+
+### 2.19 Agent Identity (v1.5+, cv=10+)
+
+The `agent_identity` field binds the receipt to the identity layers
+required for AARM R6 conformance: agent session, human principal,
+service account, and role/privilege scope.
+
+| Field | Type | Required at cv=10 |
+|-------|------|-------------------|
+| `agent_identity` | object | YES |
+
+**Subfields:**
+
+| Subfield | Type | Required | Description |
+|----------|------|----------|-------------|
+| `agent_session_id` | string | YES | Opaque identifier for the agent's active session. Stable for the duration of one governed session. |
+| `human_principal` | object or null | NO | The user/principal identity the agent acts on behalf of. |
+| `human_principal.subject` | string | -- | Subject identifier (email, OIDC sub claim, or organization-scoped user id). |
+| `human_principal.provider` | string | -- | Identity provider ("okta", "google_workspace", "azure_ad", "local"). |
+| `human_principal.verified` | boolean | -- | Whether the gateway verified the principal claim against the provider. |
+| `service_account` | object or null | NO | Service account identity separate from agent identity. |
+| `service_account.id` | string | -- | Service account identifier. |
+| `service_account.provider` | string | -- | IAM provider ("aws_iam", "gcp_iam", "azure_managed_identity"). |
+| `role` | string or null | NO | Role assigned to the agent for this session. |
+| `privilege_scope` | array of strings or null | NO | Explicit privileges granted to the agent for this session (e.g., ["read:invoices", "write:tickets"]). |
+
+The `agent_identity` field MUST be present at `checks_version` = `"10"`.
+At earlier checks_versions, the field MUST be absent (legacy receipts
+were emitted before the field existed).
+
+Participates in fingerprint computation as
+`agent_identity_hash = hash_obj(agent_identity)` at field 21. cv=9
+receipts use the 20-field fingerprint formula; cv=10 receipts use the
+21-field formula. Both are valid; verifiers dispatch based on
+`checks_version`.
+
+Optional subfields support deployments without each layer: pure service
+account scenarios omit `human_principal`; non-IAM scenarios omit
+`service_account`; deployments without explicit RBAC omit `role` and
+`privilege_scope`.
+
+### 2.20 The com.sanna.manifest Extension Namespace (v1.5+)
+
+Receipts with `event_type` = `session_manifest` carry the manifest
+data inside the `extensions["com.sanna.manifest"]` object. This
+section reserves the namespace and specifies its shape.
+
+#### 2.20.1 Key naming convention
+
+All keys inside `extensions["com.sanna.manifest"]` MUST use snake_case.
+Verifiers MUST reject receipts whose extension contains camelCase or
+other-cased keys. This convention matches the rest of Sanna's receipt
+JSON shape.
+
+#### 2.20.2 Required shape
+
+```yaml
+extensions:
+  com.sanna.manifest:
+    version: "0.1"
+    composition_basis: "static"  # Phase 1; "dynamic" reserved for Phase 2
+    surfaces:
+      mcp:                       # optional; present when MCP surface initialized
+        tools_delivered: [...]
+        tools_suppressed: [...]
+        suppression_reasons: {tool_name: reason_enum_value}
+      cli:                       # optional; present when CLI interceptor initialized
+        patterns_delivered: [...]
+        patterns_suppressed: [...]
+        suppression_reasons: {pattern: reason_enum_value}
+        mode: "strict"
+      http:                      # optional; present when HTTP interceptor initialized
+        patterns_delivered: [...]
+        patterns_suppressed: [...]
+        suppression_reasons: {pattern: reason_enum_value}
+        mode: "strict"
+```
+
+#### 2.20.3 Determinism
+
+Delivered and suppressed lists MUST be sorted alphabetically by tool/
+pattern name (ties broken by rule_id). `suppression_reasons` keys MUST
+match the names in the suppressed lists exactly. No tool/pattern may
+appear in both delivered and suppressed for the same surface.
+
+When `enforcement_surface` is `mixed`, the `surfaces` object MUST
+contain two or more sub-objects (mcp + cli, mcp + http, cli + http,
+or all three).
+
+### 2.21 Suppression Reason Enum (v1.5+)
+
+Values for `suppression_reasons[name]` inside the `com.sanna.manifest`
+extension. Stable; verifier rejects unknown values (warns, does not
+fail, on unknown -- it is the documented fallback).
+
+| Value | Meaning |
+|-------|---------|
+| `cannot_execute` | Constitution explicitly denies the capability |
+| `policy_denied` | Per-tool policy override denies |
+| `escalation_suppressed` | Tool requires escalation AND constitution sets `escalation_visibility=suppressed` |
+| `server_default_denied` | Capability outside any allowlist; default-deny applied |
+| `constitution_invalid` | Constitution failed to load; fail-closed empty surface |
+| `content_mode_redacted` | Suppression reason itself redacted under content_mode (capability is suppressed; reason private) |
+| `unknown` | Fallback when suppression occurred but reason cannot be determined; verifier emits warning, not error |
 
 ---
 
@@ -651,7 +841,7 @@ Canonicalization Scheme) for all hash computations.
 ### 3.1 Sanna Canonical JSON
 
 String values MUST be normalized to Unicode NFC form (UAX #15)
-at the `hash_text()` boundary — i.e., immediately before the input
+at the `hash_text()` boundary -- i.e., immediately before the input
 is passed to SHA-256. This is a deliberate design decision: Sanna
 normalizes at the hashing boundary, not at ingestion. Callers are
 NOT required to NFC-normalize all strings globally; the hashing
@@ -741,31 +931,34 @@ components:
 
 ```python
 fingerprint_input = '|'.join([
-    correlation_id,              # Field 1  — literal string
-    context_hash,                # Field 2  — hash_obj(inputs), 64-hex SHA-256
-    output_hash,                 # Field 3  — hash_obj(outputs), 64-hex SHA-256
-    CHECKS_VERSION,              # Field 4  — literal string (currently "9")
-    checks_hash,                 # Field 5  — hash_obj(checks_data), 64-hex SHA-256
-    constitution_hash,           # Field 6  — hash_obj(constitution_ref minus constitution_approval), or EMPTY_HASH
-    enforcement_hash,            # Field 7  — hash_obj(enforcement), or EMPTY_HASH
-    coverage_hash,               # Field 8  — hash_obj(evaluation_coverage), or EMPTY_HASH
-    authority_hash,              # Field 9  — hash_obj(authority_decisions), or EMPTY_HASH
-    escalation_hash,             # Field 10 — hash_obj(escalation_events), or EMPTY_HASH
-    trust_hash,                  # Field 11 — hash_obj(source_trust_evaluations), or EMPTY_HASH
-    extensions_hash,             # Field 12 — hash_obj(extensions), or EMPTY_HASH
-    parent_receipts_hash,        # Field 13 — hash_obj(parent_receipts), or EMPTY_HASH
-    workflow_id_hash,            # Field 14 — hash_text(workflow_id), or EMPTY_HASH
-    enforcement_surface_hash,    # Field 15 — hash_text(enforcement_surface), or EMPTY_HASH (v1.3+)
-    invariants_scope_hash,       # Field 16 — hash_text(invariants_scope), or EMPTY_HASH (v1.3+)
-    tool_name_hash,              # Field 17 — hash_text(tool_name), or EMPTY_HASH (v1.4+)
-    agent_model_hash,            # Field 18 — hash_text(agent_model) or EMPTY_HASH if null/absent (v1.4+)
-    agent_model_provider_hash,   # Field 19 — hash_text(agent_model_provider) or EMPTY_HASH if null/absent (v1.4+)
-    agent_model_version_hash,    # Field 20 — hash_text(agent_model_version) or EMPTY_HASH if null/absent (v1.4+)
+    correlation_id,              # Field 1  -- literal string
+    context_hash,                # Field 2  -- hash_obj(inputs), 64-hex SHA-256
+    output_hash,                 # Field 3  -- hash_obj(outputs), 64-hex SHA-256
+    CHECKS_VERSION,              # Field 4  -- literal string (currently "9")
+    checks_hash,                 # Field 5  -- hash_obj(checks_data), 64-hex SHA-256
+    constitution_hash,           # Field 6  -- hash_obj(constitution_ref minus constitution_approval), or EMPTY_HASH
+    enforcement_hash,            # Field 7  -- hash_obj(enforcement), or EMPTY_HASH
+    coverage_hash,               # Field 8  -- hash_obj(evaluation_coverage), or EMPTY_HASH
+    authority_hash,              # Field 9  -- hash_obj(authority_decisions), or EMPTY_HASH
+    escalation_hash,             # Field 10 -- hash_obj(escalation_events), or EMPTY_HASH
+    trust_hash,                  # Field 11 -- hash_obj(source_trust_evaluations), or EMPTY_HASH
+    extensions_hash,             # Field 12 -- hash_obj(extensions), or EMPTY_HASH
+    parent_receipts_hash,        # Field 13 -- hash_obj(parent_receipts), or EMPTY_HASH
+    workflow_id_hash,            # Field 14 -- hash_text(workflow_id), or EMPTY_HASH
+    enforcement_surface_hash,    # Field 15 -- hash_text(enforcement_surface), or EMPTY_HASH (v1.3+)
+    invariants_scope_hash,       # Field 16 -- hash_text(invariants_scope), or EMPTY_HASH (v1.3+)
+    tool_name_hash,              # Field 17 -- hash_text(tool_name), or EMPTY_HASH (v1.4+)
+    agent_model_hash,            # Field 18 -- hash_text(agent_model) or EMPTY_HASH if null/absent (v1.4+)
+    agent_model_provider_hash,   # Field 19 -- hash_text(agent_model_provider) or EMPTY_HASH if null/absent (v1.4+)
+    agent_model_version_hash,    # Field 20 -- hash_text(agent_model_version) or EMPTY_HASH if null/absent (v1.4+)
+    agent_identity_hash,         # Field 21 -- hash_obj(agent_identity) at cv=10; EMPTY_HASH if absent/null (v1.5+)
 ])
 fingerprint = sha256(fingerprint_input)
 ```
 
-At `checks_version="9"` (v1.4+) this is always exactly **20 pipe-separated fields**. Verifiers MUST dispatch on `checks_version` to determine field count (see Section 4.4).
+At `checks_version="9"` (v1.4) this is exactly **20 pipe-separated fields**.
+At `checks_version="10"` (v1.5) this is exactly **21 pipe-separated fields**.
+Verifiers MUST dispatch on `checks_version` to determine field count (see Section 4.4).
 
 | # | Component | Source |
 |---|-----------|--------|
@@ -786,9 +979,10 @@ At `checks_version="9"` (v1.4+) this is always exactly **20 pipe-separated field
 | 15 | `enforcement_surface_hash` | `hash_text()` of `enforcement_surface` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.3. |
 | 16 | `invariants_scope_hash` | `hash_text()` of `invariants_scope` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED). Added in v1.3. |
 | 17 | `tool_name_hash` | `hash_text()` of `tool_name` string. `EMPTY_HASH` if absent/null (but at v1.4+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.4. |
-| 18 | `agent_model_hash` | `hash_text()` of `agent_model` string, or `EMPTY_HASH` if null or absent. Both null and absent produce `EMPTY_HASH` — the fingerprint does not distinguish opt-out from not-captured (see Section 2.17.2). Added in v1.4. |
+| 18 | `agent_model_hash` | `hash_text()` of `agent_model` string, or `EMPTY_HASH` if null or absent. Both null and absent produce `EMPTY_HASH` -- the fingerprint does not distinguish opt-out from not-captured (see Section 2.17.2). Added in v1.4. |
 | 19 | `agent_model_provider_hash` | `hash_text()` of `agent_model_provider` string, or `EMPTY_HASH` if null or absent. Added in v1.4. |
 | 20 | `agent_model_version_hash` | `hash_text()` of `agent_model_version` string, or `EMPTY_HASH` if null or absent. Added in v1.4. |
+| 21 | `agent_identity_hash` | `hash_obj(agent_identity)` at cv=10. Field absent at cv=9 -- use `EMPTY_HASH` for legacy slot. Added in v1.5 (SAN-370 implements fingerprint update in SDKs). |
 
 `EMPTY_HASH` is the SHA-256 digest of zero bytes, used as sentinel for
 absent fields:
@@ -805,7 +999,7 @@ hexadecimal SHA-256 strings or `EMPTY_HASH`.
 (empty array) and `{}` (empty object) as "empty", producing
 `EMPTY_HASH`. This matches Python's falsy semantics and the TypeScript
 SDK's explicit empty checks. For field 13 (`parent_receipts_hash`),
-`null` produces `EMPTY_HASH` but `[]` does NOT — it is hashed as an
+`null` produces `EMPTY_HASH` but `[]` does NOT -- it is hashed as an
 empty array. This distinction is critical for cross-language
 consistency.
 
@@ -823,7 +1017,7 @@ regenerated. The `checks_version` constant has been incremented to
 and `trust_hash`. The reference implementations (sanna v1.0.0, sanna-ts
 v1.0.2) have always computed the correct formula above. No third-party
 implementation used the incorrect formula. This correction is not a
-breaking change. Note: v1.2 was never released in SDK form — see
+breaking change. Note: v1.2 was never released in SDK form -- see
 Section 14 and the normative statement in Section 4.4.
 
 **v1.3 breaking change:** The fingerprint formula expanded from 14
@@ -838,6 +1032,13 @@ fields to 20 fields. Fields 17 (`tool_name_hash`), 18
 (`agent_model_version_hash`) are added for the new v1.4 fields.
 `checks_version` incremented to `"9"`. Verifiers MUST dispatch on
 `checks_version` to select the correct field count.
+
+**v1.5 breaking change (spec-ahead-of-impl):** The fingerprint formula
+expands from 20 fields to 21 fields at cv=10. Field 21
+(`agent_identity_hash`) is added for the new `agent_identity` field.
+`checks_version` will be incremented to `"10"` by SAN-370 when SDKs
+implement cv=10 emission. Until SAN-370 lands, no cv=10 receipts exist
+and the 21-field formula is inactive.
 
 The `receipt_fingerprint` is `hash_text(fingerprint_input, truncate=16)` (16 hex chars).
 The `full_fingerprint` is `hash_text(fingerprint_input)` (64 hex chars).
@@ -903,13 +1104,19 @@ way that alters fingerprints for identical inputs.
 | `"7"` | (SDK-internal, post-v1.0.0) | Empty-checks fingerprint normalization (SAN-27/SAN-48). Bumped in SDK releases but not reflected in the v1.1 spec document. Any receipt in the wild with `checks_version="7"` uses the 14-field formula. |
 | `"8"` | v1.3.0 | 16-field fingerprint formula (added `enforcement_surface_hash` field 15, `invariants_scope_hash` field 16). Corresponds to two new required top-level fields. |
 | `"9"` | v1.4.0 | 20-field fingerprint formula (added `tool_name_hash` field 17, `agent_model_hash` field 18, `agent_model_provider_hash` field 19, `agent_model_version_hash` field 20). Corresponds to new `tool_name` required field and optional `agent_model*` fields. |
+| `"10"` | v1.5.0 | 21-field fingerprint formula (adds `agent_identity_hash` field 21). Corresponds to new `agent_identity` required field at cv=10. SDKs flip CHECKS_VERSION 9 -> 10 in SAN-370. |
 
 Verifiers MUST treat `checks_version` as an opaque string for equality
 comparison during fingerprint verification. Verifiers MUST dispatch on
-`checks_version` to select the correct field count: `"9"` or higher → 20 fields,
-`"8"` → 16 fields, `"6"` or `"7"` → 14 fields, `"5"` → 12 fields. Verifiers
-MUST NOT make behavioral decisions beyond field-count dispatch based on the
+`checks_version` to select the correct field count: `"10"` or higher -> 21 fields,
+`"9"` -> 20 fields, `"8"` -> 16 fields, `"6"` or `"7"` -> 14 fields, `"5"` -> 12 fields.
+Verifiers MUST NOT make behavioral decisions beyond field-count dispatch based on the
 numeric value.
+
+**Note:** SAN-370 ships the actual fingerprint formula update in `receipt.py`
+and `receipt.ts`. This spec section describes what SAN-370 will implement.
+Until SAN-370 lands, no cv=10 receipts exist; the 21-field formula is spec-
+ahead-of-impl.
 
 ### 4.5 Fields NOT in Fingerprint
 
@@ -922,10 +1129,10 @@ The following fields are NOT included in fingerprint computation:
 - `receipt_fingerprint` and `full_fingerprint` (self-referential)
 - `receipt_signature` (computed after fingerprint)
 - `identity_verification` (verified separately)
-- `content_mode` (Cloud metadata — see Section 2.14)
-- `content_mode_source` (Cloud metadata — see Section 2.14)
-- `event_type` (governance surface metadata — see Section 2.15)
-- `context_limitation` (governance surface metadata — see Section 2.15)
+- `content_mode` (Cloud metadata -- see Section 2.14)
+- `content_mode_source` (Cloud metadata -- see Section 2.14)
+- `event_type` (governance surface metadata -- see Section 2.15)
+- `context_limitation` (governance surface metadata -- see Section 2.15)
 
 Note: `parent_receipts` and `workflow_id` ARE included in fingerprint
 computation (fields 13 and 14). `enforcement_surface` and
@@ -939,7 +1146,7 @@ receipt should be *interpreted*, not the receipt's cryptographic identity.
 **Agent-model fields and EMPTY_HASH:** For fields 18-20, both null and
 absent produce `EMPTY_HASH`. The fingerprint does not distinguish between
 explicit opt-out (null) and not-captured (absent). The distinction IS
-preserved at the JSON layer — a receipt with `"agent_model": null` and
+preserved at the JSON layer -- a receipt with `"agent_model": null` and
 one with no `agent_model` key are different JSON objects. Verifiers and
 aggregators MUST use the JSON layer to distinguish these cases; see
 Section 2.17.2 for normative rules on this three-way distinction.
@@ -1146,20 +1353,47 @@ constitution blocks that extend governance beyond MCP tool invocations.
 - `api_permissions` governs HTTP requests (API surface).
 
 A single constitution MAY contain all three blocks. Each block operates
-independently — MCP governance does not affect CLI or API governance,
+independently -- MCP governance does not affect CLI or API governance,
 and vice versa.
 
 **Rule evaluation:** Rules within each block are evaluated in
 declaration order. First match wins; no further evaluation is attempted.
 
 **Mode semantics:**
-- `strict` — unlisted binaries/endpoints are denied (fail-closed).
-- `permissive` — unlisted binaries/endpoints are allowed with an audit receipt.
+- `strict` -- unlisted binaries/endpoints are denied (fail-closed).
+- `permissive` -- unlisted binaries/endpoints are allowed with an audit receipt.
 
 When present, these blocks participate in `policy_hash` computation
 (computed from raw YAML bytes per Appendix F).
 
 See `constitution.schema.json` for the full schema of both blocks.
+
+### 6.7 Static Composition (v1.5 Phase 1)
+
+The `session_manifest` receipt captures the agent's authorized capability
+surface AT SESSION INITIALIZATION. The `constitution_ref.policy_hash`
+records which constitution was active at session-start.
+
+**Normative rules:**
+
+- If the constitution updates mid-session, the existing manifest remains
+  valid for the duration of the session. The next session emits a new
+  manifest with the new `policy_hash`. Mid-session recomposition is
+  reserved for Phase 2.
+- `composition_basis` in the manifest extension MUST be `"static"` for
+  Phase 1 receipts. The value `"dynamic"` is reserved for Phase 2.
+- The `session_manifest` receipt MUST be emitted before any
+  `invocation_anomaly`, `invocation_modified`, or `invocation_deferred`
+  receipts for the same session. Verifiers MUST reject anomaly/modified/
+  deferred receipts whose `parent_receipts` reference does not resolve
+  to a `session_manifest` receipt.
+
+### 6.8 AARM Conformance (v1.5+, skeleton)
+
+Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance,
+mechanically verifiable via `sanna-verify aarm`. Full conformance
+mapping and declaration will be specified in a dedicated section
+added by SAN-361.
 
 ---
 
@@ -1814,7 +2048,7 @@ not 14 fields from the v1.1 formula.
 | 1.1.0 | 0.13.7 | **Breaking change:** Fingerprint formula expanded from 12 fields to 14 fields. No backward compatibility with 12-field formula. New first-class fields: `parent_receipts` (receipt chaining, fingerprint field 13), `workflow_id` (workflow grouping, fingerprint field 14). New metadata fields: `content_mode`, `content_mode_source` (Cloud content handling, NOT in fingerprint). `checks_version` incremented to `"6"`. Gateway extension namespace (`com.sanna.gateway`) documented (Appendix E). Canonical YAML hash specification (Appendix F). 1,000+ cross-language canonicalization test vectors. Golden receipts regenerated for 14-field formula. |
 | 1.2.0 | 1.0.0 | **Fingerprint formula correction:** Section 4.1 corrected to match reference implementations (sanna v1.0.0, sanna-ts v1.0.2). Not a breaking change. **Multi-surface governance:** `event_type` field (9 values), `context_limitation` field (5 values). Receipt Triad for CLI boundary (Section 7.6) and API boundary (Section 7.7). Constitution blocks: `cli_permissions`, `api_permissions`. Multi-surface test vectors. **NOTE: v1.2 was never released in SDK form. Any receipt claiming `spec_version="1.2"` is spurious and MUST be treated as such by verifiers. SDKs skip directly from "1.1" to "1.3".** |
 | 1.3.0 | 1.1.0 | **Two new required top-level fields:** `enforcement_surface` (enum: `middleware`, `gateway`, `cli_interceptor`, `http_interceptor`) and `invariants_scope` (enum: `full`, `authority_only`, `limited`, `none`). Both participate in fingerprint computation (fields 15 and 16). **Status derivation mapping (normative):** when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` (halted→FAIL, warned→WARN, allowed→PASS, escalated→WARN). **Cross-field consistency rule (normative):** verifiers MUST assert `status` matches `enforcement.action` per the derivation mapping; mismatch is a verification error indicating compromised receipt integrity. **`checks_version` incremented to `"8"`**, fingerprint formula expanded from 14 to 16 fields. **JSON Schema `$id` bumped to `receipt/v1.3.json`.** Architectural asymmetry note for C1-C5 invocation across Python vs TypeScript SDKs documented (non-normative, Section 2.16.4). |
-| 1.4.0 | 1.4.0 | **New required field `tool_name`** (required at cv>=9): enum `"sanna"` \| `"sanna-ts"`. Separates SDK identity from SDK version — `tool_version` stays bare semver; `tool_name` is a registered enum. Third-party SDKs register values via spec PR. Participates in fingerprint (field 17). **New optional agent-model fields** `agent_model`, `agent_model_provider`, `agent_model_version` (all string or null): capture the LLM model running when the receipt was generated. Nullable for explicit opt-out; absent = not captured. Tri-valued absent/null/string semantics are normative (Section 2.18.4); aggregators MUST NOT conflate absent with null. Participate in fingerprint at fields 18-20 (EMPTY_HASH for null or absent). **`checks_version` incremented to `"9"`**, fingerprint formula expanded from 16 to 20 fields. **JSON Schema `$id` bumped to `receipt/v1.4.json`.** **Section 13 rewritten** to describe cv-based dispatch for both generators and verifiers (closes stale 14-field reference — Codex F-013). SAN-222. |
+| 1.4.0 | 1.4.0 | **New required field `tool_name`** (required at cv>=9): enum `"sanna"` \| `"sanna-ts"`. Separates SDK identity from SDK version -- `tool_version` stays bare semver; `tool_name` is a registered enum. Third-party SDKs register values via spec PR. Participates in fingerprint (field 17). **New optional agent-model fields** `agent_model`, `agent_model_provider`, `agent_model_version` (all string or null): capture the LLM model running when the receipt was generated. Nullable for explicit opt-out; absent = not captured. Tri-valued absent/null/string semantics are normative (Section 2.18.4); aggregators MUST NOT conflate absent with null. Participate in fingerprint at fields 18-20 (EMPTY_HASH for null or absent). **`checks_version` incremented to `"9"`**, fingerprint formula expanded from 16 to 20 fields. **JSON Schema `$id` bumped to `receipt/v1.4.json`.** **Section 13 rewritten** to describe cv-based dispatch for both generators and verifiers (closes stale 14-field reference -- Codex F-013). SAN-222. |
 
 ---
 
@@ -1956,14 +2190,14 @@ a match is determined as follows:
    `p_stripped`), then check `a_stripped == p_stripped` (exact equality
    after stripping). The separatorless fallback compensates for edge
    cases where separator placement differs between the action name and
-   the pattern, but it is an exact comparison — it is NOT substring
+   the pattern, but it is an exact comparison -- it is NOT substring
    containment.
 
 2. **Glob branch (one or more `*` in pattern):** If `p` contains one
    or more `*` characters, then `a` matches `p` iff the full normalized
    action string matches `p` as a shell-style glob. Matching rules:
    - `*` matches zero or more characters (any characters, including `.`).
-   - Matching is **anchored at both ends** — the entire action string
+   - Matching is **anchored at both ends** -- the entire action string
      must match the pattern, not just a substring of it.
    - Only `*` is a recognized glob metacharacter. The characters `?`,
      `[`, `]`, `{`, `}`, and `\` have no special meaning and are
@@ -2069,7 +2303,7 @@ not first-class protocol fields. They are documented here for
 interoperability across implementations.
 
 Verifiers MUST ignore unknown extensions per the protocol rule in
-Section 2.2. The fields below are OPTIONAL — their absence does not
+Section 2.2. The fields below are OPTIONAL -- their absence does not
 invalidate a receipt.
 
 ### E.1 Standard Gateway Extension Fields

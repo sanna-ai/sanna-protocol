@@ -6,6 +6,60 @@ in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] -- 2026-04-30
+
+### Added
+- Section 2.7: MODIFY parameter recording fields (`tool_input_original`,
+  `tool_input_transformed`, `transformations_applied`) for the new
+  `modify_with_constraints` authority decision. Required when a receipt's
+  `authority_decisions` includes a `modify_with_constraints` decision.
+- Section 2.12: Normative binding text for invocation_anomaly receipts.
+  `parent_receipts` MUST contain the active session_manifest's
+  `full_fingerprint`.
+- Section 2.14: content_mode handling for the com.sanna.manifest
+  extension. Tool names and patterns are obscured under
+  `content_mode=redacted` or `hashes_only`.
+- Section 2.15.1: Ten new event_type values activated --
+  `session_manifest`, `invocation_anomaly`, `invocation_modified`,
+  `invocation_deferred`, plus six CLI/API surface variants. event_type
+  remains optional; conditional rules apply for new event_types.
+- Section 2.16.1: enforcement_surface enum gains `"mixed"` for cross-
+  surface session_manifest receipts.
+- Section 2.16.3: Explicit status semantics for the new event_types.
+- Section 2.19 NEW: `agent_identity` field for AARM R6 full conformance.
+  Required at cv=10. Fingerprint position 21.
+- Section 2.20 NEW: com.sanna.manifest extension namespace shape +
+  determinism rules + snake_case key convention.
+- Section 2.21 NEW: suppression_reason enum (7 stable values).
+- Section 4.1: Fingerprint formula extended to 21 fields at cv=10.
+- Section 6.7 NEW: Static composition normative rules (Phase 1).
+- Section 6.8 NEW: AARM Conformance skeleton (full mapping in SAN-361).
+- constitution.schema.json: `escalation_visibility` in
+  `authority_boundaries`; `composition` top-level section. Both backward-
+  compat optional.
+
+### Changed
+- Spec markdown renamed from `sanna-specification-v1.4.md` to
+  `sanna-specification-v1.5.md`. Git history preserved via rename.
+
+### Compatibility
+- cv=9 receipts continue to validate against the receipt schema
+  (legacy-acceptance preserved).
+- Existing constitutions without `composition` / `escalation_visibility`
+  validate against the new constitution.schema.json (backward compat).
+- This spec landing does NOT activate cv=10. SDKs flip CHECKS_VERSION
+  9 -> 10 in SAN-370. Until SAN-370 lands, no cv=10 receipts exist;
+  the cv=10 schema rules are no-ops on existing cv=9 receipts.
+
+### Migration
+- See `docs/migration/cv9-to-cv10.md` (lands in SAN-371) for cv=10
+  transition guidance.
+
+### Tickets
+- SAN-204 (this entry)
+- See companion tickets SAN-369 (MODIFY in SDKs), SAN-370 (agent_identity
+  + cv=10 in SDKs), SAN-371 (verifier cv-aware behavior + migration memo).
+
 ## [1.4.0-errata-A] - 2026-04-21
 
 ### Changed (Breaking: Appendix D authority matching semantics)
@@ -15,7 +69,7 @@ Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   action `a` matches pattern `p` if `p` is a substring of `a` OR `a` is
   a substring of `p`. This is replaced by: (a) if `p` contains no `*`,
   match iff `p == a` after normalization (with separatorless fallback for
-  exact stripped comparison only — NOT substring containment); (b) if `p`
+  exact stripped comparison only -- NOT substring containment); (b) if `p`
   contains `*`, match iff the normalized `a` satisfies the shell-style
   glob `p` (anchored full match, `*` only).
 
@@ -32,10 +86,10 @@ Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **New fixture file `fixtures/authority-matching-vectors.json`** (21
   vectors): normative cross-SDK contract for authority matching. Both
   Python and TypeScript SDKs MUST return the same decision for every
-  vector. Vector categories: exact match (E-001–E-004), exact non-match
-  including F-005 repro (N-001–N-004), glob match (G-001–G-004), glob
-  non-match (G-005–G-006), normalization robustness (R-001–R-002),
-  separatorless fallback (S-001–S-002), degenerate/empty (D-001–D-003).
+  vector. Vector categories: exact match (E-001-E-004), exact non-match
+  including F-005 repro (N-001-N-004), glob match (G-001-G-004), glob
+  non-match (G-005-G-006), normalization robustness (R-001-R-002),
+  separatorless fallback (S-001-S-002), degenerate/empty (D-001-D-003).
 
 - **VERSIONING.md**: new "Errata for appendix-level behavioral
   clarifications" section documents the convention under which this
@@ -47,7 +101,7 @@ Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   `hash_text()` boundary (fingerprint construction and text-mode
   hashing), not recursively within `hash_obj()` /
   `canonical_json_bytes()` inputs. Matches Section 3.1 and ADR-004
-  (decided 2026-02-18). Not a breaking change — reference SDKs
+  (decided 2026-02-18). Not a breaking change -- reference SDKs
   (sanna v1.3.0, sanna-ts 1.4.0) have always implemented this scope.
   Third-party implementers building to the previous Section 13 text
   should verify their canonical JSON paths do not eagerly NFC-normalize
@@ -66,10 +120,10 @@ Protocol versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   Absent-vs-null distinction is normative per Section 2.18.4 (see spec).
   Participate in fingerprint at positions 18-20 as
   `hash_text(value)` or `EMPTY_HASH` if null/absent.
-- Section 2.17: documents `tool_name` field — purpose, enum values,
+- Section 2.17: documents `tool_name` field -- purpose, enum values,
   registration process for third-party SDKs (submit a spec PR),
   design rationale (identity/version separation).
-- Section 2.18: documents `agent_model*` fields — purpose, opt-out
+- Section 2.18: documents `agent_model*` fields -- purpose, opt-out
   semantics (absent vs null vs string), normative requirement that
   aggregators MUST respect the three-way distinction, concrete
   absent-vs-null JSON example.
@@ -112,7 +166,7 @@ features MUST document how each value is treated.
 ### Added
 - `enforcement_surface` required top-level field: enum of four values (`middleware`, `gateway`, `cli_interceptor`, `http_interceptor`). Makes receipts self-describing about which governance surface produced them. Participates in fingerprint computation as field 15.
 - `invariants_scope` required top-level field: enum of four values (`full`, `authority_only`, `limited`, `none`). Makes receipts self-describing about which invariants actually ran. Participates in fingerprint computation as field 16.
-- Status derivation mapping (normative, Section 2.16.3): when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` — `halted`→`FAIL`, `warned`→`WARN`, `allowed`→`PASS`, `escalated`→`WARN`. Rationale for `escalated→WARN`: escalated actions are flagged-not-greenlit; approval is a downstream receipt. Reporting PASS would imply governance allowed this, which is false until approval lands.
+- Status derivation mapping (normative, Section 2.16.3): when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` -- `halted`→`FAIL`, `warned`→`WARN`, `allowed`→`PASS`, `escalated`→`WARN`. Rationale for `escalated→WARN`: escalated actions are flagged-not-greenlit; approval is a downstream receipt. Reporting PASS would imply governance allowed this, which is false until approval lands.
 - Cross-field consistency rule (normative, Section 4.6): verifiers MUST assert that `status` matches `enforcement.action` per the derivation mapping. Mismatch MUST produce a verification error. A receipt that passes schema validation but violates this rule is cryptographically valid but semantically defective.
 - 16-field fingerprint formula: two new fields (`enforcement_surface_hash` at position 15, `invariants_scope_hash` at position 16) participate in fingerprint computation.
 - Architectural asymmetry note (non-normative, Section 2.16.4): Python `generate_receipt()` invokes C1-C5 by default with `skip_default_checks=True` opt-out for interceptor surfaces; TypeScript `generateReceipt()` does not invoke C1-C5 automatically (caller invokes `runCoherenceChecks()` separately). Both paths are spec-compliant at v1.3.
@@ -171,10 +225,10 @@ features MUST document how each value is treated.
 - `workflow_id` field: opaque string grouping related receipts into a
   workflow. Participates in fingerprint computation (field 14).
 - `content_mode` field: enum (`full`, `redacted`, `hashes_only`) declaring
-  content handling for Cloud. Metadata only — does NOT participate in
+  content handling for Cloud. Metadata only -- does NOT participate in
   fingerprint.
 - `content_mode_source` field: origin of content_mode value (`local_config`,
-  `cloud_tenant`, `override`). Metadata only — does NOT participate in
+  `cloud_tenant`, `override`). Metadata only -- does NOT participate in
   fingerprint.
 - Gateway extension namespace appendix (Appendix E): formalizes
   `com.sanna.gateway` extension schema for interoperability

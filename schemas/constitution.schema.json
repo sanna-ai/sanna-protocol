@@ -205,6 +205,12 @@
           "type": "array",
           "items": {"type": "string"},
           "description": "Actions explicitly permitted for the agent"
+        },
+        "escalation_visibility": {
+          "type": "string",
+          "description": "Visibility of must_escalate tools at discovery time (v1.5+). 'visible' = listed and visible to agent (default; backward compatible). 'suppressed' = hidden from tool listing.",
+          "enum": ["visible", "suppressed"],
+          "default": "visible"
         }
       },
       "additionalProperties": false
@@ -386,6 +392,19 @@
         }
       },
       "required": ["records"],
+      "additionalProperties": false
+    },
+    "composition": {
+      "type": "object",
+      "description": "Composition policy (v1.5+). Phase 1 contains only escalation_visibility; rule engine reserved for Phase 2. Optional; existing constitutions without this section validate normally.",
+      "properties": {
+        "escalation_visibility": {
+          "type": "string",
+          "description": "Visibility of must_escalate tools at discovery time. 'visible' = listed and visible to agent (default). 'suppressed' = hidden from tool listing.",
+          "enum": ["visible", "suppressed"],
+          "default": "visible"
+        }
+      },
       "additionalProperties": false
     }
   },
