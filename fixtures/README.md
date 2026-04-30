@@ -57,6 +57,24 @@ For each receipt in `receipts/`:
 | `escalated.json` | PASS | escalated | Checks pass but action requires human approval |
 | `full-featured.json` | PASS | allowed | All optional fields populated: constitution_ref, enforcement, evaluation_coverage, authority_decisions, source_trust_evaluations, extensions |
 
+## Cross-SDK Test Vectors
+
+These vector files are loaded by both the Python (`sanna`) and TypeScript (`sanna-ts`) SDKs to enforce cross-SDK behavioral parity. Both SDKs must produce byte-identical outputs for every vector. Cross-SDK divergence is a load-bearing governance failure: receipts from one SDK must mean the same thing as receipts from the other.
+
+### `manifest-content-vectors.json`
+
+Tests `generate_manifest()` content correctness. Each vector specifies a constitution dict, an `mcp_tools` list, an optional `surfaces_filter`, and the expected manifest output dict. SDK test code loads each vector, parses the constitution dict via the SDK's constitution loader (passing None directly when the input constitution is null), calls `generate_manifest(constitution, mcp_tools=..., surfaces=...)`, and asserts byte-equal against the expected output.
+
+References: SAN-376 (this fixture), SAN-202 (Python manifest origin), SAN-203 (TS manifest origin), SAN-206 (Python content assertions), SAN-209 (TS content assertions). Spec: v1.5 Section 2.20 (com.sanna.manifest extension), Section 2.21 (suppression_reason enum).
+
+### `authority-matching-vectors.json`
+
+Tests `evaluate_authority()` pattern-matching correctness across both SDKs. Each vector specifies a pattern, an action, an expected boolean match result, and a rationale. Used by SAN-224 to enforce cross-SDK normalizer parity.
+
+### `multi-surface-vectors.json`
+
+Tests canonical-JSON hash computation for CLI input objects across both SDKs. Each vector specifies an input dict and the expected canonical JSON serialization plus SHA-256 hash. Used by SAN-186 (multi-surface receipt hashing).
+
 ## golden-hashes.json
 
 This file contains the expected values for cross-language verification:
