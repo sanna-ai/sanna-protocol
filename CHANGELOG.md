@@ -1,3 +1,18 @@
+## [Unreleased] -- 2026-04-30 (SAN-378 Prompt A)
+
+### Changed
+- `fixtures/manifest-content-vectors.json` MC-006 (cli surface) expected output: added `suppression_reasons: {"rm": "cannot_execute"}` to `surfaces.cli`. Aligns the fixture with v1.5 spec Section 2.20.2 which has always required `suppression_reasons` in cli surface shape.
+- MC-007 (http surface) expected output: added `suppression_reasons: {"https://malicious.com/*": "cannot_execute"}` to `surfaces.http`. Same alignment.
+
+### Compatibility
+- **Receipt fingerprint compatibility:** post-SAN-378 receipts will include `suppression_reasons` in cli/http surfaces (per v1.5 Section 2.20.2). This changes the canonical JSON shape and therefore the receipt fingerprint when cli/http surfaces have suppressed entries. Existing signed receipts remain valid (signature is over what was emitted). Re-emission of the same input post-upgrade produces a different fingerprint than pre-upgrade. Verifiers should accept receipts as-emitted; cross-version fingerprint replay is not a conformance test.
+- **SDK consumers MUST upgrade in lockstep with this fixture update.** sanna-repo and sanna-ts SDKs at the pre-SAN-378 manifest.py / manifest.ts implementation will FAIL the behavior-parity gate when running test_manifest_content_vectors against this updated fixture (their `_generate_cli_surface` / `_generate_http_surface` do not emit `suppression_reasons` yet). The SDK fixes ship in SAN-378 Prompt B (sanna-repo) and Prompt C (sanna-ts), with each SDK bumping its `spec/` submodule pin to this prompt's merge commit at the same time as the implementation update.
+- The SDKs' current `spec/` submodule pins (sanna-protocol f89c8c9 = post-SAN-376/377) are NOT auto-updated by this PR. Each SDK's main branch CI continues to pass against its current pin. SAN-378 Prompt B + Prompt C explicitly bump the pins.
+
+### Tickets
+- SAN-378 Prompt A (this entry)
+- Companion: SAN-378 Prompt B (sanna-repo, blocked on this), SAN-378 Prompt C (sanna-ts, blocked on Prompt B), SAN-376 (cross-SDK fixture origin, annotated post-done), SAN-202 + SAN-203 (Python + TS manifest origins, annotated post-done x3 collectively), SAN-377 (spec clarification, merged), SAN-382 (R1 schema-rule enforcement gap, deferred Backlog).
+
 ## [Unreleased] -- 2026-04-30 (SAN-377)
 
 ### Changed
