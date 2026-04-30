@@ -458,16 +458,40 @@ in fingerprint computation.
   would break verification when Cloud settings change.
 
 **Content mode and the com.sanna.manifest extension (v1.5+, normative):**
-When `content_mode` is `redacted`, tool names and patterns inside
-`extensions["com.sanna.manifest"]` MUST be replaced with `<redacted>`
-markers; `rule_id` and `suppression_reason` fields remain visible.
-When `content_mode` is `hashes_only`, tool names and patterns MUST be
-replaced with their SHA-256 hex strings (lowercase). The fingerprint is
-computed over the redacted/hashed content; signature verification
-proceeds normally regardless of `content_mode`. Verifiers MUST accept
-`<redacted>` markers in capability surface fields when
-`content_mode=redacted` is set; cryptographic integrity (fingerprint +
-signature) is the conformance test, not visible-content presence.
+The redaction rules below apply to tool names and patterns inside
+`extensions["com.sanna.manifest"]`. Per-content_mode rules:
+
+- `content_mode = "full"` (or absent): no transformation. Tool names,
+  patterns, and `suppression_reasons` keys remain cleartext.
+
+- `content_mode = "redacted"`: every entry in `tools_delivered`,
+  `tools_suppressed`, `patterns_delivered`, `patterns_suppressed` MUST
+  be the literal string `"<redacted>"`. The `suppression_reasons` field
+  MUST be ABSENT from each surface sub-object. A new field
+  `aggregate_suppression_reasons: list[str]` MUST be present in each
+  surface sub-object that has suppressed entries; each list entry is a
+  reason from the suppression_reason enum (Section 2.21), aligned by
+  index with the corresponding suppressed list (i.e., index `i` of
+  `aggregate_suppression_reasons` is the reason for the suppressed entry
+  at index `i`, after sorting per Section 2.20.3). `rule_id` and the
+  reason ENUM VALUES themselves remain visible; per-tool/per-pattern
+  mapping is intentionally dropped to prevent information leak via dict
+  keys.
+
+- `content_mode = "hashes_only"`: every entry in `tools_delivered`,
+  `tools_suppressed`, `patterns_delivered`, `patterns_suppressed` MUST
+  be the lowercase 64-hex SHA-256 of the cleartext value, computed via
+  the canonical `hash_text` helper (Section 3.1). `suppression_reasons`
+  keys MUST be the same SHA-256 hex values; values remain cleartext
+  reason enum strings. Hashes are unique per cleartext name so dict
+  structure is preserved without information loss.
+
+The fingerprint is computed over the redacted/hashed content; signature
+verification proceeds normally regardless of `content_mode`. Verifiers
+MUST accept `"<redacted>"` markers, hex-string capability entries, and
+the `aggregate_suppression_reasons` shape transitions when
+`content_mode` is set; cryptographic integrity (fingerprint + signature)
+is the conformance test, not visible-content presence.
 
 ### 2.15 Governance Surface Metadata
 
@@ -803,6 +827,20 @@ extensions:
         suppression_reasons: {pattern: reason_enum_value}
         mode: "strict"
 ```
+
+**`aggregate_suppression_reasons` (v1.5+, optional, REQUIRED only when
+`content_mode=redacted`):** A list of reason enum values aligned by index
+with the corresponding suppressed list (`tools_suppressed` for the mcp
+surface; `patterns_suppressed` for cli/http surfaces). Used in place of
+`suppression_reasons` under `content_mode=redacted` because the dict-key
+form would either leak cleartext tool names (defeating redaction) or
+collapse to a single key (losing per-suppression cardinality + reason
+mapping). Each list entry MUST be a value from the suppression_reason
+enum (Section 2.21). When `content_mode` is `full`, `hashes_only`, or
+absent, this field MUST be absent and `suppression_reasons` carries the
+mapping.
+
+See Section 2.14 for full per-`content_mode` rules.
 
 #### 2.20.3 Determinism
 
