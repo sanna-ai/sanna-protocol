@@ -202,6 +202,7 @@
           "cli": {
             "patterns_delivered": ["git"],
             "patterns_suppressed": ["rm"],
+            "suppression_reasons": {"rm": "cannot_execute"},
             "mode": "strict"
           }
         }
@@ -244,6 +245,7 @@
           "http": {
             "patterns_delivered": ["https://api.example.com/*"],
             "patterns_suppressed": ["https://malicious.com/*"],
+            "suppression_reasons": {"https://malicious.com/*": "cannot_execute"},
             "mode": "strict"
           }
         }
