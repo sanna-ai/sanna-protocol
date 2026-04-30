@@ -1,3 +1,19 @@
+## [Unreleased] -- 2026-04-30 (SAN-377)
+
+### Changed
+- Spec Section 2.14 (Content mode and the com.sanna.manifest extension): clarified per-content_mode redaction rules. Under `content_mode=redacted`, tool names and patterns become the literal string `<redacted>`, `suppression_reasons` is OMITTED from each surface sub-object, and a new `aggregate_suppression_reasons: list[str]` field is REQUIRED in each surface sub-object that has suppressed entries (aligned by index with the corresponding suppressed list). Under `content_mode=hashes_only`, tool names and patterns become lowercase 64-hex SHA-256 of the cleartext value (via canonical `hash_text` helper); `suppression_reasons` keys become the same hashes; values remain cleartext reason enum strings. Resolves the dict-key ambiguity that prevented SAN-202 + SAN-203 from implementing redaction without information leak.
+- Spec Section 2.20.2 (com.sanna.manifest required shape): documented the new `aggregate_suppression_reasons` optional field; cross-references Section 2.14 for per-content_mode rules.
+- `schemas/receipt.schema.json`: added two new conditional rules (R1 for `content_mode=redacted`, R2 for `content_mode=hashes_only`) to the top-level `allOf` array. Pre-validated with four test receipts (full cleartext, redacted-correct, redacted-bug, hashes_only); rules behave as designed -- redacted-correct passes, redacted-bug (SAN-202/SAN-203 inherited shape) fails.
+
+### Compatibility
+- Backward-compatible for receipts with `content_mode=full` or absent (the existing case): no change. The new rules only apply when `content_mode` is explicitly set to `redacted` or `hashes_only`.
+- Existing v1.5 receipts WITHOUT content_mode set continue to validate unchanged.
+- SDKs implementing redaction now have an unambiguous spec target. SAN-206 (Python) and SAN-209 (TS) are unblocked on this clarification.
+
+### Tickets
+- SAN-377 (this entry)
+- Companion: SAN-206 (Python redaction implementation, blocked on this), SAN-209 (TS mirror, blocked on this), SAN-202 (Python manifest origin, annotated post-done), SAN-203 (TS manifest origin, annotated post-done), SAN-204 (v1.5 spec foundations, merged), SAN-376 (cross-SDK manifest content fixture, merged).
+
 ## [Unreleased] -- 2026-04-30 (SAN-376)
 
 ### Added
