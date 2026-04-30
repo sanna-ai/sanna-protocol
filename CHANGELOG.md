@@ -1,3 +1,19 @@
+## [Unreleased] -- 2026-04-30 (SAN-376)
+
+### Added
+- New cross-SDK test vector file `fixtures/manifest-content-vectors.json` with 8 vectors (MC-001..MC-007, MC-009) exercising `generate_manifest()` content correctness. Both Python (sanna) and TypeScript (sanna-ts) SDKs must produce byte-identical outputs for every vector. Resolves the manifest-content-assertion gap surfaced in SAN-203 PR #27 where integration tests validated receipt structure but not content. Vectors cover: cannot_execute halt; must_escalate with escalation_visibility=visible; must_escalate with escalation_visibility=suppressed; fail-closed on null constitution; determinism/sorting; CLI-only surface; HTTP-only surface; empty mcp_tools key-presence semantics.
+- `fixtures/README.md` new "Cross-SDK Test Vectors" section documenting `manifest-content-vectors.json`, `authority-matching-vectors.json`, and `multi-surface-vectors.json`. Closes a pre-existing audit-trail gap where these vector files were undocumented.
+
+### Compatibility
+- No spec changes. No schema changes. No SDK code changes in this PR.
+- Vector file `version` field is `"1.5"`, indicating the protocol spec version the vectors target.
+- Constitutions embedded in vectors are unsigned dicts; signature verification is out of scope for manifest content tests (verified separately by receipt-fixture tests).
+- MC-008 (surfaces_filter exercise) is intentionally absent from SAN-376; ships in SAN-206 alongside the surfaces-filter implementation in `manifest.py` / `manifest.ts`.
+
+### Tickets
+- SAN-376 (this entry)
+- Companion: SAN-206 (Python interceptors + gateway retrofit + content assertions, blocked on this), SAN-209 (TS mirror, blocked on SAN-206), SAN-202 (Python manifest origin, merged), SAN-203 (TS manifest origin, merged), SAN-204 (v1.5 spec, merged).
+
 # Changelog
 
 All notable changes to the Sanna Protocol specification will be documented

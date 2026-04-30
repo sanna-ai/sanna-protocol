@@ -1,0 +1,288 @@
+{
+  "version": "1.5",
+  "description": "Cross-SDK manifest content test vectors. Both Python (sanna) and TypeScript (sanna-ts) SDKs must produce byte-identical generate_manifest output for every vector. Resolves the manifest-content-assertion gap surfaced in SAN-203 PR #27. See spec/sanna-specification-v1.5.md Section 2.20 (com.sanna.manifest extension) and Section 2.21 (suppression_reason enum).",
+  "ticket_refs": ["SAN-376", "SAN-202", "SAN-203", "SAN-206", "SAN-209"],
+  "vectors": [
+    {
+      "id": "MC-001-cannot-execute",
+      "description": "Constitution with cannot_execute halts the named tool; can_execute lets the named tool through. Verifies the SAN-203 namespaced-name bug is fixed: tool names from the catalog are matched against constitution patterns directly, not after gateway namespacing.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-001-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": ["delete_all"],
+            "must_escalate": [],
+            "can_execute": ["read_data"]
+          }
+        },
+        "mcp_tools": ["delete_all", "read_data"],
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "mcp": {
+            "tools_delivered": ["read_data"],
+            "tools_suppressed": ["delete_all"],
+            "suppression_reasons": {"delete_all": "cannot_execute"}
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-002-must-escalate-visible",
+      "description": "must_escalate with escalation_visibility=visible (the default per v1.5 Section 2.20.2) keeps the tool in tools_delivered. The tool is not hidden; invocation triggers escalation.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-002-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": [],
+            "must_escalate": [{"condition": "send_email"}],
+            "can_execute": ["read_data"],
+            "escalation_visibility": "visible"
+          }
+        },
+        "mcp_tools": ["send_email", "read_data"],
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "mcp": {
+            "tools_delivered": ["read_data", "send_email"],
+            "tools_suppressed": [],
+            "suppression_reasons": {}
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-003-must-escalate-suppressed",
+      "description": "must_escalate with escalation_visibility=suppressed hides the tool from tools_delivered with suppression_reason=escalation_suppressed. Anti-enumeration property: the agent cannot discover the tool exists.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-003-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": [],
+            "must_escalate": [{"condition": "send_email"}],
+            "can_execute": ["read_data"],
+            "escalation_visibility": "suppressed"
+          }
+        },
+        "mcp_tools": ["send_email", "read_data"],
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "mcp": {
+            "tools_delivered": ["read_data"],
+            "tools_suppressed": ["send_email"],
+            "suppression_reasons": {"send_email": "escalation_suppressed"}
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-004-fail-closed-null",
+      "description": "Null constitution: all tools suppressed with suppression_reason=constitution_invalid. Fail-closed default per v1.5 Section 2.20.3. Loader contract: when input.constitution is JSON null, SDKs pass None/null directly to generate_manifest (do NOT attempt to parse a null dict).",
+      "input": {
+        "constitution": null,
+        "mcp_tools": ["x", "y"],
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "mcp": {
+            "tools_delivered": [],
+            "tools_suppressed": ["x", "y"],
+            "suppression_reasons": {"x": "constitution_invalid", "y": "constitution_invalid"}
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-005-determinism-sort",
+      "description": "Determinism: unsorted input mcp_tools list produces sorted tools_delivered/tools_suppressed lists. Per v1.5 Section 2.20.1, manifest output must be deterministic so receipt fingerprints are reproducible.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-005-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": ["zebra"],
+            "must_escalate": [],
+            "can_execute": []
+          }
+        },
+        "mcp_tools": ["zebra", "yak", "apple"],
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "mcp": {
+            "tools_delivered": ["apple", "yak"],
+            "tools_suppressed": ["zebra"],
+            "suppression_reasons": {"zebra": "cannot_execute"}
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-006-cli-surface",
+      "description": "Constitution declaring cli_permissions but no api_permissions; mcp_tools omitted. Manifest output has surfaces.cli only -- mcp and http are absent. Cross-SDK CLI surface composition test.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-006-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": [],
+            "must_escalate": [],
+            "can_execute": []
+          },
+          "cli_permissions": {
+            "mode": "strict",
+            "commands": [
+              {"id": "cli-001", "binary": "git", "authority": "can_execute"},
+              {"id": "cli-002", "binary": "rm", "authority": "cannot_execute"}
+            ]
+          }
+        },
+        "mcp_tools": null,
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "cli": {
+            "patterns_delivered": ["git"],
+            "patterns_suppressed": ["rm"],
+            "mode": "strict"
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-007-http-surface",
+      "description": "Constitution declaring api_permissions but no cli_permissions; mcp_tools omitted. Manifest output has surfaces.http only. Cross-SDK HTTP surface composition test.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-007-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": [],
+            "must_escalate": [],
+            "can_execute": []
+          },
+          "api_permissions": {
+            "mode": "strict",
+            "endpoints": [
+              {"id": "api-001", "url_pattern": "https://api.example.com/*", "authority": "can_execute"},
+              {"id": "api-002", "url_pattern": "https://malicious.com/*", "authority": "cannot_execute"}
+            ]
+          }
+        },
+        "mcp_tools": null,
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "http": {
+            "patterns_delivered": ["https://api.example.com/*"],
+            "patterns_suppressed": ["https://malicious.com/*"],
+            "mode": "strict"
+          }
+        }
+      }
+    },
+    {
+      "id": "MC-009-empty-mcp-tools",
+      "description": "Empty mcp_tools list (not None/null): surfaces.mcp is PRESENT with empty tools_delivered, tools_suppressed, suppression_reasons. Distinguishes no-mcp-surface-declared from mcp-surface-declared-but-empty. Cross-SDK key-presence semantic test.",
+      "input": {
+        "constitution": {
+          "sanna_constitution": "1.0.0",
+          "identity": {"agent_name": "mc-009-test", "domain": "testing"},
+          "provenance": {
+            "authored_by": "test-author@sanna.dev",
+            "approved_by": ["test-author@sanna.dev"],
+            "approval_date": "2026-04-30",
+            "approval_method": "test-fixture"
+          },
+          "boundaries": [{"id": "B001", "description": "test", "category": "scope", "severity": "high"}],
+          "authority_boundaries": {
+            "cannot_execute": ["foo"],
+            "must_escalate": [],
+            "can_execute": []
+          }
+        },
+        "mcp_tools": [],
+        "surfaces_filter": null
+      },
+      "expected": {
+        "version": "0.1",
+        "composition_basis": "static",
+        "surfaces": {
+          "mcp": {
+            "tools_delivered": [],
+            "tools_suppressed": [],
+            "suppression_reasons": {}
+          }
+        }
+      }
+    }
+  ]
+}
