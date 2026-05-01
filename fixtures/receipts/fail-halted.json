@@ -80,10 +80,10 @@
     "agent_session_id": "sanna-fixture-fail-001-session"
   },
   "receipt_signature": {
-    "signature": "w9kYiNT/SYq9770YdB3LxTlcE8BP1qB5DpXJhU8aDVeGmRasf3oW41rKHIZnq8YZ9taERrhtg2GLgGIPoAygBA==",
-    "key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+    "signature": "eTdwdO6crS9Pw81fjhUPz9hjLvQdmed3PmTHwqQ9lDDGNwBwc42lKGvb0x/WdASMEUwAVfnKTH2EisQcTGFaCw==",
+    "key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T01:15:05.768301+00:00",
+    "signed_at": "2026-05-01T18:47:48.438553+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

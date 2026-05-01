@@ -71,10 +71,10 @@
     "agent_session_id": "sanna-fixture-pass-001-session"
   },
   "receipt_signature": {
-    "signature": "/vWzxbBItcQOAZF93InzzwROUeJXEC87nCedptyHE8LQVKe8dhGJj45vOfve9p7AQ69ZZV0tLltGuRs2fn41CA==",
-    "key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+    "signature": "3XEmuzfAou7/uoi8E5uWsAofDAYz+6tQDWpwQlFOEkGz4bIBfLyDr5DxSCEDXawdyyj6RB6Qp4mSMRaziB56AQ==",
+    "key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T01:15:05.766619+00:00",
+    "signed_at": "2026-05-01T18:47:48.439918+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

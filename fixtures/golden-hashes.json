@@ -4,7 +4,7 @@
   "checks_version": "10",
   "fingerprint_fields": 21,
   "EMPTY_HASH": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "test_key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+  "test_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
   "receipts": {
     "pass-single-check": {
       "receipt_id": "4d34c9a5-07fd-4109-b9e6-33cea15de6ec",
@@ -16,7 +16,7 @@
       "status": "PASS",
       "checks_passed": 5,
       "checks_failed": 0,
-      "signature_key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+      "signature_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
       "signature_scheme": "receipt_sig_v1",
       "canonical_json_sha256": "da2b0b8f35f4daa7a013925f90ec70792caa3ce97d78c0086c5ba5b4fb66b1d3"
     },
@@ -31,7 +31,7 @@
       "checks_passed": 5,
       "checks_failed": 0,
       "enforcement_action": "halted",
-      "signature_key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+      "signature_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
       "signature_scheme": "receipt_sig_v1",
       "canonical_json_sha256": "a73e3041a3c12ba162a53929bf36d0ad4302ca519383e9a46594e371b60cbc83"
     },
@@ -46,7 +46,7 @@
       "checks_passed": 5,
       "checks_failed": 0,
       "enforcement_action": "escalated",
-      "signature_key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+      "signature_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
       "signature_scheme": "receipt_sig_v1",
       "canonical_json_sha256": "b30b5840f2a89923f0c14aadb47aec3d2bf8ee38e4ffb84477bd7d8cd5cdb8e7"
     },
@@ -61,7 +61,7 @@
       "checks_passed": 5,
       "checks_failed": 0,
       "enforcement_action": "allowed",
-      "signature_key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+      "signature_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
       "signature_scheme": "receipt_sig_v1",
       "constitution_policy_hash": "79c19406e93949f6388712dc355792c791774a1dc39dbac4812924f484d7615f",
       "workflow_id": "sanna-fixture-workflow-001",
@@ -71,7 +71,7 @@
   },
   "constitutions": {
     "minimal": {
-      "content_hash": "59c671b5c8f1ba8e015e015f29477765b8b8a280fca773529ab360d99457272d"
+      "content_hash": "5c85705b50f9da6b63a706189d0227446e7f05370baecece1587ab96abe0d030"
     },
     "full-featured": {
       "content_hash": "00a9d0f73ff8063233b89f045fd983ba01411a06dc1cc28854474c6204f09835"
