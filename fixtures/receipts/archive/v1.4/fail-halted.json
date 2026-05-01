@@ -1,12 +1,12 @@
 {
-  "spec_version": "1.5",
+  "spec_version": "1.4",
   "tool_version": "1.4.0",
-  "checks_version": "10",
-  "receipt_id": "99fd66f4-cea5-421a-8d3c-b34857feb126",
-  "receipt_fingerprint": "206bda5957b4abc4",
-  "full_fingerprint": "206bda5957b4abc4cb14e6003932bf68754db2f9675e8f2e21345146267da9af",
+  "checks_version": "9",
+  "receipt_id": "5cd295d5-1ede-43da-a5b6-c4a6d42bd411",
+  "receipt_fingerprint": "129c14d0cd871cb2",
+  "full_fingerprint": "129c14d0cd871cb2042cde73be2e559443b87f59ce3df505257e1424d15b5c94",
   "correlation_id": "sanna-fixture-fail-001",
-  "timestamp": "2026-05-01T01:15:05.768029+00:00",
+  "timestamp": "2026-04-21T06:57:34.799784+00:00",
   "inputs": {
     "query": "What happened in the meeting yesterday?",
     "context": "No meeting notes are available for yesterday."
@@ -71,19 +71,16 @@
       "C1"
     ],
     "enforcement_mode": "halt",
-    "timestamp": "2026-05-01T01:15:05.768029+00:00"
+    "timestamp": "2026-04-21T06:57:34.799784+00:00"
   },
   "agent_model": null,
   "agent_model_provider": null,
   "agent_model_version": null,
-  "agent_identity": {
-    "agent_session_id": "sanna-fixture-fail-001-session"
-  },
   "receipt_signature": {
-    "signature": "w9kYiNT/SYq9770YdB3LxTlcE8BP1qB5DpXJhU8aDVeGmRasf3oW41rKHIZnq8YZ9taERrhtg2GLgGIPoAygBA==",
-    "key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+    "signature": "e8IWWTh3FLlGucd9ejl6LEQ6m189R2/euf0jYTbtYkqaD+ltWZtaiyrvn1qCdk8lpJ1cp4gwszkzDFD0POvEAg==",
+    "key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T01:15:05.768301+00:00",
+    "signed_at": "2026-04-21T06:57:34.800058+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

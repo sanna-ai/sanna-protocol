@@ -1,3 +1,23 @@
+## [Unreleased] -- 2026-04-30 (SAN-370 Prompt A)
+
+### Changed
+- `fixtures/receipts/`: archived 4 active cv=9 fixtures (`escalated.json`, `fail-halted.json`, `full-featured.json`, `pass-single-check.json`) to `fixtures/receipts/archive/v1.4/`. Regenerated active fixtures at cv=10 with `agent_identity` populated per spec Section 2.19. `pass-single-check`, `fail-halted`, `escalated` use the minimum form (just `agent_session_id`); `full-featured` exercises all Section 2.19 sub-fields (`human_principal`, `service_account`, `role`, `privilege_scope`).
+- `generate_fixtures.py`: emits cv=10 receipts with the 21-field fingerprint formula and `agent_identity` field. Override of `_EMIT_CHECKS_VERSION` + `_EMIT_SPEC_VERSION` at module level so cv=10 fixtures can be generated even when the installed sanna SDK is still at cv=9 (sanna SDK constants flip in SAN-370 Prompt B).
+- `schemas/receipt.schema.json`: `$id` flipped from `https://sanna.dev/schemas/receipt/v1.4.json` to `https://sanna.dev/schemas/receipt/v1.5.json`. Example `checks_version` bumped from `"8"` to `"10"`. Example `spec_version` bumped from `"1.3"` to `"1.5"`. Description reference updated from v1.4.md to v1.5.md. Documenting legacy behavior unchanged.
+- `fixtures/golden-hashes.json`: regenerated with cv=10 fingerprints for active fixtures. Top-level metadata reflects spec_version 1.5 + checks_version 10 + fingerprint_fields 21.
+
+### Compatibility
+- **Receipt fingerprint compatibility:** post-SAN-370 receipts use the 21-field formula at cv=10 (adds `agent_identity_hash` at field 21 = `hash_obj(agent_identity)`). cv=9 legacy receipts continue to validate via the 20-field formula; verifiers dispatch on `checks_version`. Existing signed cv=9 receipts remain valid (signature is over what was emitted; their 20-field fingerprint formula is preserved). Re-emission of the same input post-upgrade produces a different fingerprint (cv=10 includes `agent_identity_hash`; cv=9 didn't have field 21 at all).
+- **SDK lockstep:** sanna-repo (Python) and sanna-ts (TypeScript) flip `SPEC_VERSION` 1.4 -> 1.5 and `CHECKS_VERSION` 9 -> 10 in SAN-370 Prompts B + C. Until those merge, the SDKs continue emitting cv=9 receipts; the active cv=10 fixtures in this PR are generation-time only (consumed by post-Prompt-B/C SDK tests once submodule pins bump).
+- **Schema $id flip is a metadata change.** Verifiers + tooling that reference the schema by URL should update if they had hardcoded the v1.4.json path (none known; sanna-protocol is the publisher).
+- **Library middleware MAY emit cv=9** post-SAN-370. Per spec Section 2.19 line 781-782, library middleware (non-gateway, non-interceptor) MAY emit at the lower checks_version. Gateway and interceptors emit cv=10 with agent_identity. SDK call-site discipline (Issue Y design lock) lands in Prompt B + C.
+
+### Tickets
+- SAN-370 Prompt A (this entry)
+- Companion: SAN-370 Prompt B (sanna-repo SDK constants flip + agent_identity emission + cv-dispatch fingerprint, blocked on this), SAN-370 Prompt C (sanna-ts mirror, blocked on Prompt B).
+- Spec/schema/fingerprint formula doc: SAN-204 (MERGED at sanna-protocol c1ae331).
+- Out-of-scope follow-ups: SAN-368 (AARM-conformance verifier), SAN-369 (MODIFY parameter recording), SAN-371 (cv=10 cascade legacy warnings + customer notification), SAN-384 (cv<10 -> agent_identity-absent negative schema rule, Backlog).
+
 ## [Unreleased] -- 2026-04-30 (SAN-378 Prompt A)
 
 ### Changed

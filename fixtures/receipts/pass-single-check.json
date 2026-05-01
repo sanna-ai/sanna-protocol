@@ -1,12 +1,12 @@
 {
-  "spec_version": "1.4",
+  "spec_version": "1.5",
   "tool_version": "1.4.0",
-  "checks_version": "9",
-  "receipt_id": "87063eb3-596c-4c95-a752-e1db771ad4a4",
-  "receipt_fingerprint": "d3dbcafdbd5f2eb8",
-  "full_fingerprint": "d3dbcafdbd5f2eb89a6ed8bdb73e6609dd8206036dd5139331bafbfb1fa03953",
+  "checks_version": "10",
+  "receipt_id": "4d34c9a5-07fd-4109-b9e6-33cea15de6ec",
+  "receipt_fingerprint": "c400915f81d9e730",
+  "full_fingerprint": "c400915f81d9e7305e70a71ab810eef3703f90491e501addf3851f74eb03f29d",
   "correlation_id": "sanna-fixture-pass-001",
-  "timestamp": "2026-04-21T06:57:34.798175+00:00",
+  "timestamp": "2026-05-01T01:15:05.765942+00:00",
   "inputs": {
     "query": "What is the capital of France?",
     "context": "France is a country in Western Europe. Its capital is Paris."
@@ -67,11 +67,14 @@
   "agent_model": null,
   "agent_model_provider": null,
   "agent_model_version": null,
+  "agent_identity": {
+    "agent_session_id": "sanna-fixture-pass-001-session"
+  },
   "receipt_signature": {
-    "signature": "Xtx6iac4nbfaYsrtfExLwwdSsvVu/0K3CIiVelOqFrqAYoRtlmHxiR6IExUlWCTHV1xKo+hqmrUFTc3yFBx4CQ==",
-    "key_id": "48b9f5ba8facc3129f480d1b8d58f02ad6098630a055ee592daa1ed7c4a590ca",
+    "signature": "/vWzxbBItcQOAZF93InzzwROUeJXEC87nCedptyHE8LQVKe8dhGJj45vOfve9p7AQ69ZZV0tLltGuRs2fn41CA==",
+    "key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-04-21T06:57:34.798850+00:00",
+    "signed_at": "2026-05-01T01:15:05.766619+00:00",
     "scheme": "receipt_sig_v1"
   }
 }
