@@ -1,3 +1,17 @@
+## [Unreleased] -- 2026-05-01 (SAN-371)
+
+### Added
+- `docs/migration/cv9-to-cv10.md`: version-history record for the v1.5 receipt-format transition. Documents what changed (agent_identity at fingerprint position 21), why (AARM R6 binding), how verifiers handle the transition (cv=9 receipts continue to verify with CV9_LEGACY-prefixed warning; cv=10 receipts require agent_identity), and SDK lockstep guidance.
+
+### Compatibility
+- **No-action-required for existing signed cv=9 receipts.** Pre-v1.5 receipts remain cryptographically valid; their 20-field fingerprints continue to verify.
+- **Verifier CV9_LEGACY warning emission** lands in companion sanna-repo + sanna-ts work under SAN-371.
+
+### Tickets
+- SAN-371 (this entry; sanna-protocol portion)
+- Predecessor: SAN-370 (cv=10 cascade, MERGED)
+- Companions: sanna-repo + sanna-ts verifier CV9_LEGACY warning (separate Opus prompts)
+
 ## [Unreleased] -- 2026-05-01 (SAN-389)
 
 ### Fixed
