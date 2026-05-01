@@ -1,3 +1,26 @@
+## [Unreleased] -- 2026-05-01 (SAN-389)
+
+### Fixed
+- **Artifact self-consistency at v1.5 (SAN-370 Prompt A fallout):** spec submodule's `fixtures/keypairs/test-author.pub`, `fixtures/constitutions/minimal.yaml`, and `fixtures/constitutions/full-featured.yaml` were stale relative to `fixtures/golden-hashes.json` after SAN-370 Prompt A's `generate_fixtures.py` run. Specifically: cv=10 active fixtures were signed with a regenerated keypair (key_id `d28465e3...`) but the new `test-author.{key,pub,meta.json}` files were not committed; bundled keypair retained the pre-SAN-370 key_id `48b9f5ba...`. Constitutions yaml content_hashes diverged from golden-hashes entries.
+- **Fix:** generated a fresh keypair on this branch, then re-signed cv=10 active receipt fixtures and `fixtures/constitutions/minimal.yaml` with the new keypair. All non-signature receipt fields (timestamps, enforcement, trust evaluations, fingerprints) preserved byte-identical to the SAN-370 Prompt A state. cv=9 archive fixtures (`fixtures/receipts/archive/v1.4/`) are byte-identical to pre-PR-1 (untouched).
+
+### Compatibility
+- **Receipt fingerprints (cv=10) preserved byte-equal:** the 21-field fingerprint formula uses pipe-joined receipt fields, not the signing key. Re-signing with a fresh keypair changes signature values but not fingerprint values. Cross-SDK fingerprint contract validated: `fixtures/receipts/full-featured.json:full_fingerprint = e0794986270598e7ce7e4473cde77c35bd93c4e8fb15b8d1c8328893dd775a0f` (matches sanna-repo + sanna-ts cross-language test target).
+- **test_key_id rotates:** `golden-hashes.json:test_key_id` reflects the new bundled keypair (`6edb993...`). Customers/SDK tests that pinned to `d28465e3...` will need to re-pull the spec submodule to get the new key_id.
+- **Receipt signatures (Ed25519) for cv=10 fixtures changed:** signatures rotated to the new keypair. All other receipt fields unchanged. cv=9 archive signatures unchanged (different keypair history, archived intact).
+- **sanna-ts cross-language test workaround can be reverted:** the `getVerifyKey()` helper in `packages/core/tests/cross-language.test.ts` (added in SAN-370 Prompt C) skipped signature verification on key_id mismatch. Post-SAN-389 with self-consistent keypair, signature verification works strictly. SAN-389 PR-2 (sanna-ts, separate Opus prompt after this PR-1 merges) reverts the workaround.
+
+### Notes
+- **Fingerprint instability in generate_fixtures.py (SAN-391 forward-pointer):** running `generate_fixtures.py` from scratch regenerates receipt content with current timestamps. Enforcement, trust-evaluation, and authority-decision objects include `timestamp`/`evaluated_at` fields that are hashed into fingerprint fields 7, 9, and 11 respectively. A full re-run therefore produces different fingerprints, breaking the cross-SDK contract. This PR fixed the artifact gap via targeted re-signing (keypair + signatures only); fingerprint-affecting content was not regenerated. SAN-391 tracks making the generator deterministic.
+- **Pre-flight harness (preflight_san389.py) corrected:** the original harness had two bugs discovered during SAN-389 execution: (1) C3 checked archive fixture sig.key_id against the current committed pub -- a coincidence that held pre-regen but breaks post-regen; fixed to check git-diff cleanliness instead. (2) C4/C5 used `load_constitution` + `compute_content_hash` (parsed-object hash, excludes signature) while the generator uses `hash_text(raw_yaml, truncate=64)` -- two incompatible algorithms; fixed to match the generator.
+
+### Tickets
+- SAN-389 PR-1 (this entry)
+- Predecessor: SAN-370 Prompt A (sanna-protocol 9ee7527, MERGED) -- introduced the artifact divergence
+- Successor: SAN-389 PR-2 (sanna-ts, separate prompt) -- reverts cross-language test workaround
+- Unblocks: SAN-386 (v1.5 release coordination + customer notification, P1)
+- Forward-pointer: SAN-391 (deterministic keypair generation in generate_fixtures.py; auto-regen on every run is non-deterministic)
+
 ## [Unreleased] -- 2026-04-30 (SAN-370 Prompt A)
 
 ### Changed

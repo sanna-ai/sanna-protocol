@@ -145,10 +145,10 @@
     ]
   },
   "receipt_signature": {
-    "signature": "8OorwY+28CWrJHEQkXhyUiQZ3Fl1vNOK1gSM/teb7Xo7Nj8+xj/YCwjzIPh+GOGQkVd3wP3lIFdBsmX7JnX2BA==",
-    "key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+    "signature": "bZsXtq0g4gY1p6ofXkgjGXa4OaGO6BLGtlUFQQ64rnp8gzQjIru54T+VW+bBHMjXT5ZOZwWRXT56veKwNG+MAQ==",
+    "key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T01:15:05.769689+00:00",
+    "signed_at": "2026-05-01T18:47:48.439244+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

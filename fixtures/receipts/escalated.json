@@ -78,10 +78,10 @@
     "agent_session_id": "sanna-fixture-escalated-001-session"
   },
   "receipt_signature": {
-    "signature": "4Kmjvdub8ymvHqrOLokAhKAc5jNFdRc8hU09NpMgcrk0Ito67EhEl26fEHkE/AwtkVYzMCTUIXuUCbF1cHOTAw==",
-    "key_id": "d28465e3c05cbba643a1eb434be5a7874634b00eaf3a5443db6cd2c5f354baa3",
+    "signature": "BaWacHdjKTw6epGrU/y/SmkWtoGQK7cWCvBvs5zrvYA+vVU1j0D67LJo+8mJtl6KzlqFKzAUMI5OfVePLT2jDQ==",
+    "key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T01:15:05.769023+00:00",
+    "signed_at": "2026-05-01T18:47:48.436702+00:00",
     "scheme": "receipt_sig_v1"
   }
 }
