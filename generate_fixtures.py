@@ -55,6 +55,12 @@ except ImportError:
     print("ERROR: sanna package not installed. Run: pip install sanna")
     sys.exit(1)
 
+# SAN-370: Emit cv=10 fixtures regardless of installed SDK version.
+# sanna SDK constants flip in SAN-370 Prompts B + C; this script
+# forces cv=10/v1.5 so active fixtures can be generated now.
+_EMIT_CHECKS_VERSION = "10"
+_EMIT_SPEC_VERSION = "1.5"
+
 
 def ensure_dirs():
     for d in [KEYPAIRS, CONSTITUTIONS, RECEIPTS]:
@@ -451,6 +457,12 @@ def recompute_fingerprint(receipt_dict):
             agent_model_version_hash,    # 20 — hash or EMPTY_HASH if null/absent (v1.4+)
         ])
 
+    # cv=10 (v1.5+): extend to 21 fields
+    if int(checks_version) >= 10:
+        agent_identity = receipt_dict.get("agent_identity")
+        agent_identity_hash = hash_obj(agent_identity) if agent_identity is not None else EMPTY_HASH
+        fields.append(agent_identity_hash)  # Field 21 — hash_obj(agent_identity) (v1.5+)
+
     fingerprint_input = "|".join(fields)
 
     receipt_dict["full_fingerprint"] = hash_text(fingerprint_input, truncate=64)
@@ -478,6 +490,10 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     receipt_pass_dict["agent_model"] = None
     receipt_pass_dict["agent_model_provider"] = None
     receipt_pass_dict["agent_model_version"] = None
+    # SAN-370: Bump to cv=10/v1.5; add agent_identity (Section 2.19 minimum form)
+    receipt_pass_dict["checks_version"] = _EMIT_CHECKS_VERSION
+    receipt_pass_dict["spec_version"] = _EMIT_SPEC_VERSION
+    receipt_pass_dict["agent_identity"] = {"agent_session_id": "sanna-fixture-pass-001-session"}
     receipt_pass_dict = recompute_fingerprint(receipt_pass_dict)
     receipt_pass_signed = sign_receipt(receipt_pass_dict, priv_key_path, "test-author@sanna.dev")
 
@@ -505,6 +521,10 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     receipt_fail_dict["agent_model"] = None
     receipt_fail_dict["agent_model_provider"] = None
     receipt_fail_dict["agent_model_version"] = None
+    # SAN-370: Bump to cv=10/v1.5; add agent_identity (Section 2.19 minimum form)
+    receipt_fail_dict["checks_version"] = _EMIT_CHECKS_VERSION
+    receipt_fail_dict["spec_version"] = _EMIT_SPEC_VERSION
+    receipt_fail_dict["agent_identity"] = {"agent_session_id": "sanna-fixture-fail-001-session"}
 
     # Ensure at least one critical failure for fixture realism (check results ALSO
     # show failure, not just enforcement-forced status). The SDK's halted override
@@ -559,6 +579,10 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     receipt_esc_dict["agent_model"] = None
     receipt_esc_dict["agent_model_provider"] = None
     receipt_esc_dict["agent_model_version"] = None
+    # SAN-370: Bump to cv=10/v1.5; add agent_identity (Section 2.19 minimum form)
+    receipt_esc_dict["checks_version"] = _EMIT_CHECKS_VERSION
+    receipt_esc_dict["spec_version"] = _EMIT_SPEC_VERSION
+    receipt_esc_dict["agent_identity"] = {"agent_session_id": "sanna-fixture-escalated-001-session"}
 
     _sync_enforcement_timestamp(receipt_esc_dict)
     receipt_esc_dict = recompute_fingerprint(receipt_esc_dict)
@@ -663,6 +687,24 @@ def generate_receipts(priv_key_path, pub_key_path, key_id):
     receipt_full_dict["content_mode"] = "full"
     receipt_full_dict["content_mode_source"] = "local_config"
 
+    # SAN-370: Bump to cv=10/v1.5; add agent_identity (Section 2.19 full sub-fields)
+    receipt_full_dict["checks_version"] = _EMIT_CHECKS_VERSION
+    receipt_full_dict["spec_version"] = _EMIT_SPEC_VERSION
+    receipt_full_dict["agent_identity"] = {
+        "agent_session_id": "sanna-fixture-full-001-session",
+        "human_principal": {
+            "subject": "test-principal@sanna.dev",
+            "provider": "local",
+            "verified": True,
+        },
+        "service_account": {
+            "id": "test-service-account-001",
+            "provider": "local",
+        },
+        "role": "fixture-test-role",
+        "privilege_scope": ["read:fixtures", "verify:receipts"],
+    }
+
     _sync_enforcement_timestamp(receipt_full_dict)
     receipt_full_dict = recompute_fingerprint(receipt_full_dict)
     receipt_full_signed = sign_receipt(receipt_full_dict, priv_key_path, "test-author@sanna.dev")
@@ -687,9 +729,9 @@ def generate_golden_hashes(receipts, key_id):
 
     golden = {
         "generated_with": f"sanna v{TOOL_VERSION}",
-        "spec_version": SPEC_VERSION,
-        "checks_version": CHECKS_VERSION,
-        "fingerprint_fields": 20,
+        "spec_version": _EMIT_SPEC_VERSION,
+        "checks_version": _EMIT_CHECKS_VERSION,
+        "fingerprint_fields": 21,
         "EMPTY_HASH": EMPTY_HASH,
         "test_key_id": key_id,
         "receipts": {},
