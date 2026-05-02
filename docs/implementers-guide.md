@@ -199,6 +199,117 @@ escalate, or cannot execute a given tool call.
 
 See Appendix D of the specification for the full algorithm and test vectors.
 
+### 7.1 MODIFY Decisions (v1.5+)
+
+When a runtime authority engine decides to permit an action with parameter transformation
+(AARM R4 MODIFY; Sanna `modify_with_constraints`), the receipt MUST record three fields
+inside `authority_decisions[i]` per spec Section 2.7:
+
+- `tool_input_original`: the input the agent submitted before transformation (string or object)
+- `tool_input_transformed`: the input actually passed to the tool after transformation
+- `transformations_applied`: array of transformation descriptors `{type, target_field, rationale}`
+
+Without these fields, an auditor reading the receipt sees only the transformed input and cannot
+reconstruct the agent's original intent. The schema's A1' conditional rule rejects MODIFY records
+missing any of the three.
+
+**Constitution rule pattern (conceptual):**
+
+```yaml
+authority_boundaries:
+  must_modify:  # Phase 2 -- rule engine ships in a future ticket
+    - condition: "tool == 'search-api' and 'email' in args.query"
+      transformations:
+        - type: redact_pii
+          target_field: query
+          rationale: PII per AUTH-PII-01
+```
+
+Note: the `must_modify` constitution boundary type and the `evaluate_authority` dispatch path
+that reads it are NOT yet implemented. SAN-369 ships only the recording-infrastructure helpers
+below; the rule engine that DECIDES when to MODIFY ships in a follow-up ticket.
+
+**Recording a MODIFY decision (Python):**
+
+```python
+from sanna.enforcement.authority import build_modify_authority_decision
+
+# Custom enforcement code that has decided to transform the agent's input:
+record = build_modify_authority_decision(
+    action="search-api",
+    original={"query": "find user@example.com records"},
+    transformed={"query": "find <REDACTED-EMAIL> records"},
+    transformations=[
+        {
+            "type": "redact_pii",
+            "target_field": "query",
+            "rationale": "PII per AUTH-PII-01",
+        },
+    ],
+    reason="PII redacted from query parameter",
+)
+
+# Pass into the authority_decisions list when generating the receipt:
+receipt = generate_receipt(
+    trace_data,
+    agent_identity={"agent_session_id": session_id},
+    enforcement_surface="gateway",
+    invariants_scope="full",
+    authority_decisions=[record],
+)
+```
+
+**Recording a MODIFY decision (TypeScript):**
+
+```typescript
+import { buildModifyAuthorityDecision } from "@sanna-ai/core/dist/authority.js";
+import { generateReceipt } from "@sanna-ai/core";
+
+const record = buildModifyAuthorityDecision(
+  "search-api",
+  { query: "find user@example.com records" },
+  { query: "find <REDACTED-EMAIL> records" },
+  [
+    {
+      type: "redact_pii",
+      target_field: "query",
+      rationale: "PII per AUTH-PII-01",
+    },
+  ],
+  { reason: "PII redacted from query parameter" },
+);
+
+const receipt = generateReceipt({
+  correlation_id: correlationId,
+  inputs: { query: "..." },
+  outputs: { response: "..." },
+  checks: [],
+  enforcement_surface: "gateway",
+  invariants_scope: "full",
+  agent_identity: { agent_session_id: sessionId },
+  authority_decisions: [record],
+});
+```
+
+**Cross-SDK byte-equal parity:** both helpers produce identical records given identical inputs
+(key order: `action, decision, reason, boundary_type, timestamp, tool_input_original,
+tool_input_transformed, transformations_applied`). A receipt containing a MODIFY record from
+either helper passes verification by either SDK (cv=10 21-field fingerprint + Ed25519 signature).
+
+**Validation rules enforced at construction time:**
+
+- `transformations` must be a non-empty list/array
+- Each transformation must have exactly the keys `{type, target_field, rationale}` (extra or missing keys are rejected)
+- `original` and `transformed` must be string or object (not null, not array)
+- `boundary_type` is set to `"can_execute"` (the action proceeds with transformation; the schema's
+  `boundary_type` enum does not include a separate MODIFY value)
+
+References:
+- Spec Section 2.7: Authority Decisions
+- Receipt schema: `AuthorityDecisionRecord` definition + A1' conditional rule
+- SAN-369: MODIFY recording infrastructure (sanna-repo `7e0d3ce`, sanna-ts `60cced0`)
+- SAN-368 (planned): `sanna-verify aarm` mechanically verifies MODIFY conformance
+
 ---
 
 ## 8. Verification Pipeline

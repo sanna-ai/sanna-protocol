@@ -1,3 +1,16 @@
+## [Unreleased] -- 2026-05-02 (SAN-369)
+
+### Added
+- **Implementer's guide example for MODIFY authority decisions** (`docs/implementers-guide.md` Section 7.1). Documents the MODIFY decision pattern with Python and TypeScript code examples using the SAN-369 recording-infrastructure helpers. Includes the conceptual constitution rule pattern (rule engine ships in a follow-up), explains cross-SDK byte-equal parity, lists construction-time validation rules, and cross-references spec Section 2.7 + the SDK commits.
+
+### Tickets
+- SAN-369 (this entry; sanna-protocol portion -- closes SAN-369)
+- Predecessors:
+  - sanna-repo SAN-369 portion (Python helper, MERGED at sanna-repo 7e0d3ce)
+  - sanna-ts SAN-369 portion (TypeScript helper, MERGED at sanna-ts 60cced0)
+- Cross-SDK fixture file in spec/fixtures/receipts/ deferred as a follow-up; AC #4 is met via byte-equal helper parity tests in both SDKs.
+- Verifier rejection of MODIFY receipts missing the three fields: SAN-368.
+
 ## [Unreleased] -- 2026-05-01 (SAN-361)
 
 ### Added
