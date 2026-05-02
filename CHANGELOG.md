@@ -1,3 +1,35 @@
+## [v1.5] -- 2026-05-02 (SAN-395)
+
+### Added
+- Section 2.22 NEW: The com.sanna.anomaly Extension Namespace.
+  Reserves the namespace for invocation_anomaly receipts. Documents
+  required shape (attempted_tool / attempted_command /
+  attempted_endpoint per surface variant), suppression_basis enum
+  (session_manifest, policy_override, constitution_invalid), and
+  content_mode interaction.
+- receipt.schema.json: rule B3 (com.sanna.anomaly extension implies
+  event_type is an anomaly variant) + rule B4 (anomaly event_type
+  requires com.sanna.anomaly with suppression_basis).
+- receipt.schema.json: extensions description updated to distinguish
+  com.sanna.* reserved namespace (positive validation) from vendor
+  extensions outside that namespace (ignored by verifiers).
+
+### Compatibility
+- Existing cv=9 and cv=10 receipts WITHOUT invocation_anomaly
+  event_type are unaffected (B3/B4 rules are conditional; no-ops
+  when event_type is absent or non-anomaly).
+- Existing invocation_anomaly fixtures validate cleanly under B4
+  (they already contain com.sanna.anomaly with suppression_basis).
+- No SPEC_VERSION bump (additive in-place clarification, same
+  pattern as SAN-377).
+
+### Tickets
+- SAN-395 (this entry)
+- Origin: SAN-206 + SAN-209 (introduced com.sanna.anomaly without
+  spec coverage). SAN-358 Prompt A (baked it into verifier contract).
+- Unblocks: SAN-358 Prompt B (TS verifier mirror); SAN-397
+  (CLI/HTTP anomaly emission).
+
 ## [Unreleased] -- 2026-05-02 (SAN-368)
 
 ### Added
