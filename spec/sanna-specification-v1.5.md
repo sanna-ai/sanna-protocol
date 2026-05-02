@@ -1056,7 +1056,7 @@ and `trust_hash`. The reference implementations (sanna v1.0.0, sanna-ts
 v1.0.2) have always computed the correct formula above. No third-party
 implementation used the incorrect formula. This correction is not a
 breaking change. Note: v1.2 was never released in SDK form -- see
-Section 14 and the normative statement in Section 4.4.
+Section 15 and the normative statement in Section 4.4.
 
 **v1.3 breaking change:** The fingerprint formula expanded from 14
 fields to 16 fields. Fields 15 (`enforcement_surface_hash`) and 16
@@ -1426,12 +1426,9 @@ records which constitution was active at session-start.
   deferred receipts whose `parent_receipts` reference does not resolve
   to a `session_manifest` receipt.
 
-### 6.8 AARM Conformance (v1.5+, skeleton)
+### 6.8 AARM Conformance
 
-Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance,
-mechanically verifiable via `sanna-verify aarm`. Full conformance
-mapping and declaration will be specified in a dedicated section
-added by SAN-361.
+Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance. The full mapping, decision-enum table, R5 receipt-field mapping, gap acknowledgment, and exceedances are normatively specified in Section 14.
 
 ---
 
@@ -2076,7 +2073,103 @@ not 14 fields from the v1.1 formula.
 
 ---
 
-## 14. Version History
+## 14. AARM Conformance and Mapping
+
+This section documents Sanna Protocol's conformance to the Agentic Action Risk Management (AARM) reference model and maps Sanna's runtime governance primitives to AARM requirements R1-R9.
+
+### 14.1 Conformance claim
+
+Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance, mechanically verifiable via the `sanna-verify aarm` tool.
+
+Manifest implements the Composition layer (GCD reference model Layer 3) that AARM v1.0 does not address. R7 (semantic distance) and R9 (JIT credentials) are addressed in future protocol versions.
+
+Sanna receipts exceed AARM R5 on three axes:
+- Offline third-party verifiability via Ed25519 + RFC 8785 + 21-field fingerprint (cv=10)
+- Hash-chained `parent_receipts` for cross-receipt integrity
+- Model-identity binding (`agent_model`, `agent_model_provider`, `agent_model_version` fields)
+
+Sanna exceeds AARM R6 by enforcing operator/agent credential isolation: agent credentials cannot access governance metadata about their own suppression.
+
+If a future AARM version addresses the Composition layer, Sanna will revisit this framing for alignment.
+
+### 14.2 Decision-enum mapping (R4)
+
+Sanna's authority decision enum maps to AARM R4 as follows:
+
+| Sanna authority | AARM R4 |
+|-----------------|---------|
+| `can_execute` | ALLOW |
+| `cannot_execute` | DENY |
+| `must_escalate` | STEP_UP |
+| `modify_with_constraints` | MODIFY |
+| `defer_pending_context` | DEFER |
+
+STEP_UP fulfillment is observable across receipt PAIRS: an `enforcement.action="escalated"` receipt chains to a downstream approval receipt via `parent_receipts`. The `sanna-verify aarm` tool evaluates both as a pair to confirm STEP_UP completion.
+
+MODIFY decisions record three additional fields inside `authority_decisions[i]`: `tool_input_original`, `tool_input_transformed`, and `transformations_applied` (an array of `{type, target_field, rationale}` descriptors). Without these fields, a MODIFY receipt cannot reconstruct the agent's original intent and is non-conformant.
+
+### 14.3 Receipt-field mapping (R5)
+
+AARM R5 binds action / context / decision / outcome / timestamp / identity. Sanna receipts bind these via:
+
+| AARM R5 axis | Sanna receipt fields |
+|--------------|----------------------|
+| Action | `tool_name`, `inputs.query`, `inputs.context` |
+| Context | `reasoning_hash`, `context_limitation`, `extensions.com.sanna.gateway.action.tool` |
+| Decision | `enforcement.action`, `authority_decisions[*].decision` |
+| Outcome | `status`, `outputs.response` |
+| Timestamp | `timestamp` |
+| Identity | `agent_identity` (cv>=10), `constitution_ref`, `agent_model*`, `tool_name` |
+
+Sanna receipts ALSO carry `receipt_signature` (Ed25519), `full_fingerprint` (21-field at cv=10), `parent_receipts` (chain integrity), and content hashes (`context_hash`, `output_hash`). These exceed AARM R5's bare requirement.
+
+When `content_mode="redacted"`, the verifier accepts redaction markers in `inputs` / `outputs` / `extensions`. Cryptographic integrity (fingerprint + signature) is the conformance test, not visible content presence.
+
+### 14.4 Manifest as AARM Layer 3 (Composition)
+
+AARM v1.0 has no concept of session manifest, capability surface delivery, pre-execution authority filtering, or escalation_visibility. Manifest fills this gap.
+
+A Sanna `session_manifest` receipt declares the gateway's intended capability surface for a session: which tools the agent can see, which require escalation, which are suppressed entirely. Manifest is the GCD reference model's Layer 3 (Composition) -- the layer between AARM's R1-R6 runtime authorities and the agent's capability discovery.
+
+Manifest does not modify or extend AARM. It documents a layer AARM is silent on.
+
+### 14.5 Gap acknowledgment (R7 and R9)
+
+R7 (semantic distance / intent drift): Sanna does not implement R7 in v1.5. The capability is targeted in a future protocol version.
+
+R9 (JIT scoped credentials): R9 sits at the entitlement layer (GCD Layer 2). Sanna addresses this in the cloud surface (Phase 4 work), not in the protocol-level SDK. R9 is out of v1.5 protocol scope.
+
+### 14.6 R6 conformance: full at cv=10
+
+The `agent_identity` field at cv=10 (Section 2.19) binds the receipt to the identity layers required for full R6 conformance: agent session (`agent_session_id`, REQUIRED), human principal (`human_principal`), service account (`service_account`), role, and privilege scope. cv=9 legacy receipts that lack `agent_identity` indicate partial R6 conformance only and emit a `CV9_LEGACY:`-prefixed warning during verification (Section 2.19; SAN-371).
+
+### 14.7 R8 telemetry export
+
+R8 requires structured telemetry export to security observability tooling. Sanna receipts are JSON-serialized over HTTPS via the cloud sink (`CloudHTTPSink`). The schema is documented in `receipt.schema.json`. SIEM-vendor integrations (Splunk, Datadog, Elastic) are customer-deployment configuration concerns; the protocol provides the wire format.
+
+### 14.8 Exceedances over AARM v1.0
+
+Sanna implements requirements that AARM v1.0 does not enumerate:
+
+- **Operator/agent credential isolation** (PRD AC-5): a SOC 2 CC6.1 / ISO 42001 access-control exceedance over R6.
+- **Static composition** (G1 D10): pre-execution capability filtering at session start; consistent with the R9 JIT-credentials gap.
+- **Hash-chained `parent_receipts`** (Section 2.10): cross-receipt integrity beyond R5's per-receipt scope.
+- **Offline third-party verifiability** (Section 5): Ed25519 signatures + RFC 8785 canonical JSON allow auditors to verify receipts without contacting Sanna infrastructure.
+
+These are normative requirements within the Sanna Protocol; they are exceedances when measured against AARM v1.0.
+
+### 14.9 References
+
+- AARM v1.0 (arxiv 2602.09433 v1)
+- Section 2.19: `agent_identity` field
+- Section 4.1: fingerprint formula (cv-aware dispatch)
+- Section 4.4: cv-dispatched generator and verifier rules
+- Section 13: Conformance Requirements (generator, verifier, legacy receipt handling)
+- `sanna-verify aarm` tool: implements mechanical verification of this section's claims (SAN-368)
+
+---
+
+## 15. Version History
 
 | Spec Version | Tool Version | Changes |
 |-------------|-------------|---------|
@@ -2087,6 +2180,7 @@ not 14 fields from the v1.1 formula.
 | 1.2.0 | 1.0.0 | **Fingerprint formula correction:** Section 4.1 corrected to match reference implementations (sanna v1.0.0, sanna-ts v1.0.2). Not a breaking change. **Multi-surface governance:** `event_type` field (9 values), `context_limitation` field (5 values). Receipt Triad for CLI boundary (Section 7.6) and API boundary (Section 7.7). Constitution blocks: `cli_permissions`, `api_permissions`. Multi-surface test vectors. **NOTE: v1.2 was never released in SDK form. Any receipt claiming `spec_version="1.2"` is spurious and MUST be treated as such by verifiers. SDKs skip directly from "1.1" to "1.3".** |
 | 1.3.0 | 1.1.0 | **Two new required top-level fields:** `enforcement_surface` (enum: `middleware`, `gateway`, `cli_interceptor`, `http_interceptor`) and `invariants_scope` (enum: `full`, `authority_only`, `limited`, `none`). Both participate in fingerprint computation (fields 15 and 16). **Status derivation mapping (normative):** when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` (halted→FAIL, warned→WARN, allowed→PASS, escalated→WARN). **Cross-field consistency rule (normative):** verifiers MUST assert `status` matches `enforcement.action` per the derivation mapping; mismatch is a verification error indicating compromised receipt integrity. **`checks_version` incremented to `"8"`**, fingerprint formula expanded from 14 to 16 fields. **JSON Schema `$id` bumped to `receipt/v1.3.json`.** Architectural asymmetry note for C1-C5 invocation across Python vs TypeScript SDKs documented (non-normative, Section 2.16.4). |
 | 1.4.0 | 1.4.0 | **New required field `tool_name`** (required at cv>=9): enum `"sanna"` \| `"sanna-ts"`. Separates SDK identity from SDK version -- `tool_version` stays bare semver; `tool_name` is a registered enum. Third-party SDKs register values via spec PR. Participates in fingerprint (field 17). **New optional agent-model fields** `agent_model`, `agent_model_provider`, `agent_model_version` (all string or null): capture the LLM model running when the receipt was generated. Nullable for explicit opt-out; absent = not captured. Tri-valued absent/null/string semantics are normative (Section 2.18.4); aggregators MUST NOT conflate absent with null. Participate in fingerprint at fields 18-20 (EMPTY_HASH for null or absent). **`checks_version` incremented to `"9"`**, fingerprint formula expanded from 16 to 20 fields. **JSON Schema `$id` bumped to `receipt/v1.4.json`.** **Section 13 rewritten** to describe cv-based dispatch for both generators and verifiers (closes stale 14-field reference -- Codex F-013). SAN-222. |
+| 1.5.0 | 1.5.0 | **New required field `agent_identity`** at cv=10 (Section 2.19): binds the receipt to AARM R6 identity layers (`agent_session_id` REQUIRED; `human_principal`, `service_account`, `role`, `privilege_scope` OPTIONAL). Participates in fingerprint at field 21 (`agent_identity_hash = hash_obj(agent_identity)`). **`checks_version` incremented to `"10"`**, fingerprint formula expanded from 20 to 21 fields. **JSON Schema `$id` bumped to `receipt/v1.5.json`**. **MODIFY decision parameter recording** (Section 2.7): `tool_input_original`, `tool_input_transformed`, `transformations_applied` recorded inside `authority_decisions[i]` for `modify_with_constraints` decisions (no fingerprint formula change; per-decision fields hash via `authority_hash`). **CV9_LEGACY-prefixed verifier warning** for cv=9 receipts (partial R6 conformance only; receipts remain valid). **New Section 14 "AARM Conformance and Mapping"**: public conformance claim text, decision-enum mapping (Sanna<->AARM R4), receipt-field mapping (R5), Manifest framing as Layer 3 (Composition), R7/R9 gap acknowledgment, R5/R6 exceedances. SAN-204, SAN-369, SAN-370, SAN-371, SAN-361. |
 
 ---
 
