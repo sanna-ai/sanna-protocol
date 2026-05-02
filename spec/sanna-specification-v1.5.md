@@ -2158,7 +2158,87 @@ Sanna implements requirements that AARM v1.0 does not enumerate:
 
 These are normative requirements within the Sanna Protocol; they are exceedances when measured against AARM v1.0.
 
-### 14.9 References
+### 14.9 How to verify AARM conformance
+
+Both Sanna SDKs ship a CLI that mechanically verifies AARM Core (R1-R6) conformance on a receipt set. Invocations differ slightly between SDKs due to per-language CLI conventions; verdict semantics are byte-equal.
+
+**Python (`sanna` PyPI package):**
+
+```bash
+sanna-verify aarm <receipt-files-glob> [--format json|human] [--public-key <pub-key-path>] [--output <file>]
+```
+
+**TypeScript (`@sanna-ai/cli` npm package):**
+
+```bash
+sanna verify-aarm <receipt-files-glob> [--format json|human] [--public-key <pub-key-path>] [--output <file>]
+```
+
+Both invocations produce structurally identical reports for the same receipt set (modulo a `generated_at` timestamp).
+
+**Output format (JSON):**
+
+```json
+{
+  "aggregate_status": "PASS" | "FAIL" | "PARTIAL",
+  "receipt_count": 3,
+  "generated_at": "2026-05-02T10:30:00+00:00",
+  "checks": [
+    {
+      "requirement": "R1",
+      "name": "Pre-Execution Interception",
+      "status": "PASS" | "FAIL" | "PARTIAL" | "N/A",
+      "message": "...",
+      "evidence": []
+    },
+    ...
+  ]
+}
+```
+
+**Aggregate status semantics:**
+
+- `PASS`: all six R1-R6 checks return PASS or N/A.
+- `PARTIAL`: at least one check returned PARTIAL; no check returned FAIL. Typically indicates the receipt set contains cv=9 legacy receipts (R6 PARTIAL) alongside cv=10 receipts.
+- `FAIL`: at least one check returned FAIL. The set is non-conformant; specific failures are listed in `checks[].evidence`.
+
+**Per-requirement check semantics:**
+
+| Requirement | Check | PASS condition | FAIL condition | PARTIAL condition |
+|---|---|---|---|---|
+| R1 | Pre-Execution Interception | Every `invocation_*` receipt has `enforcement_surface` in `{middleware, gateway, cli_interceptor, http_interceptor, mixed}` | Any invocation receipt missing or with invalid `enforcement_surface` | -- |
+| R2 | Context Accumulation | All `parent_receipts` references resolve within the receipt set | Any `parent_receipts` entry references a fingerprint not in the set | -- |
+| R3 | Policy Evaluation | Every governance receipt has `constitution_ref.policy_hash` | Any governance receipt missing `policy_hash` | N/A if no governance receipts in set |
+| R4 | Five Authorization Decisions | All `decision` values in `{ALLOW, DENY, STEP_UP, MODIFY, DEFER}` AND every `enforcement.action="escalated"` receipt chains to a downstream resolution receipt | Invalid decision value OR orphaned STEP_UP receipt with no resolution | -- |
+| R5 | Tamper-Evident Receipts | Every receipt's fingerprint validates; signatures validate when public key provided. Redacted-content receipts pass when fingerprint is intact (cryptographic integrity is the conformance test) | Fingerprint or signature mismatch | -- |
+| R6 | Identity Binding | All cv=10 receipts have `agent_identity.agent_session_id` | Any cv=10 receipt missing `agent_identity` | Set contains only cv<=9 receipts (legacy partial R6) OR mixes cv=9 and cv=10 receipts |
+
+**Exit codes:**
+
+- `0`: aggregate PASS or PARTIAL (verifier ran successfully)
+- `1`: aggregate FAIL (one or more checks failed)
+- `2`: file load error (glob expansion failed, file unreadable, JSON parse error)
+- `3`: internal error (verifier crashed, public key load failed)
+
+**Cross-SDK verdict parity:**
+
+Python and TypeScript verifiers produce byte-equal `aggregate_status` and per-check `status` for identical receipt sets (cross-language test in sanna-ts validates this against the Python reference output). Audit consumers can use either SDK interchangeably; the verdict is the same.
+
+**Example -- verifying a receipt set:**
+
+```bash
+# Python
+sanna-verify aarm 'receipts/*.json' --format json --output report.json
+echo "Exit code: $?"
+
+# TypeScript
+sanna verify-aarm 'receipts/*.json' --format json --output report.json
+echo "Exit code: $?"
+```
+
+A PASS exit code (0) means the receipt set is AARM Core conformant. A PARTIAL exit code (also 0) means the set is conformant for the cv=10 receipts in it but contains cv=9 legacy receipts that only bind partial R6 identity. A FAIL exit code (1) means the verifier rejected the set; investigate `checks[].evidence` for the specific failures.
+
+### 14.10 References
 
 - AARM v1.0 (arxiv 2602.09433 v1)
 - Section 2.19: `agent_identity` field
