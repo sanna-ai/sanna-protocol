@@ -1,3 +1,16 @@
+## [Unreleased] -- 2026-05-02 (SAN-368)
+
+### Added
+- **Operational subsection** in spec Section 14 (`### 14.9 How to verify AARM conformance`) documenting how to invoke the `sanna-verify aarm` (Python) and `sanna verify-aarm` (TypeScript) CLIs. Includes JSON output schema, aggregate status semantics (PASS/PARTIAL/FAIL), per-requirement check table (R1-R6 with PASS/FAIL/PARTIAL/N/A conditions), exit-code semantics, cross-SDK verdict parity note, and example invocations.
+
+### Tickets
+- SAN-368 (this entry; sanna-protocol portion -- closes SAN-368)
+- Predecessors:
+  - sanna-repo SAN-368 portion (Python `sanna-verify aarm` CLI, MERGED at sanna-repo f2b53a5)
+  - sanna-ts SAN-368 portion (TypeScript `sanna verify-aarm` CLI, MERGED)
+  - SAN-361 (Section 14 AARM Conformance and Mapping spec section, MERGED)
+- Cross-SDK CLI naming divergence (Python `sanna-verify aarm` vs TS `sanna verify-aarm`) tracked in a separate follow-up ticket (P2 Backlog).
+
 ## [Unreleased] -- 2026-05-02 (SAN-369)
 
 ### Added
