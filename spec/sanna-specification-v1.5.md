@@ -871,6 +871,68 @@ fail, on unknown -- it is the documented fallback).
 
 ---
 
+### 2.22 The com.sanna.anomaly Extension Namespace (v1.5+)
+
+Receipts with `event_type` in the set {`invocation_anomaly`,
+`cli_invocation_anomaly`, `api_invocation_anomaly`} carry anomaly
+signal data inside the `extensions["com.sanna.anomaly"]` object. This
+section reserves the namespace and specifies its shape.
+
+#### 2.22.1 Key naming convention
+
+All keys inside `extensions["com.sanna.anomaly"]` MUST use snake_case.
+This matches the convention established in Section 2.20.1 for
+`com.sanna.manifest`.
+
+#### 2.22.2 Required shape
+
+When `event_type` is one of the anomaly variants, `extensions` MUST
+contain a `com.sanna.anomaly` object with the following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `attempted_tool` | string | YES (when event_type=invocation_anomaly) | The MCP tool name the agent attempted to invoke |
+| `attempted_command` | string | YES (when event_type=cli_invocation_anomaly) | The CLI command pattern the agent attempted to invoke |
+| `attempted_endpoint` | string | YES (when event_type=api_invocation_anomaly) | The HTTP endpoint pattern the agent attempted to invoke |
+| `suppression_basis` | string | YES | How the suppression was determined. Stable enum (Section 2.22.3) |
+
+Exactly ONE of `attempted_tool`, `attempted_command`, or
+`attempted_endpoint` MUST be present, matching the surface variant of
+the `event_type`. Verifiers MUST reject anomaly receipts where the
+field name does not match the event_type surface.
+
+#### 2.22.3 suppression_basis enum
+
+| Value | Meaning |
+|-------|---------|
+| `session_manifest` | The attempted capability was found in the active session_manifest's suppressed list for the matching surface |
+| `policy_override` | A per-tool policy override denied the capability (not present in constitution's cannot_execute, but denied by runtime config) |
+| `constitution_invalid` | Constitution failed to load; all invocations suppressed by fail-closed behavior |
+
+The `suppression_basis` enum is extensible; verifiers MUST accept
+unknown values with an informational warning (not error), matching the
+`unknown` fallback posture of Section 2.21.
+
+#### 2.22.4 Relationship to parent_receipts
+
+Per Section 2.12, anomaly receipts MUST have non-empty `parent_receipts`
+containing the `full_fingerprint` of the active session_manifest receipt
+for the matching surface. The `com.sanna.anomaly` extension provides the
+signal content (what was attempted); the `parent_receipts` chain provides
+the cryptographic binding to the manifest that declared the suppression.
+
+#### 2.22.5 content_mode interaction
+
+When `content_mode` is `redacted`, the `attempted_tool` /
+`attempted_command` / `attempted_endpoint` value MUST be replaced with
+`<redacted>`. The `suppression_basis` field remains visible (it is
+metadata, not capability-identifying). When `content_mode` is
+`hashes_only`, the capability name MUST be replaced with its SHA-256
+hex string (lowercase). These rules mirror Section 2.14's handling of
+tool names in `com.sanna.manifest`.
+
+---
+
 ## 3. Canonicalization
 
 Sanna uses a canonical JSON serialization derived from RFC 8785 (JSON
