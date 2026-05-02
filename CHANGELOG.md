@@ -1,3 +1,19 @@
+## [Unreleased] -- 2026-05-01 (SAN-361)
+
+### Added
+- **Section 14 'AARM Conformance and Mapping'** in `spec/sanna-specification-v1.5.md`. New top-level section documents the public conformance claim (Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance, mechanically verifiable via `sanna-verify aarm`), the Sanna<->AARM R4 decision-enum mapping (5 values), the AARM R5 receipt-field mapping, Manifest framing as GCD Layer 3 (Composition) -- the layer AARM v1.0 does not address, R7/R9 gap acknowledgment (R7 targeted in a future protocol version; R9 is cloud entitlement layer scope), full R6 conformance via `agent_identity` at cv=10, R8 telemetry export framing, and exceedances over AARM v1.0 (operator/agent credential isolation, static composition, hash-chained `parent_receipts`, offline third-party verifiability).
+- **v1.5.0 row** in the Version History table summarizing the cv=10 transition.
+
+### Changed
+- **Renumbered**: existing Section 14 (Version History) is now Section 15. Single cross-reference updated at the line that referenced Version History.
+- **Updated Section 6.8** from forward-pointer skeleton to a brief cross-reference into the new Section 14.
+
+### Tickets
+- SAN-361 (this entry)
+- Predecessor: SAN-356 G2 (locked the conformance claim text + decision-enum mapping + R5 mapping + Manifest framing + R7/R9 gap + R5/R6 exceedances)
+- Unblocks: SAN-368 (AARM-conformance receipt-set verifier `sanna-verify aarm`)
+- Cross-references: SAN-204 (cv=10 schema work, MERGED), SAN-370 (cv=10 cascade, MERGED), SAN-371 (CV9_LEGACY warning + migration memo, MERGED)
+
 ## [Unreleased] -- 2026-05-01 (SAN-371)
 
 ### Added
