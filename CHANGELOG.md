@@ -1,3 +1,15 @@
+## [v1.5] -- 2026-05-03 (SAN-383)
+
+### Fixed
+- receipt.schema.json: A1' rule added. agent_identity MUST be absent
+  at checks_version in {6, 7, 8, 9} (pre-v1.5). Previously only
+  enforced the forward direction (cv=10 requires agent_identity).
+  Uses explicit enum (not 'not const 10') for forward-compat with
+  cv=11+ which will also require agent_identity.
+
+### Tickets
+- SAN-383 (this entry).
+
 ## [v1.5] -- 2026-05-03 (SAN-381)
 
 ### Fixed
