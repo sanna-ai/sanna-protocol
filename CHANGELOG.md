@@ -1,3 +1,31 @@
+## [v1.5] -- 2026-05-02 (SAN-358 Prompt C)
+
+### Added
+- New fixture `fixtures/manifest/verifier-verdicts.json` with 15
+  receipt vectors (VV-001 through VV-015) covering session_manifest
+  (9 checks) and invocation_anomaly (3 checks) verifier verdict
+  outputs. Each vector encodes the receipt input + expected check
+  array (name, status, message). Both Python and TypeScript verifiers
+  MUST produce these exact verdicts -- the formal cross-SDK byte-equal
+  gate.
+- Coverage: passing manifests (gateway/mcp), missing extension,
+  unsorted lists (determinism), delivered/suppressed overlap (anti-
+  enumeration integrity), unknown suppression_reason (WARN fallback),
+  invalid suppression_reason (FAIL), keys mismatch, missing
+  constitution_ref, enforcement_surface=mixed with too few surfaces,
+  anomaly single-receipt WARN, anomaly receipt-set PASS/FAIL/
+  informational variants.
+
+### Cross-SDK
+- This fixture is the audit artifact proving cross-SDK verdict parity.
+  SOC 2 evaluators can verify: same receipt -> same verdict -> same
+  message text across both SDK verifiers.
+
+### Tickets
+- SAN-358 Prompt C (this entry; closes SAN-358).
+- Companion: SAN-358 Prompt A (Python, PR #46), SAN-358 Prompt B
+  (TypeScript, PR #36).
+
 ## [v1.5] -- 2026-05-02 (SAN-395)
 
 ### Added

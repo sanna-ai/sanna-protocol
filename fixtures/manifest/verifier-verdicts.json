@@ -1,0 +1,280 @@
+{
+  "$schema": "https://sanna.dev/fixtures/verifier-verdicts/v1.json",
+  "$comment": "SAN-358 Prompt C: Cross-SDK verifier verdict fixture. Both Python (verify_session_manifest_receipt / verify_invocation_anomaly_receipt) and TypeScript (verifySessionManifestReceipt / verifyInvocationAnomalyReceipt) must produce these exact check arrays on the given receipt inputs. Byte-equal message text is the formal cross-SDK gate.",
+  "vectors": [
+    {
+      "id": "VV-001",
+      "description": "Passing session_manifest (gateway, mcp surface, one delivered + one suppressed)",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["read_data"], "tools_suppressed": ["delete_all"], "suppression_reasons": {"delete_all": "cannot_execute"}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_checks": [
+        {"name": "manifest_extension_present", "status": "PASS", "message": "extension 'com.sanna.manifest' present"},
+        {"name": "manifest_version_supported", "status": "PASS", "message": "manifest version '0.1' is supported"},
+        {"name": "manifest_has_at_least_one_surface", "status": "PASS", "message": "manifest surfaces present: ['mcp']"},
+        {"name": "manifest_lists_sorted", "status": "PASS", "message": "all surface lists are sorted alphabetically"},
+        {"name": "manifest_suppression_reasons_in_enum", "status": "PASS", "message": "all suppression_reasons are in the stable enum"},
+        {"name": "manifest_no_overlap_delivered_suppressed", "status": "PASS", "message": "no overlap between delivered and suppressed"},
+        {"name": "manifest_suppression_reasons_keys_match", "status": "PASS", "message": "suppression_reasons keys match suppressed names"},
+        {"name": "manifest_constitution_ref_present", "status": "PASS", "message": "constitution_ref.policy_hash present"},
+        {"name": "manifest_enforcement_surface_consistent", "status": "PASS", "message": "enforcement_surface='gateway' is consistent with surfaces"}
+      ]
+    },
+    {
+      "id": "VV-002",
+      "description": "FAIL: missing com.sanna.manifest extension",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_checks": [
+        {"name": "manifest_extension_present", "status": "FAIL", "message": "session_manifest receipt missing required extension 'com.sanna.manifest'"},
+        {"name": "manifest_constitution_ref_present", "status": "PASS", "message": "constitution_ref.policy_hash present"},
+        {"name": "manifest_enforcement_surface_consistent", "status": "FAIL", "message": "session_manifest with enforcement_surface='gateway' missing 'mcp' surface"}
+      ]
+    },
+    {
+      "id": "VV-003",
+      "description": "FAIL: unsorted tools_delivered list (determinism violated)",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["z_tool", "a_tool"], "tools_suppressed": [], "suppression_reasons": {}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_checks_filter": {"status": "FAIL"},
+      "expected_fail_checks": [
+        {"name": "manifest_lists_sorted", "status": "FAIL", "message": "manifest surface 'mcp' field 'tools_delivered' is not sorted alphabetically (determinism violated)"}
+      ]
+    },
+    {
+      "id": "VV-004",
+      "description": "FAIL: tool in both delivered and suppressed (anti-enumeration integrity violated)",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["tool_a"], "tools_suppressed": ["tool_a"], "suppression_reasons": {"tool_a": "cannot_execute"}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_fail_checks": [
+        {"name": "manifest_no_overlap_delivered_suppressed", "status": "FAIL", "message": "manifest surface 'mcp' has 'tool_a' in BOTH delivered and suppressed (anti-enumeration integrity violated)"}
+      ]
+    },
+    {
+      "id": "VV-005",
+      "description": "WARN: 'unknown' suppression_reason (documented fallback per Section 2.21)",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": [], "tools_suppressed": ["x"], "suppression_reasons": {"x": "unknown"}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_warn_checks": [
+        {"name": "manifest_suppression_reasons_in_enum", "status": "WARN", "message": "manifest surface 'mcp' uses 'unknown' suppression_reason (documented fallback per Section 2.21)"}
+      ]
+    },
+    {
+      "id": "VV-006",
+      "description": "FAIL: invalid suppression_reason value",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": [], "tools_suppressed": ["x"], "suppression_reasons": {"x": "totally_made_up"}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_fail_checks": [
+        {"name": "manifest_suppression_reasons_in_enum", "status": "FAIL", "message": "manifest surface 'mcp' suppression_reason 'totally_made_up' not in stable enum (Section 2.21)"}
+      ]
+    },
+    {
+      "id": "VV-007",
+      "description": "FAIL: suppression_reasons keys do not match suppressed names",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": [], "tools_suppressed": ["x", "y"], "suppression_reasons": {"x": "cannot_execute", "z": "cannot_execute"}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_fail_checks": [
+        {"name": "manifest_suppression_reasons_keys_match", "status": "FAIL", "message": "manifest surface 'mcp' suppression_reasons keys ['x', 'z'] do not match suppressed names ['x', 'y']"}
+      ]
+    },
+    {
+      "id": "VV-008",
+      "description": "FAIL: missing constitution_ref.policy_hash",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": [], "tools_suppressed": [], "suppression_reasons": {}}}}},
+        "enforcement_surface": "gateway"
+      },
+      "expected_fail_checks": [
+        {"name": "manifest_constitution_ref_present", "status": "FAIL", "message": "session_manifest receipt requires constitution_ref.policy_hash (manifest is meaningless without constitution binding)"}
+      ]
+    },
+    {
+      "id": "VV-009",
+      "description": "FAIL: enforcement_surface='mixed' with only 1 surface",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": [], "tools_suppressed": [], "suppression_reasons": {}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "mixed"
+      },
+      "expected_fail_checks": [
+        {"name": "manifest_enforcement_surface_consistent", "status": "FAIL", "message": "session_manifest with enforcement_surface='mixed' requires surfaces dict with at least 2 entries; got 1"}
+      ]
+    },
+    {
+      "id": "VV-010",
+      "description": "Anomaly receipt in single-receipt mode (all cross-receipt checks WARN-skip)",
+      "mode": "single",
+      "receipt": {
+        "event_type": "invocation_anomaly",
+        "extensions": {"com.sanna.anomaly": {"attempted_tool": "delete_all", "suppression_basis": "session_manifest"}},
+        "parent_receipts": ["eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"],
+        "enforcement_surface": "gateway"
+      },
+      "expected_checks": [
+        {"name": "anomaly_event_type_in_valid_set", "status": "PASS", "message": "event_type 'invocation_anomaly' is in valid set"},
+        {"name": "anomaly_parent_receipts_resolves_to_session_manifest", "status": "WARN", "message": "Cross-receipt parent resolution requires receipt set; use verify_receipt_set"},
+        {"name": "anomaly_attempted_capability_in_parent_suppressed_or_absent", "status": "WARN", "message": "Cross-receipt parent resolution requires receipt set; use verify_receipt_set"}
+      ]
+    },
+    {
+      "id": "VV-011",
+      "description": "Anomaly receipt in receipt-set mode: tool in suppressed (PASS, spec-conformant signal)",
+      "mode": "set",
+      "receipts": [
+        {
+          "event_type": "session_manifest",
+          "full_fingerprint": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["read_data"], "tools_suppressed": ["delete_all"], "suppression_reasons": {"delete_all": "cannot_execute"}}}}},
+          "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+          "enforcement_surface": "gateway"
+        },
+        {
+          "event_type": "invocation_anomaly",
+          "receipt_id": "anomaly-001",
+          "extensions": {"com.sanna.anomaly": {"attempted_tool": "delete_all", "suppression_basis": "session_manifest"}},
+          "parent_receipts": ["eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"],
+          "enforcement_surface": "gateway"
+        }
+      ],
+      "assert_receipt_id": "anomaly-001",
+      "expected_checks": [
+        {"name": "anomaly_event_type_in_valid_set", "status": "PASS", "message": "event_type 'invocation_anomaly' is in valid set"},
+        {"name": "anomaly_parent_receipts_resolves_to_session_manifest", "status": "PASS", "message": "anomaly receipt parent_receipts resolves to a session_manifest in the receipt set"},
+        {"name": "anomaly_attempted_capability_in_parent_suppressed_or_absent", "status": "PASS", "message": "anomaly capability 'delete_all' was suppressed in parent session_manifest (spec-conformant anti-enumeration signal)"}
+      ]
+    },
+    {
+      "id": "VV-012",
+      "description": "Anomaly receipt in receipt-set mode: tool in DELIVERED (FAIL, inconsistent receipt set)",
+      "mode": "set",
+      "receipts": [
+        {
+          "event_type": "session_manifest",
+          "full_fingerprint": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["read_data"], "tools_suppressed": ["delete_all"], "suppression_reasons": {"delete_all": "cannot_execute"}}}}},
+          "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+          "enforcement_surface": "gateway"
+        },
+        {
+          "event_type": "invocation_anomaly",
+          "receipt_id": "anomaly-002",
+          "extensions": {"com.sanna.anomaly": {"attempted_tool": "read_data", "suppression_basis": "session_manifest"}},
+          "parent_receipts": ["eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"],
+          "enforcement_surface": "gateway"
+        }
+      ],
+      "assert_receipt_id": "anomaly-002",
+      "expected_checks": [
+        {"name": "anomaly_event_type_in_valid_set", "status": "PASS", "message": "event_type 'invocation_anomaly' is in valid set"},
+        {"name": "anomaly_parent_receipts_resolves_to_session_manifest", "status": "PASS", "message": "anomaly receipt parent_receipts resolves to a session_manifest in the receipt set"},
+        {"name": "anomaly_attempted_capability_in_parent_suppressed_or_absent", "status": "FAIL", "message": "anomaly receipt for capability 'read_data' that parent session_manifest declares as DELIVERED -- inconsistent receipt set"}
+      ]
+    },
+    {
+      "id": "VV-013",
+      "description": "Anomaly receipt in receipt-set mode: empty parent_receipts (FAIL, spec Section 2.12)",
+      "mode": "set",
+      "receipts": [
+        {
+          "event_type": "session_manifest",
+          "full_fingerprint": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["read_data"], "tools_suppressed": ["delete_all"], "suppression_reasons": {"delete_all": "cannot_execute"}}}}},
+          "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+          "enforcement_surface": "gateway"
+        },
+        {
+          "event_type": "invocation_anomaly",
+          "receipt_id": "anomaly-003",
+          "extensions": {"com.sanna.anomaly": {"attempted_tool": "delete_all", "suppression_basis": "session_manifest"}},
+          "parent_receipts": [],
+          "enforcement_surface": "gateway"
+        }
+      ],
+      "assert_receipt_id": "anomaly-003",
+      "expected_checks": [
+        {"name": "anomaly_event_type_in_valid_set", "status": "PASS", "message": "event_type 'invocation_anomaly' is in valid set"},
+        {"name": "anomaly_parent_receipts_resolves_to_session_manifest", "status": "FAIL", "message": "anomaly receipt requires non-empty parent_receipts containing the active session_manifest's full_fingerprint (spec Section 2.12)"},
+        {"name": "anomaly_attempted_capability_in_parent_suppressed_or_absent", "status": "WARN", "message": "Cross-receipt parent resolution requires receipt set; use verify_receipt_set"}
+      ]
+    },
+    {
+      "id": "VV-014",
+      "description": "Anomaly receipt in receipt-set mode: tool absent from constitution entirely (PASS informational)",
+      "mode": "set",
+      "receipts": [
+        {
+          "event_type": "session_manifest",
+          "full_fingerprint": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "extensions": {"com.sanna.manifest": {"version": "0.1", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": ["read_data"], "tools_suppressed": ["delete_all"], "suppression_reasons": {"delete_all": "cannot_execute"}}}}},
+          "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+          "enforcement_surface": "gateway"
+        },
+        {
+          "event_type": "invocation_anomaly",
+          "receipt_id": "anomaly-004",
+          "extensions": {"com.sanna.anomaly": {"attempted_tool": "unknown_tool", "suppression_basis": "session_manifest"}},
+          "parent_receipts": ["eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"],
+          "enforcement_surface": "gateway"
+        }
+      ],
+      "assert_receipt_id": "anomaly-004",
+      "expected_checks": [
+        {"name": "anomaly_event_type_in_valid_set", "status": "PASS", "message": "event_type 'invocation_anomaly' is in valid set"},
+        {"name": "anomaly_parent_receipts_resolves_to_session_manifest", "status": "PASS", "message": "anomaly receipt parent_receipts resolves to a session_manifest in the receipt set"},
+        {"name": "anomaly_attempted_capability_in_parent_suppressed_or_absent", "status": "PASS", "message": "anomaly capability 'unknown_tool' was not declared in constitution at all (verifier cannot disambiguate from policy-suppression on the wire; this is an informational note, not a violation)"}
+      ]
+    },
+    {
+      "id": "VV-015",
+      "description": "FAIL: unsupported manifest version",
+      "mode": "single",
+      "receipt": {
+        "event_type": "session_manifest",
+        "extensions": {"com.sanna.manifest": {"version": "99.9", "composition_basis": "static", "surfaces": {"mcp": {"tools_delivered": [], "tools_suppressed": [], "suppression_reasons": {}}}}},
+        "constitution_ref": {"policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "enforcement_surface": "gateway"
+      },
+      "expected_fail_checks": [
+        {"name": "manifest_version_supported", "status": "FAIL", "message": "manifest version '99.9' not in supported set {'0.1'}"}
+      ]
+    }
+  ]
+}
