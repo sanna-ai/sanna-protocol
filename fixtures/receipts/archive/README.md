@@ -19,10 +19,21 @@ Receipts from protocol version 1.2 (`spec_version="1.2"`). Generated against the
 **Note:** v1.2 was never released in SDK form. The v1.2 spec document was published but no SDK release produced receipts with `spec_version="1.2"`. These fixtures were generated for spec validation purposes only. Per the v1.3 normative statement, any receipt in the wild claiming `spec_version="1.2"` is spurious.
 
 Files:
-- `escalated.json` — receipt with `enforcement.action="escalated"`
+- `escalated.json` — receipt with `enforcement.action="escalated"` (see expected-failure note below)
 - `fail-halted.json` — receipt with `status="FAIL"` and `enforcement.action="halted"`
 - `full-featured.json` — receipt exercising all optional fields
 - `pass-single-check.json` — minimal receipt with a single passing check
+
+#### v1.2/escalated.json -- Expected Failure
+
+This fixture was generated under v1.2 (cv=6) with `enforcement.action=escalated`
+and `status=PASS`. Sprint 15 (SAN-213/SAN-216/SAN-218) added a cross-field
+schema rule requiring `status=WARN` when `enforcement.action=escalated`. The
+v1.2 fixture was intentionally NOT regenerated -- rewriting it would fake history.
+
+The test `test_v12_escalated_expected_failure` in `tests/test_archive_fixtures.py`
+asserts this fixture FAILS current schema validation with the expected error. If
+someone loosens the cross-field rule, that test fails loudly.
 
 New v1.3 golden fixtures are regenerated via `generate_fixtures.py` in the `sanna-repo` branch and committed back to `fixtures/receipts/` at the top level of this directory.
 
