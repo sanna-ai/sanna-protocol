@@ -1,3 +1,13 @@
+## [v1.5] -- 2026-05-03 (SAN-381)
+
+### Fixed
+- receipt.schema.json: R1 rule tightened. aggregate_suppression_reasons
+  now REQUIRED when tools_suppressed/patterns_suppressed is non-empty
+  under content_mode=redacted. Previously only constrained shape if present.
+
+### Tickets
+- SAN-381 (this entry).
+
 ## [v1.5] -- 2026-05-02 (SAN-397 Prompt A)
 
 ### Added

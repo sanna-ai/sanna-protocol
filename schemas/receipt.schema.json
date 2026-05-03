@@ -785,6 +785,13 @@
                     "type": "object",
                     "additionalProperties": {
                       "type": "object",
+                      "if": {
+                        "anyOf": [
+                          {"properties": {"tools_suppressed": {"minItems": 1}}, "required": ["tools_suppressed"]},
+                          {"properties": {"patterns_suppressed": {"minItems": 1}}, "required": ["patterns_suppressed"]}
+                        ]
+                      },
+                      "then": {"required": ["aggregate_suppression_reasons"]},
                       "properties": {
                         "tools_delivered":      {"type": "array", "items": {"const": "<redacted>"}},
                         "tools_suppressed":     {"type": "array", "items": {"const": "<redacted>"}},
