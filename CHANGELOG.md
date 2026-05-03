@@ -1,3 +1,15 @@
+## [v1.5] -- 2026-05-03 (SAN-372)
+
+### Added
+- fixtures/receipts/archive/README.md: extended with expected-failure
+  documentation for v1.2/escalated.json (Sprint 15 cross-field rule).
+- tests/test_archive_fixtures.py: regression guard asserting
+  v1.2/escalated.json fails current schema with 'WARN' error.
+  Guards against loosening the Sprint 15 cross-field integrity rule.
+
+### Tickets
+- SAN-372 (this entry).
+
 ## [v1.5] -- 2026-05-03 (SAN-383)
 
 ### Fixed
