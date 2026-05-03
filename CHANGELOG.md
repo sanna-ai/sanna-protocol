@@ -1,3 +1,26 @@
+## [v1.5] -- 2026-05-02 (SAN-397 Prompt A)
+
+### Added
+- constitution.schema.json: authority_boundaries.anomaly_tracking
+  optional object with per-surface boolean (cli, http). Default:
+  disabled for both (backward compatible). Existing constitutions
+  validate cleanly without the field.
+- Spec Section 2.15.1: normative text clarifying that
+  cli_invocation_anomaly and api_invocation_anomaly emission requires
+  authority_boundaries.anomaly_tracking.{cli,http} = true. MCP
+  invocation_anomaly remains unconditional.
+
+### Compatibility
+- Existing constitutions without anomaly_tracking validate cleanly.
+- Constitution hash unchanged when anomaly_tracking is absent or at
+  defaults (both false). No re-signing required.
+- No SPEC_VERSION bump (additive in-place clarification).
+
+### Tickets
+- SAN-397 Prompt A (this entry; protocol half).
+- Companion: SAN-397 Prompt B (Python interceptors), SAN-397 Prompt C
+  (TS interceptors).
+
 ## [v1.5] -- 2026-05-02 (SAN-358 Prompt C)
 
 ### Added
