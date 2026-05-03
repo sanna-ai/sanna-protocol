@@ -1,3 +1,14 @@
+## [v1.5] -- 2026-05-03 (SAN-373)
+
+### Fixed
+- Spec Section 4.5 + fingerprint formula table: fixed stale cross-
+  reference 'Section 2.17.2' -> 'Section 2.18.4' (agent_model opt-out
+  semantics). Section 2.17.2 does not exist; the content lives in
+  Section 2.18.4 'Opt-Out Semantics (Normative)'.
+
+### Tickets
+- SAN-373 (this entry).
+
 ## [v1.5] -- 2026-05-03 (SAN-372)
 
 ### Added

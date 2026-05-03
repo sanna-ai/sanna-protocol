@@ -1103,7 +1103,7 @@ Verifiers MUST dispatch on `checks_version` to determine field count (see Sectio
 | 15 | `enforcement_surface_hash` | `hash_text()` of `enforcement_surface` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.3. |
 | 16 | `invariants_scope_hash` | `hash_text()` of `invariants_scope` string. `EMPTY_HASH` if absent/null (but at v1.3+ the field is REQUIRED). Added in v1.3. |
 | 17 | `tool_name_hash` | `hash_text()` of `tool_name` string. `EMPTY_HASH` if absent/null (but at v1.4+ the field is REQUIRED, so `EMPTY_HASH` indicates a malformed receipt). Added in v1.4. |
-| 18 | `agent_model_hash` | `hash_text()` of `agent_model` string, or `EMPTY_HASH` if null or absent. Both null and absent produce `EMPTY_HASH` -- the fingerprint does not distinguish opt-out from not-captured (see Section 2.17.2). Added in v1.4. |
+| 18 | `agent_model_hash` | `hash_text()` of `agent_model` string, or `EMPTY_HASH` if null or absent. Both null and absent produce `EMPTY_HASH` -- the fingerprint does not distinguish opt-out from not-captured (see Section 2.18.4). Added in v1.4. |
 | 19 | `agent_model_provider_hash` | `hash_text()` of `agent_model_provider` string, or `EMPTY_HASH` if null or absent. Added in v1.4. |
 | 20 | `agent_model_version_hash` | `hash_text()` of `agent_model_version` string, or `EMPTY_HASH` if null or absent. Added in v1.4. |
 | 21 | `agent_identity_hash` | `hash_obj(agent_identity)` at cv=10. Field absent at cv=9 -- use `EMPTY_HASH` for legacy slot. Added in v1.5 (SAN-370 implements fingerprint update in SDKs). |
@@ -1273,7 +1273,7 @@ explicit opt-out (null) and not-captured (absent). The distinction IS
 preserved at the JSON layer -- a receipt with `"agent_model": null` and
 one with no `agent_model` key are different JSON objects. Verifiers and
 aggregators MUST use the JSON layer to distinguish these cases; see
-Section 2.17.2 for normative rules on this three-way distinction.
+Section 2.18.4 for normative rules on this three-way distinction.
 
 ### 4.6 Cross-Field Consistency (v1.3+)
 
