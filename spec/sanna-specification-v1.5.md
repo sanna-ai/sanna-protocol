@@ -1887,7 +1887,7 @@ An evidence bundle is a ZIP archive containing:
 3. `public_keys/{key_id}.pub` -- public key(s)
 4. `metadata.json` -- bundle metadata
 
-Bundle verification runs 7 steps:
+Bundle verification runs 8 steps:
 
 | Step | Check |
 |------|-------|
@@ -1898,6 +1898,79 @@ Bundle verification runs 7 steps:
 | 5 | Provenance chain (receipt-to-constitution binding) |
 | 6 | Receipt signature verification |
 | 7 | Approval verification (content hash + approval signature) |
+| 8 | Trust anchor (key_ids matched against out-of-band allowlist) |
+
+### 10.1 Trust Anchor (Verifier-Side Allowlist)
+
+Receipt and constitution signatures resolve their public keys from inside the
+bundle's `public_keys/` directory. Without an external trust signal the
+verifier cannot distinguish a legitimately signed bundle from one re-signed
+end-to-end by an attacker who packaged their own public key. This is the
+bundle self-attestation forge attack closed by the trust anchor.
+
+A conformant verifier MUST accept an out-of-band trust anchor: a set of
+Ed25519 `key_id` values the operator has independently established as
+trustworthy. When supplied, the receipt signature `key_id` AND the
+constitution `provenance.signature.key_id` MUST appear in the trust set or
+the "Trust anchor" check MUST fail and the overall verdict MUST be invalid.
+
+**Trust anchor parameter on the verifier API:**
+
+| SDK | Parameter | Type |
+|-----|-----------|------|
+| Python (`sanna.bundle.verify_bundle`) | `trusted_key_ids` | `set[str] \| None` |
+| TypeScript (`@sanna-ai/core.verifyBundle`) | `trustedKeyIds` (3rd arg) | `Set<string> \| null` |
+
+Semantics:
+
+- `None` / `null`: no anchor supplied. The "Trust anchor" check MUST PASS
+  with a warning detail; the result field `trust_anchored` MUST be `false`.
+  CLI implementations MUST emit a warning banner to stderr explaining the
+  limitation when invoked without `--json`.
+- A non-empty set: every required `key_id` MUST be a member or the check
+  fails. The result field `trust_anchored` MUST be `true`.
+- An empty set: explicit "trust nothing" signal. Every membership test
+  fails. The verifier MUST treat this as fail-closed and MUST NOT
+  special-case empty as equivalent to `None`. The result field
+  `trust_anchored` MUST be `true`.
+
+**CLI surface:**
+
+The `bundle-verify` CLI (Python: `sanna bundle-verify`; TypeScript:
+`sanna bundle-verify`) MUST accept `--trusted-key-ids <FILE>` and the
+`SANNA_TRUSTED_KEY_IDS` environment variable. The flag takes precedence
+over the env var.
+
+**Trust anchor file format:**
+
+- One key_id per line, 64 hexadecimal characters.
+- A `#` introduces a comment, terminating at end of line. Trailing
+  whitespace is stripped.
+- Empty lines (after stripping) are ignored.
+- Implementations MUST normalize each key_id to lowercase before
+  membership tests.
+- Implementations MUST reject malformed lines with an error that
+  includes the file path and line number.
+- A file containing zero non-empty lines after stripping comments and
+  whitespace MUST be rejected.
+
+**`trust_anchored` result field:**
+
+`BundleVerificationResult` MUST include a boolean field `trust_anchored`.
+The field is `true` if and only if a non-`null` trust anchor was evaluated
+(regardless of pass or fail). It is `false` when no anchor was supplied.
+JSON-serialized output MUST emit the field as `trust_anchored` (snake_case)
+across all SDKs for cross-SDK shape parity.
+
+**Multi-signature constitutions and approval signatures (known limitations):**
+
+The current implementation collects one `key_id` from
+`constitution.provenance.signature` (single-sig). Multi-signature
+constitutions and `constitution.approval.*.signature` `key_id`s are NOT
+checked against the trust anchor in this revision. Both are tracked
+limitations and a subsequent revision will close them. Operators relying on
+approval-tier identity SHOULD curate approval keys through a separate
+channel until then.
 
 ---
 
@@ -1984,6 +2057,14 @@ security boundaries of the Sanna receipt system.
   private key can produce valid signatures on arbitrary receipts.
   Key management (Section 12.4) mitigates but does not eliminate
   this risk.
+- **Bundle self-attestation forgery (mitigated when a trust anchor is
+  supplied)**: A verifier with no out-of-band trust anchor cannot
+  distinguish a bundle re-signed end-to-end by an attacker (with the
+  attacker's Ed25519 public key packaged inside) from a legitimately
+  signed bundle. Operators MUST supply `--trusted-key-ids` (or
+  `SANNA_TRUSTED_KEY_IDS`) for any production verification claim.
+  Without it, the verifier emits a warning banner and the result's
+  `trust_anchored` field is `false`. See Section 10.1.
 - **Bypassing Sanna entirely**: If the agent can execute tool calls
   without going through the gateway or middleware, no receipt is
   generated. Sanna is an observational system, not a process
@@ -2156,6 +2237,31 @@ cv-dispatched field count from Section 4.4 rather than assuming a
 fixed number of fingerprint fields. This rule applies retroactively:
 a v1.3 verifier handling a v1.3 receipt MUST use 16 fields (cv=8),
 not 14 fields from the v1.1 formula.
+
+### 13.4 Bundle Trust Anchor Vectors (SAN-403)
+
+A conformant bundle verifier implementation MUST consume
+`fixtures/bundle-trust-vectors.json` and, for every vector in the file,
+produce a `BundleVerificationResult` whose `valid` and `trust_anchored`
+fields match the vector's `expect` block exactly. The fixture covers seven
+behavioral cases:
+
+1. Genuine bundle, no anchor: passes self-consistently, anchor not
+   evaluated.
+2. Genuine bundle, anchor including the genuine key_id: passes, anchor
+   evaluated.
+3. Genuine bundle, anchor excluding the genuine key_id: fails, anchor
+   evaluated.
+4. Genuine bundle, empty anchor: fails closed.
+5. Forged bundle (re-signed end-to-end by `test-attacker` with the
+   attacker public key packaged inside), no anchor: passes
+   self-consistently. This is the attack the trust anchor closes.
+6. Forged bundle, anchor including only the genuine key_id: fails, anchor
+   evaluated. This is the trust-anchor mitigation in action.
+7. Forged bundle, anchor including only the attacker key_id: passes,
+   anchor evaluated. This documents that a misconfigured anchor does not
+   provide assurance: trust anchor is necessary but not sufficient;
+   operators MUST curate the anchor.
 
 ---
 
