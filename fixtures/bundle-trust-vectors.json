@@ -1,0 +1,92 @@
+{
+  "spec_version": "1.5",
+  "san_ticket": "SAN-403",
+  "description": "Cross-SDK assertions for the bundle verifier trust anchor (SAN-403). A conformant verifier MUST produce, for every vector, a BundleVerificationResult whose valid and trust_anchored fields match the expect block. See spec Section 10.1 and Section 13.4.",
+  "genuine_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
+  "attacker_key_id": "02dd2d06eb03568accb742fc2a7ce751f2716627dd8c50773a2fcf53c6412de6",
+  "bundles": {
+    "genuine": "fixtures/bundles/genuine.bundle.zip",
+    "forged": "fixtures/bundles/forged.bundle.zip"
+  },
+  "vectors": [
+    {
+      "id": "genuine_no_anchor",
+      "bundle": "genuine",
+      "trusted_key_ids": null,
+      "expect": {
+        "valid": true,
+        "trust_anchored": false
+      }
+    },
+    {
+      "id": "genuine_anchor_match",
+      "bundle": "genuine",
+      "trusted_key_ids": [
+        "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61"
+      ],
+      "expect": {
+        "valid": true,
+        "trust_anchored": true
+      }
+    },
+    {
+      "id": "genuine_anchor_excluding",
+      "bundle": "genuine",
+      "trusted_key_ids": [
+        "0000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expect": {
+        "valid": false,
+        "trust_anchored": true
+      }
+    },
+    {
+      "id": "genuine_empty_anchor_fails_closed",
+      "bundle": "genuine",
+      "trusted_key_ids": [],
+      "expect": {
+        "valid": false,
+        "trust_anchored": true
+      },
+      "rationale": "Empty Set is the explicit 'trust nothing' signal. Verifiers MUST NOT special-case empty as equivalent to null."
+    },
+    {
+      "id": "forged_no_anchor_self_consistent",
+      "bundle": "forged",
+      "trusted_key_ids": null,
+      "expect": {
+        "valid": true,
+        "trust_anchored": false
+      },
+      "rationale": "The bug SAN-403 closes: a forged bundle is internally self-consistent and passes without an anchor. Operators see a stderr warning banner; the JSON result has trust_anchored: false."
+    },
+    {
+      "id": "forged_anchored_genuine_only_caught",
+      "bundle": "forged",
+      "trusted_key_ids": [
+        "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61"
+      ],
+      "expect": {
+        "valid": false,
+        "trust_anchored": true
+      },
+      "rationale": "The fix: an anchor listing only the genuine key catches the forge."
+    },
+    {
+      "id": "forged_anchored_attacker_passes_sanity",
+      "bundle": "forged",
+      "trusted_key_ids": [
+        "02dd2d06eb03568accb742fc2a7ce751f2716627dd8c50773a2fcf53c6412de6"
+      ],
+      "expect": {
+        "valid": true,
+        "trust_anchored": true
+      },
+      "rationale": "Sanity check: a misconfigured anchor that lists the attacker key still passes. Trust anchor is necessary but not sufficient -- operators MUST curate the anchor; merely supplying one does not provide assurance."
+    }
+  ],
+  "test_protocol": {
+    "python_sdk": "from sanna.bundle import verify_bundle; tk = set(v['trusted_key_ids']) if v['trusted_key_ids'] is not None else None; r = verify_bundle(<bundle_path>, trusted_key_ids=tk); assert r.valid == v['expect']['valid'] and r.trust_anchored == v['expect']['trust_anchored']",
+    "ts_sdk": "import { verifyBundle } from '@sanna-ai/core'; const tk = v.trusted_key_ids === null ? null : new Set(v.trusted_key_ids); const r = verifyBundle(<bundlePath>, true, tk); expect(r.valid).toBe(v.expect.valid); expect(r.trust_anchored).toBe(v.expect.trust_anchored)"
+  }
+}

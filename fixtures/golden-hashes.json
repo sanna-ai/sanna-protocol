@@ -5,6 +5,7 @@
   "fingerprint_fields": 21,
   "EMPTY_HASH": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "test_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
+  "test_attacker_key_id": "02dd2d06eb03568accb742fc2a7ce751f2716627dd8c50773a2fcf53c6412de6",
   "receipts": {
     "pass-single-check": {
       "receipt_id": "4d34c9a5-07fd-4109-b9e6-33cea15de6ec",

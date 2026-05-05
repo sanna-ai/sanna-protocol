@@ -1,3 +1,42 @@
+## [Unreleased] -- 2026-05-05 (SAN-403)
+
+### Added
+- `fixtures/bundles/genuine.bundle.zip` and `fixtures/bundles/forged.bundle.zip`:
+  cross-SDK test bundles covering the bundle-forge attack vector closed by
+  SAN-403. The forged variant is end-to-end re-signed with a separate
+  attacker keypair and packaged with the attacker's public key inside the
+  zip.
+- `fixtures/keypairs/test-attacker.{key,pub,meta.json}`: Ed25519 keypair
+  used to construct the forge variant. Test use only.
+- `fixtures/bundle-trust-vectors.json`: cross-SDK conformance contract,
+  seven vectors covering all anchor modes (no anchor / matching / excluding
+  / empty fails closed / forged self-consistent / forged caught by genuine
+  anchor / sanity check that misconfigured anchor does not provide
+  assurance).
+- `tools/generate_bundle_fixtures.py`: deterministic regenerator for the
+  bundle fixtures and vectors file. Idempotent on the keypair and on the
+  vectors file output.
+- `golden-hashes.json` adds top-level `test_attacker_key_id` alongside
+  `test_key_id`.
+- Spec Section 10.1 "Trust Anchor (Verifier-Side Allowlist)": full
+  semantics of the `trusted_key_ids` parameter, CLI flag, env var, file
+  format, and `trust_anchored` result field.
+- Spec Section 12.3 threat model bullet on bundle self-attestation forgery
+  and trust-anchor mitigation.
+- Spec Section 13.4 "Bundle Trust Anchor Vectors (SAN-403)" conformance
+  requirement.
+- SECURITY.md "Bundle Verification Trust Anchor (SAN-403)" section.
+
+### Changed
+- Spec Section 10 verification table: 7 steps -> 8 steps. The 8th step is
+  "Trust anchor", evaluated only when a trust anchor was supplied.
+
+### Tickets
+- SAN-403 PR 3 of 3 (this entry; protocol fixture + spec + SECURITY.md).
+  PR 1 (Python SDK) and PR 2 (TypeScript SDK) already merged. Cross-SDK
+  CI consumption of the vectors will land under follow-up tickets that
+  bump the spec submodule pin in each SDK repo.
+
 ## [v1.5] -- 2026-05-03 (SAN-373)
 
 ### Fixed
