@@ -2,8 +2,8 @@
   "spec_version": "1.5",
   "san_ticket": "SAN-403",
   "description": "Cross-SDK assertions for the bundle verifier trust anchor (SAN-403). A conformant verifier MUST produce, for every vector, a BundleVerificationResult whose valid and trust_anchored fields match the expect block. See spec Section 10.1 and Section 13.4.",
-  "genuine_key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
-  "attacker_key_id": "02dd2d06eb03568accb742fc2a7ce751f2716627dd8c50773a2fcf53c6412de6",
+  "genuine_key_id": "a1b0635d60a1404eec230a943a176c32c9462ac4a8ef746f8458b68f318a2a89",
+  "attacker_key_id": "d610a8778214aa6701d7608393d1e3ac526d6ba001a99b937237befaaf7722f0",
   "bundles": {
     "genuine": "fixtures/bundles/genuine.bundle.zip",
     "forged": "fixtures/bundles/forged.bundle.zip"
@@ -22,7 +22,7 @@
       "id": "genuine_anchor_match",
       "bundle": "genuine",
       "trusted_key_ids": [
-        "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61"
+        "a1b0635d60a1404eec230a943a176c32c9462ac4a8ef746f8458b68f318a2a89"
       ],
       "expect": {
         "valid": true,
@@ -64,7 +64,7 @@
       "id": "forged_anchored_genuine_only_caught",
       "bundle": "forged",
       "trusted_key_ids": [
-        "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61"
+        "a1b0635d60a1404eec230a943a176c32c9462ac4a8ef746f8458b68f318a2a89"
       ],
       "expect": {
         "valid": false,
@@ -76,7 +76,7 @@
       "id": "forged_anchored_attacker_passes_sanity",
       "bundle": "forged",
       "trusted_key_ids": [
-        "02dd2d06eb03568accb742fc2a7ce751f2716627dd8c50773a2fcf53c6412de6"
+        "d610a8778214aa6701d7608393d1e3ac526d6ba001a99b937237befaaf7722f0"
       ],
       "expect": {
         "valid": true,

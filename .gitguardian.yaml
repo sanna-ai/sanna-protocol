@@ -1,7 +1,8 @@
-# Test keypairs are intentional fixtures for cross-language verification - not real secrets.
-# See fixtures/README.md: "The private key is included for testing purposes only."
+# Test public keys (.pub) and metadata (.meta.json) are intentional fixtures
+# for cross-language verification. PEM private keys (.key) are NEVER
+# committed; the .pre-commit-config.yaml detect-private-key hook + CI
+# enforce this. See SECURITY.md "Test Key Rotation (SAN-404)" for the
+# rotation history.
 paths-ignore:
-  - "fixtures/keypairs/"
-  - "fixtures/keypairs/*.key"
   - "fixtures/keypairs/*.pub"
-  - "**/test-author.key"
+  - "fixtures/keypairs/*.meta.json"

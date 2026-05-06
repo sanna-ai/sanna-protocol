@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Generate golden test fixtures for the Sanna Protocol spec repo.
 
+The PRIVATE KEY is generated into a temporary directory and discarded at
+script exit. Only the public key and metadata are written to
+fixtures/keypairs/. The committed test-author.{pub,meta.json} pair is the
+public anchor for cross-SDK verification.
+
 This script generates:
-  - fixtures/keypairs/test-author.key and test-author.pub
+  - fixtures/keypairs/test-author.pub and test-author.meta.json
   - fixtures/constitutions/minimal.yaml (signed) + minimal.yaml.sig
   - fixtures/constitutions/full-featured.yaml
   - fixtures/receipts/pass-single-check.json
@@ -12,7 +17,7 @@ This script generates:
   - fixtures/golden-hashes.json
 
 Run from the repo root:
-    python generate_fixtures.py
+    python3 generate_fixtures.py
 """
 
 import json
@@ -20,6 +25,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────────
@@ -69,36 +75,43 @@ def ensure_dirs():
 
 # ── Step 1: Generate dedicated test keypair ──────────────────────────
 
-def generate_test_keypair():
-    """Generate an Ed25519 keypair and write PEM files to fixtures/keypairs/."""
+def generate_test_keypair(priv_dir: Path):
+    """Generate an Ed25519 keypair; keep the private key in priv_dir only.
+
+    The .key file is written into priv_dir (a caller-managed TemporaryDirectory)
+    and renamed to test-author.key for a stable path. Only .pub and .meta.json
+    are copied to fixtures/keypairs/. The private key never touches that tree.
+    """
     print("[1/6] Generating test keypair...")
 
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmpdir:
-        subprocess.run(
-            ["sanna", "keygen", "--output-dir", tmpdir, "--label", "test-author",
-             "--signed-by", "test-author@sanna.dev"],
-            check=True, capture_output=True, text=True,
-        )
-        key_files = list(Path(tmpdir).glob("*.key"))
-        if not key_files:
-            print("ERROR: No key file generated")
-            sys.exit(1)
+    subprocess.run(
+        ["sanna", "keygen", "--output-dir", str(priv_dir), "--label", "test-author",
+         "--signed-by", "test-author@sanna.dev"],
+        check=True, capture_output=True, text=True,
+    )
+    key_files = list(priv_dir.glob("*.key"))
+    if not key_files:
+        print("ERROR: No key file generated")
+        sys.exit(1)
 
-        key_id = key_files[0].stem
-        src_key = Path(tmpdir) / f"{key_id}.key"
-        src_pub = Path(tmpdir) / f"{key_id}.pub"
+    key_id = key_files[0].stem
+    src_key = priv_dir / f"{key_id}.key"
+    src_pub = priv_dir / f"{key_id}.pub"
 
-        shutil.copy2(src_key, KEYPAIRS / "test-author.key")
-        shutil.copy2(src_pub, KEYPAIRS / "test-author.pub")
+    # Rename .key to a stable path within priv_dir; NEVER copy to fixtures/keypairs/
+    key_dest = priv_dir / "test-author.key"
+    shutil.move(str(src_key), key_dest)
+    key_dest.chmod(0o600)
 
-        meta = Path(tmpdir) / f"{key_id}.meta.json"
-        if meta.exists():
-            shutil.copy2(meta, KEYPAIRS / "test-author.meta.json")
+    shutil.copy2(src_pub, KEYPAIRS / "test-author.pub")
+
+    meta = priv_dir / f"{key_id}.meta.json"
+    if meta.exists():
+        shutil.copy2(meta, KEYPAIRS / "test-author.meta.json")
 
     pub = load_public_key(str(KEYPAIRS / "test-author.pub"))
     kid = compute_key_id(pub)
-    priv_path = str(KEYPAIRS / "test-author.key")
+    priv_path = str(key_dest)
     pub_path = str(KEYPAIRS / "test-author.pub")
     print(f"  Key ID: {kid}")
     return priv_path, pub_path, kid
@@ -837,11 +850,21 @@ def main():
 
     ensure_dirs()
 
-    priv_key_path, pub_key_path, key_id = generate_test_keypair()
-    create_constitutions(priv_key_path)
-    receipts = generate_receipts(priv_key_path, pub_key_path, key_id)
-    generate_golden_hashes(receipts, key_id)
-    ok = verify_fixtures(pub_key_path)
+    # /tmp handoff path: generate_bundle_fixtures.py reads this and deletes it
+    # immediately after loading. Not under fixtures/; never committed.
+    _BUNDLE_KEY_HANDOFF = Path("/tmp/.sanna-protocol-test-author.key")
+
+    with tempfile.TemporaryDirectory() as raw_priv_dir:
+        priv_dir = Path(raw_priv_dir)
+        priv_key_path, pub_key_path, key_id = generate_test_keypair(priv_dir)
+        create_constitutions(priv_key_path)
+        receipts = generate_receipts(priv_key_path, pub_key_path, key_id)
+        generate_golden_hashes(receipts, key_id)
+        ok = verify_fixtures(pub_key_path)
+        # Write private key to /tmp handoff before the TemporaryDirectory is
+        # cleaned up so generate_bundle_fixtures.py can load the same key.
+        shutil.copy2(priv_dir / "test-author.key", _BUNDLE_KEY_HANDOFF)
+        _BUNDLE_KEY_HANDOFF.chmod(0o600)
 
     print(f"\n{'=' * 60}")
     if ok:

@@ -1,12 +1,12 @@
 {
   "spec_version": "1.5",
-  "tool_version": "1.4.0",
+  "tool_version": "1.5.0",
   "checks_version": "10",
-  "receipt_id": "4d34c9a5-07fd-4109-b9e6-33cea15de6ec",
+  "receipt_id": "4cb75f4c-c071-417b-913a-eab8a2faee8d",
   "receipt_fingerprint": "c400915f81d9e730",
   "full_fingerprint": "c400915f81d9e7305e70a71ab810eef3703f90491e501addf3851f74eb03f29d",
   "correlation_id": "sanna-fixture-pass-001",
-  "timestamp": "2026-05-01T01:15:05.765942+00:00",
+  "timestamp": "2026-05-06T22:32:14.057873+00:00",
   "inputs": {
     "query": "What is the capital of France?",
     "context": "France is a country in Western Europe. Its capital is Paris."
@@ -71,10 +71,10 @@
     "agent_session_id": "sanna-fixture-pass-001-session"
   },
   "receipt_signature": {
-    "signature": "3XEmuzfAou7/uoi8E5uWsAofDAYz+6tQDWpwQlFOEkGz4bIBfLyDr5DxSCEDXawdyyj6RB6Qp4mSMRaziB56AQ==",
-    "key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
+    "signature": "OubCvt4g51sMK2EiFNXYfF5+FYcwNw6NExSL+F2VgrNLA1SHgh6wOBCKw91jOTjIiyBCpjzhnhdU6y8LhApSAQ==",
+    "key_id": "a1b0635d60a1404eec230a943a176c32c9462ac4a8ef746f8458b68f318a2a89",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T18:47:48.439918+00:00",
+    "signed_at": "2026-05-06T22:32:14.058763+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

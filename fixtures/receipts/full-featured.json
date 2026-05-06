@@ -1,12 +1,12 @@
 {
   "spec_version": "1.5",
-  "tool_version": "1.4.0",
+  "tool_version": "1.5.0",
   "checks_version": "10",
-  "receipt_id": "1a911718-ee53-4028-b229-291b9fce2cd1",
-  "receipt_fingerprint": "e0794986270598e7",
-  "full_fingerprint": "e0794986270598e7ce7e4473cde77c35bd93c4e8fb15b8d1c8328893dd775a0f",
+  "receipt_id": "ce5b6278-1321-49b6-be48-667b2f440d0d",
+  "receipt_fingerprint": "ab03f340ab48796b",
+  "full_fingerprint": "ab03f340ab48796bfca8e7a05f25566a74e46dd9e125a98e5803f649ba3e7908",
   "correlation_id": "sanna-fixture-full-001",
-  "timestamp": "2026-05-01T01:15:05.769454+00:00",
+  "timestamp": "2026-05-06T22:32:14.061183+00:00",
   "inputs": {
     "query": "Summarize the Q3 financial report and recommend next steps.",
     "context": "Q3 revenue: $4.2M (up 15% YoY). Operating expenses: $3.1M. Net income: $1.1M. Customer churn decreased to 2.3%. New enterprise contracts: 7."
@@ -72,7 +72,7 @@
     "reason": "All checks passed",
     "failed_checks": [],
     "enforcement_mode": "log",
-    "timestamp": "2026-05-01T01:15:05.769454+00:00"
+    "timestamp": "2026-05-06T22:32:14.061183+00:00"
   },
   "constitution_ref": {
     "document_id": "test-full-agent/1.0.0",
@@ -104,7 +104,7 @@
       "reason": "Action matches can_execute pattern *_read",
       "boundary_type": "can_execute",
       "escalation_target": null,
-      "timestamp": "2026-05-01T01:15:05.769454+00:00"
+      "timestamp": "2026-05-06T22:32:14.061183+00:00"
     }
   ],
   "escalation_events": [],
@@ -112,7 +112,7 @@
     {
       "source_name": "internal-database",
       "trust_tier": "tier_1",
-      "evaluated_at": "2026-05-01T01:15:05.769454+00:00",
+      "evaluated_at": "2026-05-06T22:32:14.061183+00:00",
       "verification_flag": null,
       "context_used": true
     }
@@ -145,10 +145,10 @@
     ]
   },
   "receipt_signature": {
-    "signature": "bZsXtq0g4gY1p6ofXkgjGXa4OaGO6BLGtlUFQQ64rnp8gzQjIru54T+VW+bBHMjXT5ZOZwWRXT56veKwNG+MAQ==",
-    "key_id": "6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61",
+    "signature": "Qyd/UnNpZd4DQjibHlVS29lOu8NkpzC7Dw30UetGdlPSRZ+3irL1+/QUjYHcIIl7k6Mc0lX8IsVdxCb1TKO6CQ==",
+    "key_id": "a1b0635d60a1404eec230a943a176c32c9462ac4a8ef746f8458b68f318a2a89",
     "signed_by": "test-author@sanna.dev",
-    "signed_at": "2026-05-01T18:47:48.439244+00:00",
+    "signed_at": "2026-05-06T22:32:14.061442+00:00",
     "scheme": "receipt_sig_v1"
   }
 }

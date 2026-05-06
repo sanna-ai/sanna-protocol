@@ -1,3 +1,56 @@
+## [Unreleased] -- 2026-05-06 (SAN-404)
+
+### Security
+
+- **Test keypair rotation.** Both committed Ed25519 test PEM private keys
+  in `fixtures/keypairs/` have been rotated and are now REVOKED:
+    - `6edb993769fb606cdd56c47335970a0b42d163bcb44b21db416e6ec43963af61`
+      (test-author, original) -- REVOKED
+    - `02dd2d06eb03568accb742fc2a7ce751f2716627dd8c50773a2fcf53c6412de6`
+      (test-attacker, original) -- REVOKED
+  Both `.key` files have been deleted from the working tree (forward-only;
+  git history retains the keys at the commits at which they were
+  introduced -- see SECURITY.md "Test Key Rotation (SAN-404)" for the
+  trust posture).
+- **`generate_fixtures.py` no longer writes a private key to
+  `fixtures/keypairs/`.** The private key now lives in a temporary
+  directory for the script run and is discarded at exit. Only
+  `test-author.pub` and `test-author.meta.json` are committed.
+- **`tools/generate_bundle_fixtures.py` no longer writes the attacker
+  private key to disk.** The attacker keypair is held in process memory
+  and used directly to sign the forged-bundle fixtures. Only
+  `test-attacker.pub` and `test-attacker.meta.json` are committed.
+- **Pre-commit hook.** Added `.pre-commit-config.yaml` with
+  `pre-commit/pre-commit-hooks` `detect-private-key` to block any future
+  PEM private key from entering the repo. CI runs the same hook on PR.
+- **GitGuardian config tightened.** Removed `**/test-author.key` and
+  `*.key` allowlist entries in `.gitguardian.yaml`. With the rotation
+  complete, no `*.key` file should ever appear under `fixtures/`.
+
+### Changed
+
+- `golden-hashes.json:test_key_id` rotates from
+  `6edb993...3af61` to the new author key_id. Customers / SDK tests
+  that read `data["test_key_id"]` from the golden file pick up the new
+  value automatically. Tests with hardcoded references to the old hex
+  string will need to update.
+- `golden-hashes.json:test_attacker_key_id` rotates from
+  `02dd2d0...12de6` to the new attacker key_id (same dynamic-read
+  contract).
+- `bundle-trust-vectors.json:genuine_key_id` and `attacker_key_id`
+  rotate to match the new keypairs.
+- `fixtures/constitutions/minimal.yaml:provenance.signature.key_id` and
+  `fixtures/receipts/*.json:receipt_signature.key_id` re-signed with the
+  new author key.
+- `fixtures/receipts/archive/v1.2/`, `v1.3/`, `v1.4/` are
+  byte-identical and were NOT regenerated -- archives are frozen
+  historical evidence.
+
+### Tickets
+
+- SAN-404 (this entry; sanna-protocol portion). Cross-SDK consumption
+  follows in companion sanna-repo and sanna-ts submodule pin bumps.
+
 ## [Unreleased] -- 2026-05-06 (SAN-406)
 
 ### Added
