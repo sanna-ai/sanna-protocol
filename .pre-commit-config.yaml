@@ -4,4 +4,4 @@ repos:
     hooks:
       - id: detect-private-key
         name: Block PEM private keys
-        exclude: ^spec/
+        exclude: ^spec/sanna-specification-v[0-9]+\.[0-9]+\.md$
