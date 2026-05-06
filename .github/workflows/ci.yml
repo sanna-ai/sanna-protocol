@@ -39,3 +39,6 @@ jobs:
                   sys.exit(1)
           print('All schemas parsed OK')
           "
+
+      - name: Run pre-commit (block PEM private keys, etc.)
+        uses: pre-commit/action@v3.0.1

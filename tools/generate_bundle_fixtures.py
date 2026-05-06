@@ -5,12 +5,15 @@ Generate cross-SDK bundle forge fixture for SAN-403.
 Creates:
   fixtures/bundles/genuine.bundle.zip
   fixtures/bundles/forged.bundle.zip
-  fixtures/keypairs/test-attacker.{key,pub,meta.json}
+  fixtures/keypairs/test-attacker.{pub,meta.json}
   fixtures/bundle-trust-vectors.json
   (updates fixtures/golden-hashes.json to add test_attacker_key_id)
 
-The vectors file is byte-stable across runs (idempotent on keypair + key_ids).
-The ZIP files may regenerate across runs (zip timestamps, signed_at differ).
+Non-deterministic across runs: each run generates a fresh attacker keypair
+and rewrites bundle-trust-vectors.json with the new attacker_key_id.
+The ZIP files also regenerate across runs (zip timestamps, signed_at differ).
+The attacker private key is held in process memory only; no .key file is
+written to fixtures/keypairs/.
 
 Usage:
     python3 tools/generate_bundle_fixtures.py
@@ -18,8 +21,8 @@ Usage:
 
 import copy
 import json
-import os
 import subprocess
+import sys
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -42,7 +45,11 @@ def main() -> None:
     fixtures = root / "fixtures"
 
     # ---------------------------------------------------------------------------
-    # Step 1: Load genuine author keypair
+    # Step 1: Load genuine author keypair from generate_fixtures.py handoff path.
+    #
+    # generate_fixtures.py writes the new private key to this /tmp path before
+    # its TemporaryDirectory is cleaned up. We load the key into memory, then
+    # immediately delete the /tmp file. The key never lives under fixtures/.
     # ---------------------------------------------------------------------------
     from sanna.crypto import (
         compute_key_id,
@@ -54,10 +61,19 @@ def main() -> None:
         _sign_receipt_with_key,
     )
 
-    author_key_path = fixtures / "keypairs" / "test-author.key"
-    author_pub_path = fixtures / "keypairs" / "test-author.pub"
+    _BUNDLE_KEY_HANDOFF = Path("/tmp/.sanna-protocol-test-author.key")
+    if not _BUNDLE_KEY_HANDOFF.exists():
+        print(
+            "ERROR: /tmp/.sanna-protocol-test-author.key not found.\n"
+            "Run python3 generate_fixtures.py before this script.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
-    author_private_key = load_private_key(author_key_path)
+    author_private_key = load_private_key(_BUNDLE_KEY_HANDOFF)
+    _BUNDLE_KEY_HANDOFF.unlink()  # delete immediately; key is now in memory only
+
+    author_pub_path = fixtures / "keypairs" / "test-author.pub"
     author_public_key = load_public_key(author_pub_path)
     genuine_key_id = compute_key_id(author_public_key)
 
@@ -67,46 +83,34 @@ def main() -> None:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives.serialization import (
         Encoding,
-        NoEncryption,
-        PrivateFormat,
         PublicFormat,
     )
 
-    attacker_key_path = fixtures / "keypairs" / "test-attacker.key"
     attacker_pub_path = fixtures / "keypairs" / "test-attacker.pub"
     attacker_meta_path = fixtures / "keypairs" / "test-attacker.meta.json"
 
-    if attacker_key_path.exists():
-        attacker_private_key = load_private_key(attacker_key_path)
-        attacker_public_key = load_public_key(attacker_pub_path)
-        attacker_key_id = compute_key_id(attacker_public_key)
-    else:
-        attacker_private_key = Ed25519PrivateKey.generate()
-        attacker_public_key = attacker_private_key.public_key()
-        attacker_key_id = compute_key_id(attacker_public_key)
+    # Always generate a fresh attacker keypair; private key held in memory only.
+    attacker_private_key = Ed25519PrivateKey.generate()
+    attacker_public_key = attacker_private_key.public_key()
+    attacker_key_id = compute_key_id(attacker_public_key)
 
-        priv_pem = attacker_private_key.private_bytes(
-            Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()
-        )
-        pub_pem = attacker_public_key.public_bytes(
-            Encoding.PEM, PublicFormat.SubjectPublicKeyInfo
-        )
+    pub_pem = attacker_public_key.public_bytes(
+        Encoding.PEM, PublicFormat.SubjectPublicKeyInfo
+    )
 
-        attacker_key_path.write_bytes(priv_pem)
-        os.chmod(attacker_key_path, 0o600)
-        attacker_pub_path.write_bytes(pub_pem)
+    attacker_pub_path.write_bytes(pub_pem)
 
-        meta = {
-            "key_id": attacker_key_id,
-            "created_at": now_iso(),
-            "algorithm": "Ed25519",
-            "label": "test-attacker",
-            "signed_by": "test-attacker@sanna.dev",
-        }
-        attacker_meta_path.write_text(
-            json.dumps(meta, indent=2, ensure_ascii=True) + "\n",
-            encoding="ascii",
-        )
+    meta = {
+        "key_id": attacker_key_id,
+        "created_at": now_iso(),
+        "algorithm": "Ed25519",
+        "label": "test-attacker",
+        "signed_by": "test-attacker@sanna.dev",
+    }
+    attacker_meta_path.write_text(
+        json.dumps(meta, indent=2, ensure_ascii=True) + "\n",
+        encoding="ascii",
+    )
 
     # ---------------------------------------------------------------------------
     # Step 3: Load genuine constitution; build fresh bundle receipt
