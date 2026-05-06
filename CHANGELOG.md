@@ -1,3 +1,38 @@
+## [Unreleased] -- 2026-05-06 (SAN-406)
+
+### Added
+- `fixtures/redaction-vectors.json`: cross-SDK byte-equal contract for
+  com.sanna.anomaly extension field-level redaction (spec Section 2.22.5).
+  9 helper_vectors covering 3 content_mode values (full / redacted /
+  hashes_only) x 3 anomaly surfaces (invocation_anomaly /
+  cli_invocation_anomaly / api_invocation_anomaly). 6 verifier_vectors
+  (NEGATIVE cases: raw value emitted under redacted/hashes_only mode ->
+  marker check FAILS; positive cases derivable from helper_vectors).
+  Both Python (sanna) and TypeScript (sanna-ts) SDKs MUST produce
+  byte-identical helper output AND identical Check.status for every
+  vector. Verifier check name is the snake_case STRING
+  `"redaction_markers_correct"` in both SDKs per cross-SDK Check.name
+  parity contract.
+- Hashes_only-mode helper_vectors include canonical SHA-256 hex
+  (lowercase) for the 3 sample inputs ("rm", "echo_echo",
+  "https://internal.evil.com/*"). For pure ASCII inputs, canonical
+  hash_text/hashContent (NFC + line-ending norm + whitespace norm + UTF-8
+  + SHA-256) reduces to raw SHA-256, so the fixture's hex equals
+  `hashlib.sha256(input.encode("utf-8")).hexdigest()`. Phase 2
+  validation re-computes and asserts equality (typo + drift guard).
+
+### Tickets
+- SAN-406 PR 3 of 5 (this entry; sanna-protocol cross-SDK fixture).
+  PR 1 (sanna-repo Python) merged at 817bf1a. PR 2 (sanna-ts TypeScript)
+  merged at 77acc44. PR 4 (sanna-repo bump+consume) and PR 5 (sanna-ts
+  bump+consume) follow.
+- Related: SAN-487 (CRITICAL authority bypass). PR 4 + PR 5 will ADD
+  new fixture-consumption tests that load this fixture and call the
+  helper + verifier DIRECTLY (no interceptor traversal). Those NEW
+  tests are INDEPENDENT of SAN-487. The 6 end-to-end integration tests
+  skipped in PR 1 + PR 2 with SAN-487 cite remain skipped until SAN-487
+  fixes the design gap.
+
 ## [Unreleased] -- 2026-05-05 (SAN-403)
 
 ### Added

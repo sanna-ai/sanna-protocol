@@ -1,0 +1,156 @@
+{
+  "version": "1.5",
+  "san_ticket": "SAN-406",
+  "spec_section": "2.22.5",
+  "description": "Cross-SDK byte-equal redaction vectors for com.sanna.anomaly extension field-level redaction. Both Python (sanna) and TypeScript (sanna-ts) SDKs MUST produce byte-identical helper output for every helper_vector AND emit the same Check.status from the verifier marker check for every verifier_vector. The verifier check is named 'redaction_markers_correct' (snake_case) in BOTH SDKs for cross-SDK Check.name parity. See spec Section 2.22.5; SAN-406 PR 1 (sanna-repo 817bf1a), PR 2 (sanna-ts 77acc44).",
+  "ticket_refs": ["SAN-406"],
+  "expected_check_name": "redaction_markers_correct",
+  "helper_vectors_doc": "9 vectors: 3 content_mode values (full / redacted / hashes_only) x 3 anomaly surfaces (cli_invocation_anomaly / invocation_anomaly / api_invocation_anomaly). SDK consumer asserts: helper(input, content_mode) == expected. Hashes_only mode `expected` values are SHA-256 hex (lowercase) of the input encoded as UTF-8.",
+  "helper_vectors": [
+    {
+      "id": "helper-cli-full",
+      "description": "CLI command under content_mode=full: raw passthrough.",
+      "event_type": "cli_invocation_anomaly",
+      "field_name": "attempted_command",
+      "content_mode": "full",
+      "input": "rm",
+      "expected": "rm"
+    },
+    {
+      "id": "helper-cli-redacted",
+      "description": "CLI command under content_mode=redacted: literal substitution.",
+      "event_type": "cli_invocation_anomaly",
+      "field_name": "attempted_command",
+      "content_mode": "redacted",
+      "input": "rm",
+      "expected": "<redacted>"
+    },
+    {
+      "id": "helper-cli-hashes-only",
+      "description": "CLI command under content_mode=hashes_only: SHA-256 hex (lowercase) via canonical hash_text/hashContent (NFC + line-ending norm + UTF-8 + SHA-256 + lowercase). For pure ASCII inputs (this case), canonical hashing reduces to raw SHA-256.",
+      "event_type": "cli_invocation_anomaly",
+      "field_name": "attempted_command",
+      "content_mode": "hashes_only",
+      "input": "rm",
+      "expected": "58466ebdd352f801198118e294e38715f864985fd87977f348bfcd7db62e7c76"
+    },
+    {
+      "id": "helper-mcp-full",
+      "description": "MCP tool under content_mode=full: raw passthrough.",
+      "event_type": "invocation_anomaly",
+      "field_name": "attempted_tool",
+      "content_mode": "full",
+      "input": "echo_echo",
+      "expected": "echo_echo"
+    },
+    {
+      "id": "helper-mcp-redacted",
+      "description": "MCP tool under content_mode=redacted: literal substitution.",
+      "event_type": "invocation_anomaly",
+      "field_name": "attempted_tool",
+      "content_mode": "redacted",
+      "input": "echo_echo",
+      "expected": "<redacted>"
+    },
+    {
+      "id": "helper-mcp-hashes-only",
+      "description": "MCP tool under content_mode=hashes_only.",
+      "event_type": "invocation_anomaly",
+      "field_name": "attempted_tool",
+      "content_mode": "hashes_only",
+      "input": "echo_echo",
+      "expected": "cc2fdf85f7cc7ef6f1d62191042688d94ec5b867c55ed8a1f3c3de43f5430a9a"
+    },
+    {
+      "id": "helper-http-full",
+      "description": "HTTP endpoint under content_mode=full: raw passthrough (URL pattern emitted as-is).",
+      "event_type": "api_invocation_anomaly",
+      "field_name": "attempted_endpoint",
+      "content_mode": "full",
+      "input": "https://internal.evil.com/*",
+      "expected": "https://internal.evil.com/*"
+    },
+    {
+      "id": "helper-http-redacted",
+      "description": "HTTP endpoint under content_mode=redacted: literal substitution.",
+      "event_type": "api_invocation_anomaly",
+      "field_name": "attempted_endpoint",
+      "content_mode": "redacted",
+      "input": "https://internal.evil.com/*",
+      "expected": "<redacted>"
+    },
+    {
+      "id": "helper-http-hashes-only",
+      "description": "HTTP endpoint under content_mode=hashes_only.",
+      "event_type": "api_invocation_anomaly",
+      "field_name": "attempted_endpoint",
+      "content_mode": "hashes_only",
+      "input": "https://internal.evil.com/*",
+      "expected": "626bcccc6e2dc08fc8454f183f347ce20663be2b5e9e504e25038500e659cc04"
+    }
+  ],
+  "verifier_vectors_doc": "6 NEGATIVE-CASE vectors: 2 non-full modes (redacted / hashes_only) x 3 surfaces. Each defines a receipt where content_mode is set but the attempted_* field contains a RAW value (the AUDIT-008 leak class). SDK consumer asserts: verify_invocation_anomaly_receipt(receipt) emits a Check with name='redaction_markers_correct' and status=FAIL. POSITIVE verifier cases are NOT in this array; they are derivable from helper_vectors (substitute each non-full helper_vector's `expected` into a receipt's field_value with the same content_mode, expect Check.status=PASS).",
+  "verifier_vectors": [
+    {
+      "id": "verifier-cli-redacted-leaks-raw",
+      "description": "Receipt with content_mode=redacted but attempted_command=raw value: redaction_markers_correct check MUST emit status=FAIL.",
+      "event_type": "cli_invocation_anomaly",
+      "field_name": "attempted_command",
+      "content_mode": "redacted",
+      "field_value": "rm",
+      "expected_check_status": "FAIL"
+    },
+    {
+      "id": "verifier-cli-hashes-only-leaks-raw",
+      "description": "Receipt with content_mode=hashes_only but attempted_command=raw value (not 64-hex): redaction_markers_correct check MUST emit status=FAIL.",
+      "event_type": "cli_invocation_anomaly",
+      "field_name": "attempted_command",
+      "content_mode": "hashes_only",
+      "field_value": "rm",
+      "expected_check_status": "FAIL"
+    },
+    {
+      "id": "verifier-mcp-redacted-leaks-raw",
+      "description": "Receipt with content_mode=redacted but attempted_tool=raw value: redaction_markers_correct check MUST emit status=FAIL.",
+      "event_type": "invocation_anomaly",
+      "field_name": "attempted_tool",
+      "content_mode": "redacted",
+      "field_value": "echo_echo",
+      "expected_check_status": "FAIL"
+    },
+    {
+      "id": "verifier-mcp-hashes-only-leaks-raw",
+      "description": "Receipt with content_mode=hashes_only but attempted_tool=raw value: redaction_markers_correct check MUST emit status=FAIL.",
+      "event_type": "invocation_anomaly",
+      "field_name": "attempted_tool",
+      "content_mode": "hashes_only",
+      "field_value": "echo_echo",
+      "expected_check_status": "FAIL"
+    },
+    {
+      "id": "verifier-http-redacted-leaks-raw",
+      "description": "Receipt with content_mode=redacted but attempted_endpoint=raw URL: redaction_markers_correct check MUST emit status=FAIL.",
+      "event_type": "api_invocation_anomaly",
+      "field_name": "attempted_endpoint",
+      "content_mode": "redacted",
+      "field_value": "https://internal.evil.com/*",
+      "expected_check_status": "FAIL"
+    },
+    {
+      "id": "verifier-http-hashes-only-leaks-raw",
+      "description": "Receipt with content_mode=hashes_only but attempted_endpoint=raw URL: redaction_markers_correct check MUST emit status=FAIL.",
+      "event_type": "api_invocation_anomaly",
+      "field_name": "attempted_endpoint",
+      "content_mode": "hashes_only",
+      "field_value": "https://internal.evil.com/*",
+      "expected_check_status": "FAIL"
+    }
+  ],
+  "test_protocol_doc": "Pseudo-code; consumers adapt to their language idioms. The receipt minimally needs event_type + content_mode + extensions['com.sanna.anomaly'][field_name] + suppression_basis to satisfy the verifier's required-field checks; cross-receipt checks (parent_receipts) can be skipped by passing receipt_set=None to the Python verifier or null to the TS verifier.",
+  "test_protocol": {
+    "python_sdk_helper": "from sanna.anomaly import redact_attempted_field; for hv in fixture['helper_vectors']: assert redact_attempted_field(hv['input'], hv['content_mode']) == hv['expected']",
+    "python_sdk_verifier": "from sanna.verify_manifest import verify_invocation_anomaly_receipt; for vv in fixture['verifier_vectors']: receipt = {'event_type': vv['event_type'], 'content_mode': vv['content_mode'], 'extensions': {'com.sanna.anomaly': {vv['field_name']: vv['field_value'], 'suppression_basis': 'constitution'}}}; checks = verify_invocation_anomaly_receipt(receipt); marker = next((c for c in checks if c.name == fixture['expected_check_name']), None); assert marker is not None and marker.status == vv['expected_check_status']",
+    "ts_sdk_helper": "import { redactAttemptedField } from '@sanna-ai/core'; for (const hv of fixture.helper_vectors) { expect(redactAttemptedField(hv.input, hv.content_mode)).toBe(hv.expected); }",
+    "ts_sdk_verifier": "import { verifyInvocationAnomalyReceipt } from '@sanna-ai/core'; for (const vv of fixture.verifier_vectors) { const receipt = { event_type: vv.event_type, content_mode: vv.content_mode, extensions: { 'com.sanna.anomaly': { [vv.field_name]: vv.field_value, suppression_basis: 'constitution' } } }; const checks = verifyInvocationAnomalyReceipt(receipt, null); const marker = checks.find(c => c.name === fixture.expected_check_name); expect(marker?.status).toBe(vv.expected_check_status); }"
+  }
+}
