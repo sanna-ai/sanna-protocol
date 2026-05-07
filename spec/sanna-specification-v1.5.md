@@ -1516,6 +1516,28 @@ records which constitution was active at session-start.
 
 Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance. The full mapping, decision-enum table, R5 receipt-field mapping, gap acknowledgment, and exceedances are normatively specified in Section 14.
 
+### 6.9 Canonical Signable Form for `must_escalate.target` (SAN-490)
+
+When computing the canonical signable bytes (input to Ed25519 signing) of an
+`authority_boundaries.must_escalate[*]` rule, conformant implementations MUST
+include all defined optional sub-fields of `target` explicitly, with values
+absent in the source emitted as JSON `null`. Specifically, when `target` is
+non-null:
+
+- `target.type` (required): the escalation target type (`"log"`,
+  `"webhook"`, or `"callback"`).
+- `target.url` (string or null): the source value if present in the
+  constitution, otherwise `null`.
+- `target.handler` (string or null): the source value if present in the
+  constitution, otherwise `null`.
+
+This rule applies only at the canonical-bytes layer (input to Ed25519
+signing). YAML serialization MAY omit absent optional fields entirely; the
+schema accepts both forms (`sanna_constitution` >= `"1.0.1"`).
+
+Cross-SDK byte-equal parity is enforced by
+`fixtures/constitution-signable-vectors.json` (Section 13.5).
+
 ---
 
 ## 7. Receipt Triad
@@ -2262,6 +2284,22 @@ behavioral cases:
    anchor evaluated. This documents that a misconfigured anchor does not
    provide assurance: trust anchor is necessary but not sufficient;
    operators MUST curate the anchor.
+
+### 13.5 Constitution Signable Vectors (SAN-490)
+
+`fixtures/constitution-signable-vectors.json` defines the cross-SDK byte-equal
+contract for `constitution_to_signable_dict`'s output, with focus on
+`must_escalate.target` null-handling. Conformant SDKs MUST, for every vector,
+parse `input_constitution`, run their canonical signable serialization, and
+produce `expected_signable_canonical_json` byte-for-byte.
+
+`expected_signable_sha256` is the lowercase 64-hex SHA-256 of
+`expected_signable_canonical_json` and serves as a fast cross-check.
+
+The five required vectors cover: no optional fields on target (the SAN-490
+canonical bug case), url-only, handler-only, null target, and all fields.
+
+See Section 6.9 for the canonical form definition.
 
 ---
 
