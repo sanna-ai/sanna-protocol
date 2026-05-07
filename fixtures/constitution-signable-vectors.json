@@ -1,0 +1,268 @@
+{
+  "spec_version": "1.5",
+  "san_ticket": "SAN-490",
+  "description": "Cross-SDK byte-equal contract for constitution_to_signable_dict output. A conformant SDK MUST, for every vector, parse the input_constitution dict, run its constitution_to_signable_dict equivalent, canonicalize via its RFC 8785-style canonical_json, and produce expected_signable_canonical_json byte-for-byte. expected_signable_sha256 is a fast cross-check. See spec Section 6.9 for the canonical form definition.",
+  "vectors": [
+    {
+      "id": "must_escalate_target_no_optionals",
+      "description": "target has only `type`; url and handler absent in source dict (SAN-490 canonical bug case)",
+      "input_constitution": {
+        "sanna_constitution": "1.0.1",
+        "identity": {
+          "agent_name": "san-490-vector-agent",
+          "domain": "testing",
+          "description": "Cross-SDK signable parity vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-06",
+          "approval_method": "vector-generation",
+          "change_history": []
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with no optional fields",
+              "target": {
+                "type": "log"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "policy_hash": "4214b3ebacf0839095caa4bcffe3dc4f9366040db04aa4a9f0356db04c48f881"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with no optional fields\",\"target\":{\"handler\":null,\"type\":\"log\",\"url\":null}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-490-vector-agent\",\"description\":\"Cross-SDK signable parity vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"4214b3ebacf0839095caa4bcffe3dc4f9366040db04aa4a9f0356db04c48f881\",\"provenance\":{\"approval_date\":\"2026-05-06\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":null},\"schema_version\":\"1.0.1\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "0d79229a27629e681ba6890ab937a967dcaa560dbfd2893f0700c3b20b03bd54"
+    },
+    {
+      "id": "must_escalate_target_url_only",
+      "description": "target has type + url; handler absent in source",
+      "input_constitution": {
+        "sanna_constitution": "1.0.1",
+        "identity": {
+          "agent_name": "san-490-vector-agent",
+          "domain": "testing",
+          "description": "Cross-SDK signable parity vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-06",
+          "approval_method": "vector-generation",
+          "change_history": []
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with url only",
+              "target": {
+                "type": "webhook",
+                "url": "https://example.com/escalations"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "policy_hash": "9ef54f3bebd408163428d9fed3df2d8f7546bc774020c267e0cd30f7f83be3bb"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with url only\",\"target\":{\"handler\":null,\"type\":\"webhook\",\"url\":\"https://example.com/escalations\"}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-490-vector-agent\",\"description\":\"Cross-SDK signable parity vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"9ef54f3bebd408163428d9fed3df2d8f7546bc774020c267e0cd30f7f83be3bb\",\"provenance\":{\"approval_date\":\"2026-05-06\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":null},\"schema_version\":\"1.0.1\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "f51d744caf1039060e1b12d7eeb4e77ba3087ad586d55fe20a913fc44fe4e824"
+    },
+    {
+      "id": "must_escalate_target_handler_only",
+      "description": "target has type + handler; url absent in source",
+      "input_constitution": {
+        "sanna_constitution": "1.0.1",
+        "identity": {
+          "agent_name": "san-490-vector-agent",
+          "domain": "testing",
+          "description": "Cross-SDK signable parity vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-06",
+          "approval_method": "vector-generation",
+          "change_history": []
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with handler only",
+              "target": {
+                "type": "callback",
+                "handler": "review_handler"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "policy_hash": "32f46fe9a393bdb2b20fac8c9df528f1dbf6143384d8b52c5b5043d1ba2605aa"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with handler only\",\"target\":{\"handler\":\"review_handler\",\"type\":\"callback\",\"url\":null}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-490-vector-agent\",\"description\":\"Cross-SDK signable parity vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"32f46fe9a393bdb2b20fac8c9df528f1dbf6143384d8b52c5b5043d1ba2605aa\",\"provenance\":{\"approval_date\":\"2026-05-06\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":null},\"schema_version\":\"1.0.1\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "b002dc270cb78f75fd09244b4fe9c156de3b456935b238d1a189bce9926816ad"
+    },
+    {
+      "id": "must_escalate_target_null",
+      "description": "target=null (explicit null target; regression guard for both SDKs)",
+      "input_constitution": {
+        "sanna_constitution": "1.0.1",
+        "identity": {
+          "agent_name": "san-490-vector-agent",
+          "domain": "testing",
+          "description": "Cross-SDK signable parity vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-06",
+          "approval_method": "vector-generation",
+          "change_history": []
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target=null",
+              "target": null
+            }
+          ],
+          "can_execute": []
+        },
+        "policy_hash": "f39909d0f49b0f70913227183389cfdfc116f2fda27edbaf7294a3a744d1a4c1"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target=null\",\"target\":null}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-490-vector-agent\",\"description\":\"Cross-SDK signable parity vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"f39909d0f49b0f70913227183389cfdfc116f2fda27edbaf7294a3a744d1a4c1\",\"provenance\":{\"approval_date\":\"2026-05-06\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":null},\"schema_version\":\"1.0.1\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "44858e5ea6124e2cd8b84e290a2afd0265e650e939f4208b0285f168a0fda70b"
+    },
+    {
+      "id": "must_escalate_target_all_fields",
+      "description": "target has type + url + handler (full-shape regression guard)",
+      "input_constitution": {
+        "sanna_constitution": "1.0.1",
+        "identity": {
+          "agent_name": "san-490-vector-agent",
+          "domain": "testing",
+          "description": "Cross-SDK signable parity vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-06",
+          "approval_method": "vector-generation",
+          "change_history": []
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with all fields",
+              "target": {
+                "type": "webhook",
+                "url": "https://example.com/escalations",
+                "handler": "review_handler"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "policy_hash": "a9f71fa5abe52edfcb35f8abec02887f2dc61fb39cbcd57c9edaa77a27cf9565"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with all fields\",\"target\":{\"handler\":\"review_handler\",\"type\":\"webhook\",\"url\":\"https://example.com/escalations\"}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-490-vector-agent\",\"description\":\"Cross-SDK signable parity vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"a9f71fa5abe52edfcb35f8abec02887f2dc61fb39cbcd57c9edaa77a27cf9565\",\"provenance\":{\"approval_date\":\"2026-05-06\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":null},\"schema_version\":\"1.0.1\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "cdf6edad902973c3c4c63d97363bc150c4f0e288d4b7c4f7b755fca3e53bfe0a"
+    }
+  ],
+  "test_protocol": {
+    "python_sdk": "from sanna.constitution import parse_constitution, compute_constitution_hash, constitution_to_signable_dict; import dataclasses; from sanna.hashing import canonical_json_bytes; const = parse_constitution(v['input_constitution']); const = dataclasses.replace(const, policy_hash=v['input_constitution']['policy_hash']); signable = constitution_to_signable_dict(const); canonical = canonical_json_bytes(signable).decode('ascii'); assert canonical == v['expected_signable_canonical_json']",
+    "ts_sdk": "import { parseConstitutionDict, constitutionToSignableDict, canonicalJsonBytes } from '@sanna-ai/core'; const c = parseConstitutionDict(v.input_constitution); const signable = constitutionToSignableDict(c); const canonical = canonicalJsonBytes(signable).toString('utf-8'); expect(canonical).toBe(v.expected_signable_canonical_json);"
+  }
+}

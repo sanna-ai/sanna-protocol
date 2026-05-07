@@ -1,3 +1,45 @@
+## [Unreleased] -- 2026-05-07 (SAN-490)
+
+### Changed
+
+- **Schema permissiveness clarification.** `schemas/constitution.schema.json`
+  now accepts `["string", "null"]` for `must_escalate.target.url` and
+  `must_escalate.target.handler`, and `["object", "null"]` for
+  `must_escalate.target` itself. The `sanna_constitution` schema version
+  example bumps to `"1.0.1"`. This is a backwards-compatible PATCH-level
+  bump: an absent optional field and an explicit `null` are semantically
+  identical (no escalation URL or handler configured); the previous
+  `"type": "string"` constraint was an over-strict validation, not a
+  deliberate semantic choice. YAMLs at `1.0.0` continue to validate
+  unchanged.
+
+### Added
+
+- `fixtures/constitution-signable-vectors.json`: cross-SDK byte-equal
+  contract for `constitution_to_signable_dict`'s output. Five vectors
+  cover `must_escalate.target` shapes (no optionals; url-only;
+  handler-only; null target; all-fields). Each vector specifies an
+  input Constitution dict, the expected canonical signable JSON bytes,
+  and the SHA-256 of those bytes for cross-check.
+- `fixtures/constitutions/with-authority-target.yaml`: representative
+  constitution at `sanna_constitution: 1.0.1` exercising the new
+  schema-permissive target shapes.
+- `tools/generate_signable_vectors.py`: deterministic regenerator for
+  the vectors file.
+- Spec Section 6.9: normative canonical signable form for
+  `authority_boundaries.must_escalate.target`.
+- Spec Section 13.5: cross-SDK conformance reference for
+  `fixtures/constitution-signable-vectors.json`.
+
+### Tickets
+
+- SAN-490 (this entry; sanna-protocol portion -- adds the cross-SDK
+  byte-equal contract fixture, schema permissiveness clarification, and
+  spec normative form). Companion sanna-ts canonicalization alignment
+  (applies explicit null-include at `constitution.ts:691-696`) and
+  sanna-repo regression test (asserts Python signable bytes match the
+  fixture) land in separate PRs.
+
 ## [Unreleased] -- 2026-05-06 (SAN-404)
 
 ### Security

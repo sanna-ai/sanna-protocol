@@ -1,0 +1,52 @@
+sanna_constitution: 1.0.1
+identity:
+  agent_name: san-490-target-shape-demo
+  domain: testing
+  description: Documentation fixture demonstrating must_escalate.target shapes covered by SAN-490 cross-SDK signable parity contract
+provenance:
+  authored_by: test-author@sanna.dev
+  approved_by:
+  - test-author@sanna.dev
+  approval_date: '2026-05-06'
+  approval_method: fixture-demonstration
+  change_history: []
+  signature:
+    value: null
+    key_id: null
+    signed_by: null
+    signed_at: null
+    scheme: constitution_sig_v1
+boundaries:
+- id: B001
+  description: Demonstration boundary for SAN-490
+  category: scope
+  severity: medium
+trust_tiers:
+  autonomous: []
+  requires_approval: []
+  prohibited: []
+halt_conditions: []
+invariants: []
+authority_boundaries:
+  cannot_execute: []
+  must_escalate:
+  - condition: 'target with no optional fields (url + handler absent in source)'
+    target:
+      type: log
+  - condition: 'target with url only (handler absent in source)'
+    target:
+      type: webhook
+      url: 'https://example.com/escalations'
+  - condition: 'target with handler only (url absent in source)'
+    target:
+      type: callback
+      handler: review_handler
+  - condition: 'target=null (explicit null target)'
+    target: null
+  - condition: 'target with all fields populated'
+    target:
+      type: webhook
+      url: 'https://example.com/escalations'
+      handler: review_handler
+  can_execute: []
+policy_hash: 5b3e905e32b767e36978bb5c6b70f5842aac0dd3448d62ee433cd81cf48c3b20
