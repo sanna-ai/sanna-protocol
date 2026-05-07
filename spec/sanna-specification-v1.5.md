@@ -1332,14 +1332,90 @@ The `receipt_signature` object contains:
 | Field | Type | Description |
 |-------|------|-------------|
 | `signature` | string | Base64-encoded Ed25519 signature |
-| `key_id` | string | SHA-256 hex of the public key (64 chars, see Section 5.5) |
+| `key_id` | string | SHA-256 hex of the public key (64 chars, see Section 5.6) |
 | `signed_by` | string | Human-readable signer identity |
 | `signed_at` | string | ISO 8601 timestamp |
 | `scheme` | string | `"receipt_sig_v1"` |
 
-### 5.3 Constitution Signing
+### 5.3 Constitution Canonical Form Versions (v1, v2; SAN-492)
 
-Constitution signatures cover:
+Constitution signatures (`provenance.signature`) are computed over a canonical
+JSON serialization of the constitution. Two canonical-form versions are defined:
+
+**v1 (legacy, frozen).** Each SDK's historical canonicalization. Python's v1
+includes: schema_version, identity, provenance (with signature.value=""),
+boundaries, trust_tiers, halt_conditions, invariants, policy_hash,
+[authority_boundaries], [escalation_targets], [trusted_sources], [version when
+!= "1.0"], [reasoning]. TypeScript's v1 includes: same baseline +
+[composition (only when escalation_visibility != "visible")], [cli_permissions],
+[api_permissions], [trusted_sources]; does NOT include version or reasoning.
+The two SDK v1 forms diverge structurally. v1 is preserved as-is to keep
+verification of currently-signed customer constitutions valid under their own
+SDK. **No new constitution SHOULD be signed under v1; verification is preserved
+for backwards-compat only.**
+
+**v2 (unified, current).** Both SDKs MUST emit byte-identical canonical bytes
+under v2. The v2 form is the union of all signable fields, with consistent
+default-value emission and null-handling:
+
+- **Always included** (when constitution is well-formed): schema_version,
+  identity, provenance (with signature.value=""), boundaries, trust_tiers,
+  halt_conditions, invariants, policy_hash.
+- **Conditionally included when present in source**:
+  - `authority_boundaries` + top-level `escalation_targets` (when authority_boundaries is set)
+  - `composition` (when composition section is present in source -- including at default values)
+  - `cli_permissions` (when present, including `inspect_scripts`)
+  - `api_permissions` (when present)
+  - `trusted_sources` (when present)
+  - `version` (only when != "1.0")
+  - `reasoning` (when present)
+- **Default-value handling**: dataclass/interface fields with explicit defaults
+  (e.g., `CliCommand.argv_pattern = "*"`, `ApiEndpoint.methods = ["*"]`,
+  `Composition.escalation_visibility = "visible"`,
+  `CliPermissions.inspect_scripts = false`) ARE emitted explicitly in canonical
+  bytes. This is intentionally different from v1 in both SDKs, where defaults
+  could be omitted depending on the SDK.
+- **Null-handling**: Optional sub-fields that are absent in source are emitted
+  as JSON `null` in canonical bytes. Schema accepts both absent and explicit
+  null (sanna_constitution >= "1.1.0"); both forms produce byte-identical
+  canonical output under v2.
+
+Cross-SDK byte-equal parity is enforced by
+`fixtures/constitution-signable-vectors-v2.json` (Section 13.6). Conformant
+SDKs MUST produce byte-identical output for every vector input. The reference
+implementation is `tools/generate_signable_vectors_v2.py` in this repo.
+
+**Verifier dispatch.** A verifier reads `provenance.signature.scheme` from the
+constitution. `"constitution_sig_v1"` routes to the legacy per-SDK v1
+canonicalization (frozen per the SDK's historical behavior).
+`"constitution_sig_v2"` routes to the unified v2 canonicalization. Other
+scheme values are rejected (the schema's enum constraint enforces this).
+
+**Sign defaults.** SDK `sign_constitution` (or equivalent) defaults to
+`signing_version=2`, producing `signature.scheme = "constitution_sig_v2"`.
+Customers MAY explicitly request `signing_version=1` for legacy interop; this
+is supported but NOT default.
+
+**policy_hash scope.** `compute_constitution_hash` (the source of
+`policy_hash`) covers a SUBSET of the v2 signable fields: identity,
+boundaries, trust_tiers, halt_conditions, invariants, [authority_boundaries],
+[trusted_sources], [reasoning]. policy_hash does NOT cover cli_permissions,
+api_permissions, or composition. Receipts referencing
+`constitution_ref.policy_hash` anchor the policy core; constitution v2
+signatures additionally cover cli/api/composition. This asymmetry is
+intentional: changing policy_hash to include cli/api/composition would
+invalidate every receipt that references a constitution under v1, breaking
+the existing receipt-to-constitution chain.
+
+**Future canonical-form revisions.** v2 is determined by the reference
+generator at `tools/generate_signable_vectors_v2.py`. Future incompatible
+canonical-form changes (e.g., addition of new structural fields beyond
+those covered in v2) MUST bump signing_version to v3 (or beyond) rather
+than mutating v2 in-place. Each version is frozen once published.
+
+### 5.4 Constitution Signing (v1 Reference)
+
+Constitution v1 signatures cover:
 - `schema_version`, `identity` (with extensions flattened), `provenance`
   (with `signature.value = ""`), `boundaries`, `trust_tiers`,
   `halt_conditions`, `invariants`, `policy_hash`
@@ -1347,15 +1423,16 @@ Constitution signatures cover:
   `trusted_sources`, `version` (if != `"1.0"`), `reasoning`
 
 The signing material is serialized with `canonical_json_bytes()` after
-`sanitize_for_signing()`.
+`sanitize_for_signing()`. See Section 5.3 for the full v1/v2 canonical
+form specification.
 
-### 5.4 Approval Signing
+### 5.5 Approval Signing
 
 Approval signatures cover all `ApprovalRecord` fields except
 `approval_signature` (blanked to `""`). The signing material is
 serialized with `canonical_json_bytes()`.
 
-### 5.5 Key Identification
+### 5.6 Key Identification
 
 Keys are identified by their `key_id`: the lowercase hex-encoded
 SHA-256 hash of the **32-byte raw Ed25519 public key** (not
@@ -1370,13 +1447,13 @@ key_id = hashlib.sha256(raw_bytes).hexdigest()                 # 64 hex chars
 Key files use the key_id as filename:
 `{key_id}.key`, `{key_id}.pub`, `{key_id}.meta.json`.
 
-### 5.6 Key File Encoding
+### 5.7 Key File Encoding
 
 Private keys MUST be stored in **PKCS#8 PEM format** (unencrypted).
 Public keys MUST be stored in **SubjectPublicKeyInfo PEM format**.
 
 The key_id is computed from the raw 32-byte Ed25519 public key (as
-described in Section 5.5), NOT from the PEM or DER encoding.
+described in Section 5.6), NOT from the PEM or DER encoding.
 
 Example PEM header/footer:
 - Private: `-----BEGIN PRIVATE KEY-----` / `-----END PRIVATE KEY-----`
@@ -2300,6 +2377,20 @@ The five required vectors cover: no optional fields on target (the SAN-490
 canonical bug case), url-only, handler-only, null target, and all fields.
 
 See Section 6.9 for the canonical form definition.
+
+### 13.6 Constitution Signable Vectors v2 (SAN-492)
+
+`fixtures/constitution-signable-vectors-v2.json` defines the cross-SDK
+byte-equal contract for the v2 unified canonical form. Conformant SDKs MUST,
+for every vector, parse `input_constitution`, compute v2 canonical bytes via
+their canonicalization pipeline (`signing_version=2`), and produce
+`expected_signable_canonical_json` byte-for-byte. `expected_signable_sha256`
+cross-checks.
+
+The v1 vectors at `fixtures/constitution-signable-vectors.json` (Section 13.5,
+SAN-490) remain valid for verifying v1 canonicalization paths. v1 and v2
+vectors are independent; SDKs supporting both versions MUST pass both vector
+suites.
 
 ---
 

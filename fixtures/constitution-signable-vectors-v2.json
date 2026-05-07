@@ -1,0 +1,1231 @@
+{
+  "spec_version": "1.5",
+  "san_ticket": "SAN-492",
+  "signing_version": 2,
+  "description": "Cross-SDK byte-equal contract for the v2 unified canonical signable form. A conformant SDK MUST, for every vector, parse input_constitution, compute v2 canonical bytes via its canonicalization pipeline (signing_version=2), and produce expected_signable_canonical_json byte-for-byte. expected_signable_sha256 cross-checks. See spec Section 5.3 for the v2 form definition; Section 13.6 for the conformance requirement.",
+  "vectors": [
+    {
+      "id": "v2_must_escalate_target_no_optionals",
+      "description": "v2 form: target has only `type`; url and handler absent in source (SAN-490 canonical case under v2)",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with no optional fields",
+              "target": {
+                "type": "log"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "escalation_targets": {
+          "default": "log"
+        },
+        "policy_hash": "152c52f2e9cfcb4c416927585d49772315a4525aac3528ef7895ea0108f99077"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with no optional fields\",\"target\":{\"handler\":null,\"type\":\"log\",\"url\":null}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"152c52f2e9cfcb4c416927585d49772315a4525aac3528ef7895ea0108f99077\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "5ad49255b2135cec2cd9d3a081c7ba5888a9379f7dd3db9e00fba6b3b4480df0"
+    },
+    {
+      "id": "v2_must_escalate_target_url_only",
+      "description": "v2 form: target has type + url; handler absent in source",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with url only",
+              "target": {
+                "type": "webhook",
+                "url": "https://example.com/escalations"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "escalation_targets": {
+          "default": "log"
+        },
+        "policy_hash": "029fd3f34105efda09307fa9f78aa5a1006c2879e756fdd0c03ea297107049ad"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with url only\",\"target\":{\"handler\":null,\"type\":\"webhook\",\"url\":\"https://example.com/escalations\"}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"029fd3f34105efda09307fa9f78aa5a1006c2879e756fdd0c03ea297107049ad\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "b1bcade52f6a96884c899b8d37d551d6be7a56902b979c679b3d4d0f5a9e3fed"
+    },
+    {
+      "id": "v2_must_escalate_target_handler_only",
+      "description": "v2 form: target has type + handler; url absent in source",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with handler only",
+              "target": {
+                "type": "callback",
+                "handler": "review_handler"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "escalation_targets": {
+          "default": "log"
+        },
+        "policy_hash": "73fbe35cc78cbc0c19c32c546da5ad7773e078035a2e03c70b717e4bbdf97e72"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with handler only\",\"target\":{\"handler\":\"review_handler\",\"type\":\"callback\",\"url\":null}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"73fbe35cc78cbc0c19c32c546da5ad7773e078035a2e03c70b717e4bbdf97e72\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "b274c144d70198ecfa4970be63050921cb52f79fbac1cb23a8fd66692567f320"
+    },
+    {
+      "id": "v2_must_escalate_target_null",
+      "description": "v2 form: target=null (explicit null target)",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target=null",
+              "target": null
+            }
+          ],
+          "can_execute": []
+        },
+        "escalation_targets": {
+          "default": "log"
+        },
+        "policy_hash": "3cdd06b3dcefc3ba7c7fbe468cf9ac13846a18c2c35387d1350ec0b6e72ee294"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target=null\",\"target\":null}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"3cdd06b3dcefc3ba7c7fbe468cf9ac13846a18c2c35387d1350ec0b6e72ee294\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "dfff5f8b2cac6fdb0c5427d03baaad9865ada2e12904fb63f9214f9436177c44"
+    },
+    {
+      "id": "v2_must_escalate_target_all_fields",
+      "description": "v2 form: target has type + url + handler (full shape)",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "target with all fields",
+              "target": {
+                "type": "webhook",
+                "url": "https://example.com/escalations",
+                "handler": "review_handler"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "escalation_targets": {
+          "default": "log"
+        },
+        "policy_hash": "43df2a44b49f0d75216d7a97abc945d783b9fd54dc93a9d6ea2f689cc37265c8"
+      },
+      "expected_signable_canonical_json": "{\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"target with all fields\",\"target\":{\"handler\":\"review_handler\",\"type\":\"webhook\",\"url\":\"https://example.com/escalations\"}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"43df2a44b49f0d75216d7a97abc945d783b9fd54dc93a9d6ea2f689cc37265c8\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "092ca53d3911b5edffd3a30f67d98a975666f33ebedd65349e76a7505c8f50f0"
+    },
+    {
+      "id": "v2_cli_permissions_empty",
+      "description": "v2 form: cli_permissions present with empty commands and invariants; inspect_scripts defaults to false",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "cli_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "commands": [],
+          "invariants": []
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"cli_permissions\":{\"commands\":[],\"inspect_scripts\":false,\"invariants\":[],\"justification_required\":true,\"mode\":\"strict\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "9f2d5beb9ca24b89b1e902fe1972e7ab94e9ba18ea4ef14ba82386edd633cdc1"
+    },
+    {
+      "id": "v2_cli_permissions_one_command_minimum_fields",
+      "description": "v2 form: one command with only required fields; argv_pattern/description/escalation_target emitted at defaults",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "cli_permissions": {
+          "commands": [
+            {
+              "id": "cli-001",
+              "binary": "git",
+              "authority": "can_execute"
+            }
+          ]
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"cli_permissions\":{\"commands\":[{\"argv_pattern\":\"*\",\"authority\":\"can_execute\",\"binary\":\"git\",\"description\":\"\",\"escalation_target\":null,\"id\":\"cli-001\"}],\"inspect_scripts\":false,\"invariants\":[],\"justification_required\":true,\"mode\":\"strict\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "9ff79625cc3d5a224420b75f8a5af13e00da240be0968f1927d0171e31efbfa5"
+    },
+    {
+      "id": "v2_cli_permissions_one_command_all_fields",
+      "description": "v2 form: one command with all fields populated; escalation_target=null emitted explicitly",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "cli_permissions": {
+          "mode": "permissive",
+          "justification_required": false,
+          "commands": [
+            {
+              "id": "cli-001",
+              "binary": "git",
+              "authority": "can_execute",
+              "argv_pattern": "commit *",
+              "description": "Allow git commit",
+              "escalation_target": null
+            }
+          ],
+          "invariants": []
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"cli_permissions\":{\"commands\":[{\"argv_pattern\":\"commit *\",\"authority\":\"can_execute\",\"binary\":\"git\",\"description\":\"Allow git commit\",\"escalation_target\":null,\"id\":\"cli-001\"}],\"inspect_scripts\":false,\"invariants\":[],\"justification_required\":false,\"mode\":\"permissive\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "dc578eca5775688a0be2830ba988a226857ec868057a33e5bb5e3760650d59a9"
+    },
+    {
+      "id": "v2_cli_permissions_inspect_scripts_true",
+      "description": "v2 form: inspect_scripts=true (Python-only field, formalized in schema v1.1.0)",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "cli_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "inspect_scripts": true,
+          "commands": [
+            {
+              "id": "cli-001",
+              "binary": "bash",
+              "authority": "must_escalate"
+            }
+          ],
+          "invariants": []
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"cli_permissions\":{\"commands\":[{\"argv_pattern\":\"*\",\"authority\":\"must_escalate\",\"binary\":\"bash\",\"description\":\"\",\"escalation_target\":null,\"id\":\"cli-001\"}],\"inspect_scripts\":true,\"invariants\":[],\"justification_required\":true,\"mode\":\"strict\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "d33decf9d5b3212edb4eb08ea1d6d6764acfc6fa4f6bc13e67b69b49dcf08329"
+    },
+    {
+      "id": "v2_cli_permissions_with_invariants",
+      "description": "v2 form: cli invariants with pattern=non-null/condition=null and pattern=null/condition=non-null",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "cli_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "commands": [],
+          "invariants": [
+            {
+              "id": "cli-inv-001",
+              "description": "No rm -rf",
+              "verdict": "halt",
+              "pattern": "rm.*-rf",
+              "condition": null
+            },
+            {
+              "id": "cli-inv-002",
+              "description": "Named condition check",
+              "verdict": "warn",
+              "pattern": null,
+              "condition": "is_destructive"
+            }
+          ]
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"cli_permissions\":{\"commands\":[],\"inspect_scripts\":false,\"invariants\":[{\"condition\":null,\"description\":\"No rm -rf\",\"id\":\"cli-inv-001\",\"pattern\":\"rm.*-rf\",\"verdict\":\"halt\"},{\"condition\":\"is_destructive\",\"description\":\"Named condition check\",\"id\":\"cli-inv-002\",\"pattern\":null,\"verdict\":\"warn\"}],\"justification_required\":true,\"mode\":\"strict\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "167f9da4def14cb1e741c803eccae9d9424f02a603eed251f635f9ea06281363"
+    },
+    {
+      "id": "v2_api_permissions_empty",
+      "description": "v2 form: api_permissions present with empty endpoints and invariants",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "api_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "endpoints": [],
+          "invariants": []
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"api_permissions\":{\"endpoints\":[],\"invariants\":[],\"justification_required\":true,\"mode\":\"strict\"},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "adcb9cc14996c180ea48148f8e5513938d5509f2511b2b55e87ef9e857abf089"
+    },
+    {
+      "id": "v2_api_permissions_one_endpoint_minimum",
+      "description": "v2 form: one endpoint with only required fields; methods/description/escalation_target emitted at defaults",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "api_permissions": {
+          "endpoints": [
+            {
+              "id": "api-001",
+              "url_pattern": "https://api.example.com/*",
+              "authority": "can_execute"
+            }
+          ]
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"api_permissions\":{\"endpoints\":[{\"authority\":\"can_execute\",\"description\":\"\",\"escalation_target\":null,\"id\":\"api-001\",\"methods\":[\"*\"],\"url_pattern\":\"https://api.example.com/*\"}],\"invariants\":[],\"justification_required\":true,\"mode\":\"strict\"},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "f9d6ab81e8313b439267cdb4324dab3b218b55bd73ba9668a794fdaa26b6a4cc"
+    },
+    {
+      "id": "v2_api_permissions_one_endpoint_all_fields",
+      "description": "v2 form: one endpoint with all fields; methods=[GET,POST]; escalation_target=null explicitly emitted",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "api_permissions": {
+          "mode": "permissive",
+          "justification_required": false,
+          "endpoints": [
+            {
+              "id": "api-001",
+              "url_pattern": "https://api.example.com/data/*",
+              "authority": "can_execute",
+              "methods": [
+                "GET",
+                "POST"
+              ],
+              "description": "Allow data API",
+              "escalation_target": null
+            }
+          ],
+          "invariants": []
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"api_permissions\":{\"endpoints\":[{\"authority\":\"can_execute\",\"description\":\"Allow data API\",\"escalation_target\":null,\"id\":\"api-001\",\"methods\":[\"GET\",\"POST\"],\"url_pattern\":\"https://api.example.com/data/*\"}],\"invariants\":[],\"justification_required\":false,\"mode\":\"permissive\"},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "8bedf5d81e50ef7c8f8a673421594eb59473bdcd0c0f808e23c3e798b76e54a5"
+    },
+    {
+      "id": "v2_api_permissions_with_invariants",
+      "description": "v2 form: api invariant with pattern field",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "api_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "endpoints": [],
+          "invariants": [
+            {
+              "id": "api-inv-001",
+              "description": "No PII endpoints",
+              "verdict": "halt",
+              "pattern": ".*/pii/.*"
+            }
+          ]
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"api_permissions\":{\"endpoints\":[],\"invariants\":[{\"description\":\"No PII endpoints\",\"id\":\"api-inv-001\",\"pattern\":\".*/pii/.*\",\"verdict\":\"halt\"}],\"justification_required\":true,\"mode\":\"strict\"},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "6a797c94f516373c18759a33f5681f22770dd2df77e6b8e84ab8597d15a42181"
+    },
+    {
+      "id": "v2_composition_default",
+      "description": "v2 form: composition present at default (escalation_visibility=visible); emitted even at default per v2 rule",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "composition": {
+          "escalation_visibility": "visible"
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"composition\":{\"escalation_visibility\":\"visible\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "da79550ad555292d9a4f3a5ed677d0fefda1e1aae01709a19dfcfeb0f182312b"
+    },
+    {
+      "id": "v2_composition_suppressed",
+      "description": "v2 form: composition with escalation_visibility=suppressed",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "composition": {
+          "escalation_visibility": "suppressed"
+        },
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"composition\":{\"escalation_visibility\":\"suppressed\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "8baceee4a0753f3896a5476214a74e3feeb26e3a6cf7c7cae701b06c6741bf14"
+    },
+    {
+      "id": "v2_version_non_default",
+      "description": "v2 form: version='1.1' (non-default); emitted in canonical bytes per v2 rule",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "version": "1.1",
+        "policy_hash": "356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"356ad926ea9baf7ba83c4f5a1955946d6f34017c8c9acdc4ee81b05ca07e71b6\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]},\"version\":\"1.1\"}",
+      "expected_signable_sha256": "067c406aae83120395479aaf8438045a418b4b2685c72b68a8996178400b099b"
+    },
+    {
+      "id": "v2_reasoning_minimal",
+      "description": "v2 form: minimal reasoning config (no checks, no judge); all fields emitted explicitly",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "reasoning": {
+          "require_justification_for": [
+            "must_escalate"
+          ],
+          "on_missing_justification": "block",
+          "on_check_error": "block",
+          "on_api_error": "block",
+          "checks": {},
+          "evaluate_before_escalation": true,
+          "auto_deny_on_reasoning_failure": false
+        },
+        "policy_hash": "5486ba5f4b50b3b041884664ad3a678fcff97eab0dac9cdc0acaf95abff6e235"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"5486ba5f4b50b3b041884664ad3a678fcff97eab0dac9cdc0acaf95abff6e235\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"reasoning\":{\"auto_deny_on_reasoning_failure\":false,\"checks\":{},\"evaluate_before_escalation\":true,\"on_api_error\":\"block\",\"on_check_error\":\"block\",\"on_missing_justification\":\"block\",\"require_justification_for\":[\"must_escalate\"]},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "205fbb0484b3add05bc6583eebf4383191f03f928e5fa265e243592f1fba76d0"
+    },
+    {
+      "id": "v2_reasoning_with_judge_config",
+      "description": "v2 form: reasoning with judge config and one named check (glc_002_minimum_substance)",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "reasoning": {
+          "require_justification_for": [
+            "must_escalate",
+            "cannot_execute"
+          ],
+          "on_missing_justification": "escalate",
+          "on_check_error": "block",
+          "on_api_error": "block",
+          "checks": {
+            "glc_002_minimum_substance": {
+              "enabled": true,
+              "min_length": 30
+            }
+          },
+          "evaluate_before_escalation": true,
+          "auto_deny_on_reasoning_failure": true,
+          "judge": {
+            "default_provider": "anthropic",
+            "default_model": null,
+            "cross_provider": false
+          }
+        },
+        "policy_hash": "4b2bea82bd51459b23f719141f2870ec226792515d55550a8de1a43ed8e05164"
+      },
+      "expected_signable_canonical_json": "{\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"4b2bea82bd51459b23f719141f2870ec226792515d55550a8de1a43ed8e05164\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"reasoning\":{\"auto_deny_on_reasoning_failure\":true,\"checks\":{\"glc_002_minimum_substance\":{\"enabled\":true,\"min_length\":30}},\"evaluate_before_escalation\":true,\"judge\":{\"cross_provider\":false,\"default_model\":null,\"default_provider\":\"anthropic\"},\"on_api_error\":\"block\",\"on_check_error\":\"block\",\"on_missing_justification\":\"escalate\",\"require_justification_for\":[\"must_escalate\",\"cannot_execute\"]},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]}}",
+      "expected_signable_sha256": "b0cdceb6ce83ba6b1b8c0483bb70c4267e12c3c77046b77a40d30e6e96a0f4ab"
+    },
+    {
+      "id": "v2_combined_all_features",
+      "description": "v2 form: all optional features combined (authority_boundaries, composition, cli_permissions, api_permissions, version, reasoning)",
+      "input_constitution": {
+        "sanna_constitution": "1.1.0",
+        "identity": {
+          "agent_name": "san-492-v2-vector-agent",
+          "domain": "testing",
+          "description": "v2 cross-SDK vector"
+        },
+        "provenance": {
+          "authored_by": "test-author@sanna.dev",
+          "approved_by": [
+            "test-author@sanna.dev"
+          ],
+          "approval_date": "2026-05-07",
+          "approval_method": "vector-generation",
+          "change_history": [],
+          "signature": {
+            "value": "",
+            "key_id": null,
+            "signed_by": "",
+            "signed_at": "",
+            "scheme": "constitution_sig_v2"
+          }
+        },
+        "boundaries": [
+          {
+            "id": "B001",
+            "description": "Vector test boundary",
+            "category": "scope",
+            "severity": "medium"
+          }
+        ],
+        "trust_tiers": {
+          "autonomous": [],
+          "requires_approval": [],
+          "prohibited": []
+        },
+        "halt_conditions": [],
+        "invariants": [],
+        "authority_boundaries": {
+          "cannot_execute": [],
+          "must_escalate": [
+            {
+              "condition": "decisions involving PII",
+              "target": {
+                "type": "webhook",
+                "url": "https://audit.example.com/escalate"
+              }
+            }
+          ],
+          "can_execute": []
+        },
+        "escalation_targets": {
+          "default": "log"
+        },
+        "composition": {
+          "escalation_visibility": "suppressed"
+        },
+        "cli_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "inspect_scripts": true,
+          "commands": [
+            {
+              "id": "cli-001",
+              "binary": "git",
+              "authority": "can_execute",
+              "argv_pattern": "*",
+              "description": "git operations",
+              "escalation_target": null
+            }
+          ],
+          "invariants": [
+            {
+              "id": "cli-inv-001",
+              "description": "Block dangerous rm",
+              "verdict": "halt",
+              "pattern": "rm.*-rf",
+              "condition": null
+            }
+          ]
+        },
+        "api_permissions": {
+          "mode": "strict",
+          "justification_required": true,
+          "endpoints": [
+            {
+              "id": "api-001",
+              "url_pattern": "https://internal.example.com/*",
+              "authority": "can_execute",
+              "methods": [
+                "GET"
+              ],
+              "description": "Internal read-only API",
+              "escalation_target": null
+            }
+          ],
+          "invariants": []
+        },
+        "version": "2.0",
+        "reasoning": {
+          "require_justification_for": [
+            "must_escalate"
+          ],
+          "on_missing_justification": "block",
+          "on_check_error": "block",
+          "on_api_error": "block",
+          "checks": {},
+          "evaluate_before_escalation": true,
+          "auto_deny_on_reasoning_failure": false
+        },
+        "policy_hash": "95b5f74fd7f4fbf809f19a3a63eb00af4fb99fd6ec58dd3070db095780226a29"
+      },
+      "expected_signable_canonical_json": "{\"api_permissions\":{\"endpoints\":[{\"authority\":\"can_execute\",\"description\":\"Internal read-only API\",\"escalation_target\":null,\"id\":\"api-001\",\"methods\":[\"GET\"],\"url_pattern\":\"https://internal.example.com/*\"}],\"invariants\":[],\"justification_required\":true,\"mode\":\"strict\"},\"authority_boundaries\":{\"can_execute\":[],\"cannot_execute\":[],\"default_escalation\":\"log\",\"must_escalate\":[{\"condition\":\"decisions involving PII\",\"target\":{\"handler\":null,\"type\":\"webhook\",\"url\":\"https://audit.example.com/escalate\"}}]},\"boundaries\":[{\"category\":\"scope\",\"description\":\"Vector test boundary\",\"id\":\"B001\",\"severity\":\"medium\"}],\"cli_permissions\":{\"commands\":[{\"argv_pattern\":\"*\",\"authority\":\"can_execute\",\"binary\":\"git\",\"description\":\"git operations\",\"escalation_target\":null,\"id\":\"cli-001\"}],\"inspect_scripts\":true,\"invariants\":[{\"condition\":null,\"description\":\"Block dangerous rm\",\"id\":\"cli-inv-001\",\"pattern\":\"rm.*-rf\",\"verdict\":\"halt\"}],\"justification_required\":true,\"mode\":\"strict\"},\"composition\":{\"escalation_visibility\":\"suppressed\"},\"escalation_targets\":{\"default\":\"log\"},\"halt_conditions\":[],\"identity\":{\"agent_name\":\"san-492-v2-vector-agent\",\"description\":\"v2 cross-SDK vector\",\"domain\":\"testing\"},\"invariants\":[],\"policy_hash\":\"95b5f74fd7f4fbf809f19a3a63eb00af4fb99fd6ec58dd3070db095780226a29\",\"provenance\":{\"approval_date\":\"2026-05-07\",\"approval_method\":\"vector-generation\",\"approved_by\":[\"test-author@sanna.dev\"],\"authored_by\":\"test-author@sanna.dev\",\"change_history\":[],\"signature\":{\"key_id\":null,\"scheme\":\"constitution_sig_v2\",\"signed_at\":\"\",\"signed_by\":\"\",\"value\":\"\"}},\"reasoning\":{\"auto_deny_on_reasoning_failure\":false,\"checks\":{},\"evaluate_before_escalation\":true,\"on_api_error\":\"block\",\"on_check_error\":\"block\",\"on_missing_justification\":\"block\",\"require_justification_for\":[\"must_escalate\"]},\"schema_version\":\"1.1.0\",\"trust_tiers\":{\"autonomous\":[],\"prohibited\":[],\"requires_approval\":[]},\"version\":\"2.0\"}",
+      "expected_signable_sha256": "f642171d7e8a945f328b8853fbb79361822d742eca7e3ebe393a413dd1fa6a75"
+    }
+  ],
+  "test_protocol": {
+    "python_sdk": "from sanna.constitution import parse_constitution, constitution_to_signable_dict_v2; from sanna.hashing import canonical_json_bytes; const = parse_constitution(v['input_constitution']); canonical = canonical_json_bytes(constitution_to_signable_dict_v2(const)).decode('utf-8'); assert canonical == v['expected_signable_canonical_json']",
+    "ts_sdk": "import { parseConstitution, computeCanonicalSignableJsonV2 } from '@sanna-ai/core'; const c = parseConstitution(v.input_constitution); const canonical = computeCanonicalSignableJsonV2(c); expect(canonical).toBe(v.expected_signable_canonical_json);"
+  }
+}

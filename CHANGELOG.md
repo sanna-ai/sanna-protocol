@@ -1,3 +1,70 @@
+## [Unreleased] -- 2026-05-07 (SAN-492)
+
+### Changed
+
+- **Schema MINOR bump 1.0.1 -> 1.1.0.** Mixed-class change:
+  - Formalizes `cli_permissions.inspect_scripts` (boolean, default false) in
+    the schema. The field exists in Python's CliPermissions today but was
+    rejected by the schema's `additionalProperties: false` on cli_permissions
+    -- a spec/schema/code drift now corrected.
+  - Widens `provenance.signature.scheme` enum from
+    `["constitution_sig_v1"]` to `["constitution_sig_v1", "constitution_sig_v2"]`
+    to recognize the v2 canonical form. Verifiers MUST reject any other scheme.
+  - Formalizes top-level `version` property (string, default "1.0"). The field
+    is read by the Python SDK's signing path and used in v2 canonical bytes when
+    != "1.0", but was previously rejected by `additionalProperties: false`.
+  - Formalizes top-level `reasoning` property (object/null). The GLC reasoning
+    config exists in Python's Constitution dataclass and gates on
+    sanna_constitution >= "1.1", but was previously rejected by
+    `additionalProperties: false`. Full sub-schema to follow as a separate PR.
+  - Null-acceptance permissiveness expansion across 9 fields:
+    `CliCommand.argv_pattern`, `CliCommand.description`, `CliCommand.escalation_target`,
+    `CliInvariant.pattern`, `CliInvariant.condition`,
+    `ApiEndpoint.methods`, `ApiEndpoint.description`, `ApiEndpoint.escalation_target`,
+    `ApiInvariant.pattern`. Each field's type widens from singular to `[..., "null"]`.
+  - The simultaneous PATCH-class permissiveness clarification rides along; semver
+    picks the bigger bump (formalizing inspect_scripts, scheme enum widen, version,
+    and reasoning are all MINOR-class -- new schema vocabulary for pre-existing SDK
+    behavior).
+- `sanna_constitution` schema version example bumps to `"1.1.0"` (plus retains
+  prior versions for backwards-compat in YAML inputs).
+
+### Added
+
+- **Spec Section 5.3: Constitution Canonical Form Versions (v1, v2).**
+  Documents the two canonical-form versions, the verifier-side dispatch on
+  `provenance.signature.scheme`, the v1 frozen-per-SDK behavior, the v2
+  unified union form (defaults emitted explicitly; nulls for absent
+  Optional sub-fields), and the policy_hash vs constitution-signature
+  scope asymmetry. Renumbers former 5.3-5.6 to 5.4-5.7 to accommodate.
+- **Spec Section 13.6: Constitution Signable Vectors v2 (SAN-492).**
+  Cross-SDK conformance requirement for the v2 form.
+- `fixtures/constitution-signable-vectors-v2.json`: cross-SDK byte-equal
+  contract for v2. 20 vectors cover the full union of Optional/default fields
+  across structural blocks (must_escalate.target shapes inherited from SAN-490;
+  cli_permissions including inspect_scripts; api_permissions; composition;
+  version; reasoning; combined). Each vector specifies input, expected canonical
+  JSON, and SHA-256 cross-check.
+- `tools/generate_signable_vectors_v2.py`: deterministic regenerator and
+  reference implementation for v2. SDK alignments must produce
+  byte-identical output.
+
+### Unexpected (schema/code gaps resolved)
+
+- `version` and `reasoning` were absent from the schema despite being used in
+  the Python SDK's signing path. Both are now formalized. Discovered when
+  implementing v2 vector coverage -- vectors for these fields would have failed
+  schema validation against the pre-bump schema. Reported in SAN-492 PR 1 of 3.
+
+### Tickets
+
+- SAN-492 (this entry; sanna-protocol portion -- adds cross-SDK byte-equal
+  contract for v2 + schema MINOR bump + spec normative form). Companion
+  sanna-repo PR (signing_version parameter + v1/v2 dispatch + regression
+  test) and sanna-ts PR (same + add inspect_scripts to CliPermissions +
+  add full ReasoningConfig type system + field-level default-emission
+  alignment) follow as separate PRs.
+
 ## [Unreleased] -- 2026-05-07 (SAN-490)
 
 ### Changed
