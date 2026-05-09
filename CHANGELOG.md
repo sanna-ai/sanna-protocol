@@ -1,3 +1,53 @@
+## [Unreleased] -- 2026-05-08 (SAN-491)
+
+### Added
+
+- **Cross-SDK consumption smoke gate in CI** (`.github/workflows/ci.yml`).
+  Two new jobs (`cross-sdk-smoke-python`, `cross-sdk-smoke-typescript`) check
+  out sanna-ai/sanna and sanna-ai/sanna-ts at main, override each consumer's
+  `spec/` submodule to the protocol PR's HEAD via
+  `git fetch origin pull/<N>/head`, and run each consumer's spec-touching
+  CI gates using the same commands and environment that consumer's own CI
+  uses:
+  - sanna-repo gates: schema parity diff (`spec/schemas/*` vs
+    `src/sanna/spec/*`), `python -m pytest tests/ -v`, golden receipts
+    verification via `sanna-verify`, example constitution verification via
+    `sanna-sign-constitution`. All gated on `SANNA_ALLOW_TEMP_DB=1`.
+  - sanna-ts gates: `npm run build`, then `npm test` with
+    `SANNA_ALLOW_TEMP_DB=1`.
+  Fails the protocol PR if any gate fails.
+- New `## CI: Cross-SDK Smoke Gate` section in `README.md` documenting the
+  gate's purpose, mechanics, failure interpretation, and local reproduction.
+
+### Why this matters
+
+Closes the consumer-CI detection gap surfaced during SAN-404 PR 1 -> PR 3
+sequence (2026-05-06): protocol PR 1's forward-only key rotation deleted
+`spec/fixtures/keypairs/test-author.key`, breaking 5 sanna-ts test modules
+that loaded that file at module scope. The breakage went undetected from
+PR 1 merge until PR 3 dispatch (~hours). The smoke gate moves detection
+to protocol PR time. Goes beyond the original ticket scope by also catching
+operational schema-mirror drift, golden-receipt fingerprint divergence, and
+TS type-break (via `npm run build`) -- not just pytest-visible breaks.
+
+### Tradeoffs
+
+Protocol PR CI duration increases from ~3 minutes to ~10-15 minutes. The
+two new jobs run in parallel after `validate-schemas` completes; total
+end-to-end time is `validate-schemas` (~3 min) + max(smoke-python, smoke-ts)
+(~10-15 min). Acceptable per the open-beta posture: correctness > velocity.
+
+### Security posture
+
+- Uses `pull_request` event only (NOT `pull_request_target`); CI runs without
+  secrets, fetching public repos read-only.
+- Each smoke job declares `permissions: contents: read` (least-privilege
+  GITHUB_TOKEN scope).
+- Each smoke job declares `timeout-minutes: 30` (prevents runaway hangs).
+- All action references pinned to specific commit SHAs with version comments.
+- Submodule pin override is scoped to the smoke job's transient consumer
+  checkout; does not affect protocol's own working tree or main pin.
+
 ## [Unreleased] -- 2026-05-07 (SAN-492)
 
 ### Changed

@@ -46,3 +46,136 @@ jobs:
       - name: Run pre-commit (block PEM private keys, etc.)
         # SAN-404: detect-private-key hook config in .pre-commit-config.yaml
         run: pre-commit run --all-files --show-diff-on-failure --color=always
+
+  cross-sdk-smoke-python:
+    # SAN-491: cross-SDK consumption smoke gate (Python side).
+    # Mirrors sanna-repo's spec-touching CI gates: schema parity diff, full
+    # pytest suite, golden receipts verification, example constitution. Fails
+    # the protocol PR if any consumer gate breaks. Closes the SAN-404 PR1 -> PR3
+    # detection lag (cross-SDK breaks now surface at protocol PR time, not at
+    # consumer SDK submodule-bump time).
+    name: Cross-SDK smoke (sanna-repo Python)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: validate-schemas
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    env:
+      SANNA_ALLOW_TEMP_DB: "1"
+    steps:
+      - name: Checkout sanna-repo at main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sanna-ai/sanna
+          path: consumer
+          submodules: recursive
+
+      - name: Override spec submodule to protocol PR HEAD
+        # Fetch the PR HEAD via the GitHub-mirrored ref. Works for fork PRs
+        # because GitHub mirrors all PRs as refs/pull/N/head on the upstream.
+        working-directory: consumer/spec
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head
+          git checkout FETCH_HEAD
+          echo "Spec submodule now at: $(git rev-parse HEAD)"
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: consumer/pyproject.toml
+
+      - name: Install consumer dependencies
+        working-directory: consumer
+        run: pip install -e ".[dev]" pytest-asyncio
+
+      - name: Verify operational schema copies match submodule (mirrors sanna-repo CI)
+        # SAN-326 governance gate: src/sanna/spec/*.json must mirror spec/schemas/*.json.
+        # If protocol PR adds/changes a schema but consumer hasn't updated its mirror,
+        # this catches it at protocol PR time instead of waiting for the consumer SDK PR.
+        working-directory: consumer
+        run: |
+          diff -q spec/schemas/receipt.schema.json src/sanna/spec/receipt.schema.json
+          diff -q spec/schemas/constitution.schema.json src/sanna/spec/constitution.schema.json
+
+      - name: Run sanna-repo test suite
+        # Match sanna-repo's CI invocation EXACTLY: `python -m pytest tests/ -v`.
+        # The -m flag adds cwd to sys.path, which is required for tests/* package
+        # imports (e.g., `from tests.generate_vectors import ...`). Bare `pytest`
+        # produces a ModuleNotFoundError that does not reproduce on consumer CI.
+        working-directory: consumer
+        run: python -m pytest tests/ -v
+
+      - name: Verify golden receipts (mirrors sanna-repo CI)
+        # Catches fingerprint divergence: if protocol PR changes the cv-N field set
+        # or canonicalization, golden receipt verification breaks here.
+        working-directory: consumer
+        run: |
+          for f in golden/receipts/*.json; do
+            if [[ "$(basename "$f")" == "999_tampered"* ]]; then
+              sanna-verify "$f" --format json && echo "ERROR: tampered receipt should fail" && exit 1 || echo "tampered detected"
+            else
+              sanna-verify "$f" --format json | python -c "import sys,json; r=json.load(sys.stdin); assert r['valid'], f'FAILED: {r}'"
+            fi
+          done
+          echo "All golden receipts verified."
+
+      - name: Verify example constitution (mirrors sanna-repo CI)
+        working-directory: consumer
+        run: sanna-sign-constitution examples/customer_support_constitution.yaml --verify-only
+
+  cross-sdk-smoke-typescript:
+    # SAN-491: cross-SDK consumption smoke gate (TypeScript side).
+    # Mirrors sanna-ts's spec-touching CI gates: build (catches type/schema
+    # breaks runtime tests miss) + full vitest suite. Same purpose as
+    # cross-sdk-smoke-python.
+    name: Cross-SDK smoke (sanna-ts TypeScript)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: validate-schemas
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    steps:
+      - name: Checkout sanna-ts at main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sanna-ai/sanna-ts
+          path: consumer
+          submodules: recursive
+
+      - name: Override spec submodule to protocol PR HEAD
+        working-directory: consumer/spec
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head
+          git checkout FETCH_HEAD
+          echo "Spec submodule now at: $(git rev-parse HEAD)"
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: consumer/package-lock.json
+
+      - name: Install consumer dependencies
+        working-directory: consumer
+        run: npm ci
+
+      - name: Build (mirrors sanna-ts CI)
+        # Catches type/schema breaks that runtime tests miss. If protocol PR
+        # changes a field type and the TS types in spec/ no longer compile
+        # against consumer source, this fails before tests even run.
+        working-directory: consumer
+        run: npm run build
+
+      - name: Run sanna-ts test suite
+        # Match sanna-ts's CI invocation EXACTLY: `npm test` with
+        # SANNA_ALLOW_TEMP_DB=1 set on the test step (LocalSQLiteSink /tmp
+        # guard bypass; see store.ts:99).
+        working-directory: consumer
+        env:
+          SANNA_ALLOW_TEMP_DB: "1"
+        run: npm test

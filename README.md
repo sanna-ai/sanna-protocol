@@ -31,6 +31,58 @@ A conformant implementation must produce identical hashes and fingerprints for i
 
 All hashes match → conformant. See [`docs/implementers-guide.md`](docs/implementers-guide.md) for the full algorithm and common pitfalls.
 
+
+## CI: Cross-SDK Smoke Gate
+
+Every protocol PR is validated against both consumer SDK CI gates that touch
+the spec submodule. The `cross-sdk-smoke-python` and `cross-sdk-smoke-typescript`
+jobs in `.github/workflows/ci.yml`:
+
+1. Check out sanna-ai/sanna and sanna-ai/sanna-ts at their `main` branches.
+2. Override each consumer's `spec/` submodule to point at the protocol PR's
+   HEAD via `git fetch origin pull/<N>/head` (works for fork PRs because GitHub
+   mirrors all PRs on the upstream).
+3. Run each consumer's spec-touching CI gates using the same commands and
+   environment that consumer's own CI uses:
+   - **sanna-repo**: schema parity diff, `python -m pytest tests/ -v`, golden
+     receipts verification (`sanna-verify`), example constitution verification
+     (`sanna-sign-constitution`). All gated on `SANNA_ALLOW_TEMP_DB=1`.
+   - **sanna-ts**: `npm run build`, then `npm test` with
+     `SANNA_ALLOW_TEMP_DB=1`.
+4. Fail the protocol PR if any gate fails.
+
+The gate catches fixture-shape changes, schema breakage, signing or
+canonicalization divergence, and operational schema-mirror drift at protocol
+PR time -- before consumer SDKs bump the spec submodule.
+
+### Why it exists
+
+Prior to this gate, protocol changes that broke fixture consumers were only
+detected when a consumer SDK's PR opened with the new submodule pin. The lag
+window was hours to days. The smoke gate moves detection to protocol PR time.
+Tradeoff: protocol PR CI duration increases from ~3 minutes to ~10-15 minutes.
+
+### Failure interpretation
+
+If the smoke gate fails, the failing job's logs identify which consumer broke
+and which gate. The protocol PR's content is the suspected cause. If a
+consumer's `main` is itself broken (independent of the protocol PR), the smoke
+fails as a side effect; fix the consumer's `main` first, then rerun the gate.
+
+### Local reproduction
+
+To reproduce the smoke check locally before opening a PR:
+
+```bash
+# In a temp clone of sanna-ai/sanna or sanna-ai/sanna-ts:
+cd spec
+git fetch origin <your-protocol-pr-sha>
+git checkout <your-protocol-pr-sha>
+cd ..
+# Then run the consumer's test commands (python -m pytest tests/ -v;
+# or npm run build && npm test).
+```
+
 ## Versioning
 
 Protocol versions are independent of SDK versions. Patch versions (1.0.x) are clarifications and new test vectors. Minor versions (1.x.0) add backward-compatible fields. Major versions (x.0.0) are breaking changes to the receipt format, fingerprint algorithm, or signing protocol.
