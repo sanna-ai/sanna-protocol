@@ -1,3 +1,62 @@
+## [Unreleased] -- 2026-05-10 (SAN-498)
+
+### Changed
+
+- **`tools/generate_state_doc.py`**: file enumeration now uses
+  `git ls-files` pathspec instead of `Path.glob` / `Path.rglob` in
+  three functions:
+  - `get_spec_version`: `git ls-files spec/sanna-specification-v*.md`
+  - `get_schemas`: `git ls-files schemas/*.json`
+  - `count_fixtures`: `git ls-files fixtures/`
+  Untracked working-tree files (macOS Finder duplicates like
+  `<name> 2.<ext>`, editor temps, untracked `.DS_Store`) can no
+  longer inflate state.md counts and cause local-vs-CI drift.
+
+### Added
+
+- **`tests/test_generate_state_doc.py`** with four tests:
+  - Three regression guards asserting generator output matches
+    `git ls-files` output for fixtures, schemas, and spec.
+  - One active-verification test
+    (`test_count_fixtures_excludes_untracked_pollution`) that creates
+    an untracked sentinel file in `fixtures/` and asserts
+    `count_fixtures` returns the baseline (not baseline+1). This
+    test fails under `Path.glob` and passes under `git ls-files`,
+    actively proving the bug fix beyond what regression guards catch.
+
+### Why this matters
+
+- Closes a recurring state.md drift source surfaced 2026-05-08
+  during SAN-491 dispatch (Sonnet halted at Phase 0.2 because
+  generator counted 39 fixtures instead of 37; root cause was two
+  untracked Finder duplicates in `fixtures/keypairs/`).
+- state.md is an auditor-facing snapshot referenced from README's
+  Documentation table. Drift between local and CI undermines the
+  audit-evidence trust the snapshot is meant to establish.
+- Fourth application of the "generators must use git ls-files"
+  pattern across the Sanna repos (sanna-repo, sanna-ts,
+  sanna-cloud test counts, now sanna-protocol). Memory rule
+  `feedback_generators_must_use_git_ls_files_not_filesystem_glob.md`
+  pre-existed; this PR closes the recurrence on sanna-protocol.
+
+### Out of scope
+
+- Cleanup of tracked `schemas/.DS_Store` -- pre-existing macOS
+  metadata in the repo; the `*.json` pathspec filters it correctly
+  in both pre-fix (Path.glob) and post-fix (git ls-files) code.
+  Separate hygiene ticket.
+- Path.glob audits in `generate_fixtures.py` and
+  `generate_test_vectors.py` (root-level generators in
+  sanna-protocol). Notion ticket SAN-498 is scoped to
+  `tools/generate_state_doc.py`. If those generators have similar
+  issues, file as separate tickets.
+
+### Cross-references
+
+- SAN-491 -- where this surfaced (Sonnet HALT at Phase 0.2)
+- User memory rule:
+  `feedback_generators_must_use_git_ls_files_not_filesystem_glob.md`
+
 ## [Unreleased] -- 2026-05-08 (SAN-491)
 
 ### Added
