@@ -1,3 +1,60 @@
+## [Unreleased] -- 2026-05-10 (SAN-493 PR 1 of 3)
+
+### Changed
+
+- **`tools/generate_state_doc.py`**: drops git-SHA from the
+  `docs/state.md` header. The pre-fix header was
+  `<!-- generated: TS  git-sha: SHA -->`; post-fix it is
+  `<!-- generated: TS -->`. The SHA was always one-commit-stale
+  because regen runs pre-commit (per the sealed-gate pattern,
+  HEAD at regen time is the parent commit), so the embedded SHA
+  never matched the commit that landed the state.md update. Now
+  the file contains only derived state from sources of truth
+  (spec_version, checks_version, schema list, fixture count,
+  latest CHANGELOG entry); commit SHAs come from `git log`.
+- **`git_sha()` function removed** from `generate_state_doc.py`
+  (was used only for the header; now dead code).
+- **`generate_full()` signature simplified** from
+  `(root, sha, timestamp)` to `(root, timestamp)`. Internal API
+  change; no external callers.
+- **`main()` print statement** drops the `sha=...` field; keeps
+  spec / cv / fixtures.
+
+### Added
+
+- **`test_state_md_header_does_not_contain_git_sha`** in
+  `tests/test_generate_state_doc.py`: regression guard asserting
+  the `git-sha:` substring does NOT appear in the regenerated
+  header. Catches a future re-introduction of the embedded SHA.
+
+### Why this matters
+
+- Eliminates a known one-commit-stale audit artifact in state.md.
+  Auditors reading the file previously saw a SHA that didn't match
+  the commit it landed in; post-fix, the file contains no SHA and
+  refers auditors to `git log` for that information.
+- Removes the extra round-trip ("regen post-first-commit") that
+  Sonnet workarounds previously required (see SAN-492 PR 1
+  `ca2de52`). One-commit PRs become possible again for state-only
+  changes.
+- The fix is mechanism-only: count + version fields on a clean
+  tree are byte-identical to pre-fix (fixtures=37, schemas=2,
+  spec=v1.5). No customer-visible behavior.
+
+### Out of scope (separate PRs in this ticket)
+
+- `sanna-repo/tools/generate_state_doc.py` -- SAN-493 PR 2 of 3.
+- `sanna-ts/tools/generate_state_doc.py` (or equivalent) --
+  SAN-493 PR 3 of 3.
+
+### Cross-references
+
+- SAN-492 PR 1 (sanna-protocol PR #36) -- where this surfaced,
+  workaround commit `ca2de52`.
+- SAN-498 -- prior generator cleanup in the same file.
+- Memory rule `feedback_state_md_hard_gate_before_commit.md`.
+- Memory rule `feedback_state_md_regen_commands_per_repo.md`.
+
 ## [Unreleased] -- 2026-05-10 (SAN-498)
 
 ### Changed

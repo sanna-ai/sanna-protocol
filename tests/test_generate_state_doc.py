@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
 from generate_state_doc import (
     count_fixtures,
+    generate_full,
     get_schemas,
     get_spec_version,
     repo_root,
@@ -98,4 +99,21 @@ def test_count_fixtures_excludes_untracked_pollution():
         f"count_fixtures returned {polluted} with untracked file present; "
         f"baseline (without untracked) was {baseline}. Indicates Path.glob "
         f"regression -- generator is not using git ls-files."
+    )
+
+
+def test_state_md_header_does_not_contain_git_sha():
+    """SAN-493: state.md header must NOT embed git SHA.
+
+    Pre-fix, the header included `git-sha: <12-char>` which was always
+    one-commit-stale (regen runs pre-commit per the sealed-gate
+    pattern; HEAD at that moment is the parent commit's SHA, never
+    the SHA of the commit landing the state.md update). Post-fix,
+    the SHA is dropped entirely; commit SHAs live only in git log.
+    """
+    content = generate_full(repo_root(), "2026-05-10T00:00:00Z")
+    header = "\n".join(content.splitlines()[:5])
+    assert "git-sha" not in header, (
+        f"state.md header still contains 'git-sha' substring; "
+        f"SAN-493 dropped this. Header:\n{header}"
     )
