@@ -5,6 +5,9 @@ Generate docs/state.md for sanna-protocol.
 Reads sources of truth and writes a deterministic state document.
 Never hand-edit docs/state.md — regenerate with this script.
 
+File enumeration uses `git ls-files` (not `Path.glob`) so untracked
+working-tree files cannot inflate fixture/schema/spec counts.
+
 Usage:
     python3 tools/generate_state_doc.py          # regenerate docs/state.md
     python3 tools/generate_state_doc.py --check  # exit 1 if docs/state.md is stale
@@ -37,19 +40,35 @@ def git_sha(root: Path) -> str:
     return result.stdout.strip()[:12] if result.returncode == 0 else "unknown"
 
 
+def _ls_files(root: Path, pathspec: str) -> list[str]:
+    """Return tracked file paths matching the pathspec.
+
+    Uses `git ls-files <pathspec>` so untracked working-tree files
+    (macOS Finder duplicates, editor temps) cannot inflate the count
+    or list. Returns paths relative to repo root.
+    """
+    result = subprocess.run(
+        ["git", "ls-files", pathspec],
+        capture_output=True, text=True, cwd=root, check=True,
+    )
+    return [line for line in result.stdout.splitlines() if line.strip()]
+
+
 def get_spec_version(root: Path) -> tuple[str, str]:
-    """Return (spec_version, spec_filename). Reads the most recent spec file."""
-    spec_dir = root / "spec"
-    if not spec_dir.exists():
+    """Return (spec_version, spec_filename). Reads the most recent spec file.
+
+    Uses git ls-files so untracked spec drafts are not counted.
+    """
+    paths = _ls_files(root, "spec/sanna-specification-v*.md")
+    if not paths:
         return ("(not found)", "(not found)")
-    candidates = sorted(spec_dir.glob("sanna-specification-v*.md"), reverse=True)
-    if not candidates:
-        return ("(not found)", "(not found)")
-    spec_file = candidates[0]
+    # Sort descending; newest version filename wins.
+    paths_sorted = sorted(paths, reverse=True)
+    spec_filename = paths_sorted[0]
     # Extract version from filename: sanna-specification-v1.4.md → 1.4
-    m = re.search(r"sanna-specification-v([0-9]+\.[0-9]+)\.md", spec_file.name)
+    m = re.search(r"sanna-specification-v([0-9]+\.[0-9]+)\.md", Path(spec_filename).name)
     version = m.group(1) if m else "(unknown)"
-    return (version, f"spec/{spec_file.name}")
+    return (version, spec_filename)
 
 
 def get_checks_version(root: Path) -> str:
@@ -73,17 +92,27 @@ def get_checks_version(root: Path) -> str:
 
 
 def get_schemas(root: Path) -> list[str]:
-    schemas_dir = root / "schemas"
-    if not schemas_dir.exists():
+    """List schema basenames via git ls-files.
+
+    Filters to tracked .json files only; tracked .DS_Store or similar
+    non-schema files are excluded by the pathspec. Untracked .json
+    drafts are excluded by git ls-files.
+    """
+    paths = _ls_files(root, "schemas/*.json")
+    if not paths:
         return ["(schemas/ not found)"]
-    return sorted(p.name for p in schemas_dir.glob("*.json"))
+    return sorted(Path(p).name for p in paths)
 
 
 def count_fixtures(root: Path) -> int:
-    fixtures_dir = root / "fixtures"
-    if not fixtures_dir.exists():
-        return 0
-    return len(list(fixtures_dir.rglob("*"))) - len(list(fixtures_dir.rglob("*/")))
+    """Count tracked files under fixtures/ (any type, any depth).
+
+    Uses git ls-files so untracked files (macOS Finder duplicates
+    like `<name> 2.<ext>`, editor temps, .DS_Store) cannot inflate
+    the count. The state.md fixture count must reflect committed
+    state, not working-tree state.
+    """
+    return len(_ls_files(root, "fixtures/"))
 
 
 def get_vector_counts(root: Path) -> dict[str, int]:
