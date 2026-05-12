@@ -1,3 +1,21 @@
+## [Unreleased] -- 2026-05-11 (SAN-249 PR 1 of 2)
+
+### Added
+
+- **`content_mode_source` enum** now accepts `"middleware_redaction_config"` (in addition to the existing `"local_config"`, `"cloud_tenant"`, `"override"`). The new value distinguishes redaction provenance set by the `@sanna_observe` middleware decorator's `redaction_config` parameter from local-file configuration. Schema: `schemas/receipt.schema.json`. Spec inline references: section 2.2 and section 2.14.
+
+### Why this matters
+
+SAN-249 PR 2 of 2 (sanna-repo) ports spec section 2.11 redaction primitives from the gateway path into a top-level `sanna/redaction.py` module and wires them into `@sanna_observe`. The middleware emission path needs a distinct `content_mode_source` provenance value to preserve audit-trail granularity. Without this enum addition, middleware-applied redaction would have to share the `"local_config"` provenance with YAML-file-driven gateway redaction, losing the auditor's ability to distinguish decorator-supplied configuration from local-file configuration.
+
+This PR is the cross-repo prerequisite. The consumer-side change (sanna-repo) lands in SAN-249 PR 2 of 2 (sanna-ai/sanna PR #66).
+
+### Audit-trail note (CI cross-SDK smoke expected failure)
+
+The sanna-protocol CI cross-SDK smoke step explicitly checks that sanna-repo's operational schema mirror at origin/main matches the submodule schema at this PR's HEAD. By design this fails when a protocol PR adds a schema change before the consumer SDK has its operational copy updated. The expected resolution is admin merge of this PR followed by the consumer-side PR (SAN-249 PR 2 of 2 in sanna-repo) updating both the submodule pin AND the operational mirror in one commit.
+
+Cross-SDK parity is restored when the consumer-side PR merges. No spec-version bump needed -- this is an additive schema change (enum extension, no breaking changes to existing receipts that use other source values).
+
 ## [Unreleased] -- 2026-05-11 (SAN-283)
 
 ### Changed

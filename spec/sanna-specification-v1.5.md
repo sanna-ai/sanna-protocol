@@ -111,7 +111,7 @@ Every receipt MUST contain the following fields:
 | `parent_receipts` | array/null | Array of `full_fingerprint` strings from parent receipts for receipt chaining (see Section 2.12). Participates in fingerprint computation. |
 | `workflow_id` | string/null | Opaque string grouping related receipts into a workflow (see Section 2.13). Participates in fingerprint computation. |
 | `content_mode` | string/null | Content handling mode: `"full"`, `"redacted"`, or `"hashes_only"` (see Section 2.14). Metadata only -- does NOT participate in fingerprint computation. |
-| `content_mode_source` | string/null | Origin of the content_mode value: `"local_config"`, `"cloud_tenant"`, or `"override"` (see Section 2.14). Metadata only -- does NOT participate in fingerprint computation. |
+| `content_mode_source` | string/null | Origin of the content_mode value: `"local_config"`, `"cloud_tenant"`, `"override"`, or `"middleware_redaction_config"` (see Section 2.14). Metadata only -- does NOT participate in fingerprint computation. |
 | `extensions` | object | Reverse-domain-namespaced vendor metadata |
 | `identity_verification` | object/null | Identity claim verification results (see Section 2.10) |
 | `agent_model` | string/null | LLM model identifier (see Section 2.18.1). Nullable for explicit opt-out; absent = not captured. Participates in fingerprint (field 18 at v1.4+). |
@@ -461,7 +461,7 @@ in fingerprint computation.
 | Field | Type | Description |
 |-------|------|-------------|
 | `content_mode` | string or null | `"full"`, `"redacted"`, or `"hashes_only"` |
-| `content_mode_source` | string or null | `"local_config"`, `"cloud_tenant"`, or `"override"` |
+| `content_mode_source` | string or null | `"local_config"`, `"cloud_tenant"`, `"override"`, or `"middleware_redaction_config"` |
 
 **Rules:**
 
@@ -478,6 +478,13 @@ in fingerprint computation.
   The same agent action MUST produce the same fingerprint regardless
   of Cloud configuration. Including content_mode in the fingerprint
   would break verification when Cloud settings change.
+
+**`content_mode_source` provenance values (normative):**
+
+- `"local_config"` -- gateway or middleware loaded a content_mode value from a local YAML / TOML / JSON configuration file (e.g., gateway.yaml `receipts.content_mode`).
+- `"cloud_tenant"` -- value originated from a Cloud tenant policy that the SDK fetched at gateway / middleware bootstrap.
+- `"override"` -- explicit per-receipt override (e.g., admin override via CLI flag or programmatic API call that bypasses configured defaults).
+- `"middleware_redaction_config"` -- value was set by the `@sanna_observe` middleware decorator's `redaction_config` parameter. Distinguishes middleware-decorator-supplied redaction provenance from local YAML / TOML / JSON configuration. Added v1.5+ to support spec section 2.11 redaction at the middleware emission path.
 
 **Content mode and the com.sanna.manifest extension (v1.5+, normative):**
 The redaction rules below apply to tool names and patterns inside
