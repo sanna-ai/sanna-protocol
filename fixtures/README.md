@@ -77,6 +77,22 @@ Tests `evaluate_authority()` pattern-matching correctness across both SDKs. Each
 
 Tests canonical-JSON hash computation for CLI input objects across both SDKs. Each vector specifies an input dict and the expected canonical JSON serialization plus SHA-256 hash. Used by SAN-186 (multi-surface receipt hashing).
 
+### `gateway-redaction-vectors.json` (spec section 2.11 cross-SDK conformance)
+
+Cross-SDK conformance and rejection vectors for spec section 2.11.1 marker objects. Consumed by:
+- sanna-repo: `tests/test_cross_sdk_gateway_redaction_vectors.py` (Python; added in SAN-NNN PR 2 of 3)
+- sanna-ts:   `packages/core/tests/cross-sdk-gateway-redaction-vectors.test.ts` (TypeScript; added in SAN-NNN PR 3 of 3)
+
+Both SDKs MUST produce byte-identical output for `marker_vectors` and `apply_redaction_vectors`. Both verifiers MUST reject the `verifier_rejection_vectors` with the stable error code `REDACTION_CLAIM_WITHOUT_MARKER`.
+
+Vector categories:
+- `marker_vectors`: tests `makeRedactionMarker(string) -> RedactionMarker`
+- `fix12_injection_guard_vectors`: tests spec section 2.11.4 pre-existing-marker injection guard
+- `apply_redaction_vectors`: tests `applyRedaction(receipt, config) -> [receipt, redacted_paths]`
+- `verifier_rejection_vectors`: tests verifier MUST reject content_mode/marker state mismatches
+
+Companion to `redaction-vectors.json` (SAN-406; com.sanna.anomaly extension redaction, spec section 2.22.5). These two fixtures are NOT interchangeable; they cover different spec sections.
+
 ## golden-hashes.json
 
 This file contains the expected values for cross-language verification:
