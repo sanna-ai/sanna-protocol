@@ -1,3 +1,23 @@
+## [Unreleased] -- 2026-05-12 (cross-SDK gateway-redaction fixtures + verifier rejection PR 1 of 3)
+
+### Added
+
+- **`fixtures/gateway-redaction-vectors.json`**: cross-SDK conformance and rejection vectors for spec section 2.11.1 marker objects. Companion to spec section 2.11. Vector categories: marker_vectors (makeRedactionMarker primitive), fix12_injection_guard_vectors (spec section 2.11.4 injection guard), apply_redaction_vectors (applyRedaction wrapper), verifier_rejection_vectors (incomplete-state receipts that the verifier MUST reject with stable error code REDACTION_CLAIM_WITHOUT_MARKER).
+- **`fixtures/README.md`** updated to document the new fixture file and the cross-SDK consumer pattern (sanna-repo + sanna-ts both consume + assert byte-identical conformance + identical rejection error code).
+
+### Why this matters
+
+SAN-249 (sanna-repo, merged 2026-05-12 squash 8daad7d) and SAN-250 (sanna-ts, merged 2026-05-12 squash e836b78) brought both SDKs into spec section 2.11.1 conformance for gateway-content redaction (field-level marker objects, not substring substitution). Cross-SDK byte parity was verified at the marker-shape level for a single canonical input ('user@example.com') during those PRs. This fixture provides systematic vector-based parity testing across multiple inputs + NFC normalization + FIX-12 injection guard + verifier rejection of incomplete-state receipts.
+
+Per CLAUDE.md governance principles 'Cross-SDK coherence is load-bearing' + 'Verifier-side enforcement is non-negotiable'.
+
+### Subsequent PRs
+
+- PR 2 of 3 (sanna-repo): adds Python verifier rejection logic + test consuming this fixture
+- PR 3 of 3 (sanna-ts): adds TS verifier rejection logic + test consuming this fixture
+
+Both consumer PRs bump their respective spec submodule pins to include this commit before adding the consumer tests.
+
 ## [Unreleased] -- 2026-05-11 (SAN-283)
 
 ### Changed

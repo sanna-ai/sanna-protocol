@@ -1,0 +1,190 @@
+{
+  "version": "1.0.0",
+  "description": "Cross-SDK gateway-redaction conformance and rejection vectors for spec section 2.11.1 marker objects. Companion to spec section 2.11. Consumed by sanna-repo (Python) and sanna-ts (TypeScript) test suites; both SDKs MUST produce byte-identical output for conformance vectors and reject incomplete-state receipts per rejection vectors with the same stable error code (REDACTION_CLAIM_WITHOUT_MARKER).",
+  "spec_section": "2.11",
+  "marker_vectors": [
+    {
+      "vector_id": "marker-ascii-simple",
+      "description": "ASCII string -> SHA-256(NFC(UTF-8)) -> spec section 2.11.1 marker",
+      "input": "user@example.com",
+      "expected_marker": {
+        "__redacted__": true,
+        "original_hash": "b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514"
+      }
+    },
+    {
+      "vector_id": "marker-empty-string",
+      "description": "Empty string -> EMPTY_HASH constant",
+      "input": "",
+      "expected_marker": {
+        "__redacted__": true,
+        "original_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "vector_id": "marker-multiline-text",
+      "description": "Multi-line text with control characters",
+      "input": "Hello, world",
+      "expected_marker": {
+        "__redacted__": true,
+        "original_hash": "4ae7c3b6ac0beff671efa8cf57386151c06e58ca53a78d83f36107316cec125f"
+      }
+    },
+    {
+      "vector_id": "marker-unicode-nfc-vs-nfd",
+      "description": "NFD (decomposed) and NFC (composed) Unicode forms MUST produce identical markers per spec section 2.11.1 NFC-normalization requirement",
+      "input_nfc": "café",
+      "input_nfd": "café",
+      "expected_marker_for_both": {
+        "__redacted__": true,
+        "original_hash": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+      },
+      "cross_sdk_invariant": "SDK MUST normalize to NFC before SHA-256; the two inputs are codepoint-different but normalize to the same canonical form, hence identical markers"
+    }
+  ],
+  "fix12_injection_guard_vectors": [
+    {
+      "vector_id": "fix12-pre-existing-marker-simple",
+      "description": "spec section 2.11.4 FIX-12: a pre-existing marker dict in inputs.context is suspicious (attacker-injected). Implementation MUST serialize the dict via Python-equivalent json.dumps(sort_keys=True) with default separators (', ', ': ') and ensure_ascii=True, then apply a fresh marker to the resulting string.",
+      "pre_existing_marker_input": {
+        "__redacted__": true,
+        "original_hash": "abc123"
+      },
+      "expected_python_equivalent_json_serialization": "{\"__redacted__\": true, \"original_hash\": \"abc123\"}",
+      "expected_marker_after_re_redaction": {
+        "__redacted__": true,
+        "original_hash": "ac542fc3d57b871dd937099bb04695a667a528734abe98c837470779675f0776"
+      }
+    }
+  ],
+  "apply_redaction_vectors": [
+    {
+      "vector_id": "apply-arguments-only",
+      "description": "RedactionConfig with fields=['arguments'] redacts inputs.context only; outputs.response left raw",
+      "redaction_config": {
+        "enabled": true,
+        "mode": "hash_only",
+        "fields": ["arguments"]
+      },
+      "input_receipt_partial": {
+        "inputs": { "context": "user@example.com" },
+        "outputs": { "response": "Hello, world" }
+      },
+      "expected_inputs_context_after_redaction": {
+        "__redacted__": true,
+        "original_hash": "b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514"
+      },
+      "expected_outputs_response_after_redaction": "Hello, world",
+      "expected_redacted_fields": ["inputs.context"]
+    },
+    {
+      "vector_id": "apply-result-text-only",
+      "redaction_config": {
+        "enabled": true,
+        "mode": "hash_only",
+        "fields": ["result_text"]
+      },
+      "input_receipt_partial": {
+        "inputs": { "context": "user@example.com" },
+        "outputs": { "response": "Hello, world" }
+      },
+      "expected_inputs_context_after_redaction": "user@example.com",
+      "expected_outputs_response_after_redaction": {
+        "__redacted__": true,
+        "original_hash": "4ae7c3b6ac0beff671efa8cf57386151c06e58ca53a78d83f36107316cec125f"
+      },
+      "expected_redacted_fields": ["outputs.response"]
+    },
+    {
+      "vector_id": "apply-default-both-fields",
+      "redaction_config": {
+        "enabled": true,
+        "mode": "hash_only"
+      },
+      "input_receipt_partial": {
+        "inputs": { "context": "user@example.com" },
+        "outputs": { "response": "Hello, world" }
+      },
+      "expected_inputs_context_after_redaction": {
+        "__redacted__": true,
+        "original_hash": "b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514"
+      },
+      "expected_outputs_response_after_redaction": {
+        "__redacted__": true,
+        "original_hash": "4ae7c3b6ac0beff671efa8cf57386151c06e58ca53a78d83f36107316cec125f"
+      },
+      "expected_redacted_fields": ["inputs.context", "outputs.response"]
+    },
+    {
+      "vector_id": "apply-disabled-no-op",
+      "redaction_config": {
+        "enabled": false
+      },
+      "input_receipt_partial": {
+        "inputs": { "context": "user@example.com" },
+        "outputs": { "response": "Hello, world" }
+      },
+      "expected_inputs_context_after_redaction": "user@example.com",
+      "expected_outputs_response_after_redaction": "Hello, world",
+      "expected_redacted_fields": []
+    },
+    {
+      "vector_id": "apply-empty-content",
+      "redaction_config": {
+        "enabled": true,
+        "mode": "hash_only",
+        "fields": ["arguments", "result_text"]
+      },
+      "input_receipt_partial": {
+        "inputs": { "context": null },
+        "outputs": { "response": null }
+      },
+      "expected_inputs_context_after_redaction": null,
+      "expected_outputs_response_after_redaction": null,
+      "expected_redacted_fields": []
+    }
+  ],
+  "verifier_rejection_vectors": [
+    {
+      "vector_id": "reject-content-mode-redacted-no-markers",
+      "description": "content_mode='redacted' is claimed but inputs.context is a raw string with no marker. Verifier MUST reject.",
+      "input_receipt_partial": {
+        "content_mode": "redacted",
+        "content_mode_source": "local_config",
+        "inputs": { "context": "this is raw text, no marker present" },
+        "outputs": { "response": "this is also raw, no marker present" }
+      },
+      "expected_error_code": "REDACTION_CLAIM_WITHOUT_MARKER",
+      "expected_error_message_pattern": "content_mode='redacted'.*marker"
+    },
+    {
+      "vector_id": "reject-marker-missing-original-hash",
+      "description": "Marker dict present but missing required original_hash field. Verifier MUST reject.",
+      "input_receipt_partial": {
+        "content_mode": "redacted",
+        "content_mode_source": "local_config",
+        "inputs": { "context": { "__redacted__": true } },
+        "outputs": { "response": "raw" }
+      },
+      "expected_error_code": "REDACTION_CLAIM_WITHOUT_MARKER",
+      "expected_error_message_pattern": "marker.*malformed|original_hash"
+    },
+    {
+      "vector_id": "reject-content-mode-full-with-markers",
+      "description": "content_mode='full' is claimed but inputs.context contains a marker dict (claim/state mismatch). Verifier MUST reject.",
+      "input_receipt_partial": {
+        "content_mode": "full",
+        "content_mode_source": "local_config",
+        "inputs": {
+          "context": {
+            "__redacted__": true,
+            "original_hash": "b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514"
+          }
+        },
+        "outputs": { "response": "raw" }
+      },
+      "expected_error_code": "REDACTION_CLAIM_WITHOUT_MARKER",
+      "expected_error_message_pattern": "content_mode='full'.*marker"
+    }
+  ]
+}
