@@ -1,3 +1,37 @@
+## [Unreleased] -- 2026-05-11 (SAN-283)
+
+### Changed
+
+- **`spec/sanna-specification-v1.5.md`**: RFC 7322 style audit pass.
+  Added Abstract section before Section 1. Updated Section 1.2
+  Conventions to cite BCP 14 [RFC2119] [RFC8174] per current IETF
+  requirement; added "NOT RECOMMENDED" to the conventions word list
+  for canonical-template alignment (not used in spec body, included
+  for completeness). Expanded acronyms NFC and AARM at first use
+  (lines 292 and 517). Replaced Unicode arrows in prose with ASCII
+  `->`. Added language tags to previously-unlabeled fenced code
+  blocks. Annotated 8 example blocks with normative or informative
+  classification.
+
+### Out of scope (tracked separately)
+
+- References section split into Normative / Informative -- SAN-284.
+- IANA Considerations section -- SAN-285.
+- IPR / BCP 78/79 boilerplate / Status of This Memo / Note Well --
+  SAN-286.
+- Author info and Acknowledgments -- SAN-287.
+- Prose line-wrap to <=72 chars (217 long prose lines remain) --
+  deferred to atomic kramdown-rfc transform in SAN-290.
+
+### Why this matters
+
+RFC 7322 (Style Manual) defines editorial conventions IETF RFCs
+follow. Conforming the spec source to those conventions before
+kramdown-rfc conversion reduces the diff during format conversion
+and produces a draft that an IETF reviewer reads as native-style on
+first pass. Prerequisite for the Internet-Draft submission stream
+(SAN-290, SAN-291).
+
 ## [Unreleased] -- 2026-05-10 (SAN-493 PR 1 of 3)
 
 ### Changed
