@@ -1,3 +1,14 @@
+## [Unreleased] -- 2026-05-12 (SAN-292)
+
+### Added
+
+- **`docs/threat-model.md`**: formal STRIDE-style threat model for the Sanna receipt protocol. Five top-level sections: System Overview (trust boundaries, actors, data flows), Assets (7 enumerated assets), STRIDE Analysis (6 categories, 23 concrete attack scenarios with affected assets, spec-section citations for each mitigation, and residual risk assessment), Mitigations (protocol-mandated vs implementation-mandated vs out-of-scope), and Open Questions (8 items). Includes a Provenance subsection that explicitly frames the document as a self-assessment by the protocol designer (not third-party review), and a disclaimer that the 2026-03-26 security audit referenced throughout is an automated audit (Anthropic Claude), not a human assessment.
+- **`spec/sanna-specification-v1.5.md` Section 12.3**: one-paragraph cross-reference to `docs/threat-model.md` as the analytical companion to the normative Security Considerations summary.
+
+### Tickets
+
+- SAN-292
+
 ## [Unreleased] -- 2026-05-12 (cross-SDK gateway-redaction fixtures + verifier rejection PR 1 of 3)
 
 ### Added

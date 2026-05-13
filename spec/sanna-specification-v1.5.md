@@ -2207,6 +2207,12 @@ library before governance evaluation. Sanna's duplicate key
 rejection applies to artifacts it parses directly: receipts,
 constitutions, configuration files, and escalation persistence.
 
+A formal STRIDE-style threat model with explicit asset enumeration,
+per-category attack scenarios, mitigation references, and open
+questions is published at [`docs/threat-model.md`](../docs/threat-model.md).
+The document in this section is the normative summary; the threat-
+model document is the analytical companion.
+
 ### 12.4 Key Management
 
 Private keys MUST be stored securely with restricted file permissions
