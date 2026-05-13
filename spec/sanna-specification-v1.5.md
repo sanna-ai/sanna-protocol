@@ -21,9 +21,10 @@ deterministic across implementations using [RFC8785] canonicalization
 and SHA-256 hashing. Receipts may be chained via parent_receipts to
 form auditable governance trails.
 
-This specification is intended for submission as an IETF Internet-
-Draft. Implementations exist in Python and TypeScript reference
-SDKs that emit byte-identical receipts for equivalent inputs.
+This specification is published as an open specification for AI
+agent governance under the Apache 2.0 license. Reference
+implementations exist in Python and TypeScript SDKs that emit
+byte-identical receipts for equivalent inputs.
 
 ---
 
@@ -3144,3 +3145,24 @@ support multi-surface receipts:
 5. **Validate event_type values.** The `governance_events.event_type`
    column is an unconstrained TEXT field. Consider adding a CHECK
    constraint or application-level validation.
+
+## Acknowledgments
+
+The authors thank early reviewers and implementers of the Sanna
+Reasoning Receipt format for feedback on cross-SDK byte parity,
+canonicalization edge cases, and constitution policy semantics. The
+authors of the Agentic Action Risk Management (AARM) reference model
+are acknowledged for the conformance framework that informs Section 14.
+
+Editorial drafting was supported by large language models (Anthropic
+Claude). All normative semantics, acceptance criteria, and final
+authorship rest with the named author.
+
+Specific external contributors will be acknowledged here after the
+initial open-review window completes.
+
+## Authors' Addresses
+
+   Nicholas Allen
+   Sanna AI
+   Email: nic@sanna.dev
