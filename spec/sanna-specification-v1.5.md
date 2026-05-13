@@ -17,7 +17,7 @@ protocol, and the verification protocol.
 
 Conforming implementations produce portable cryptographic receipts
 that third parties can verify offline. The fingerprint algorithm is
-deterministic across implementations using RFC 8785 canonicalization
+deterministic across implementations using [RFC8785] canonicalization
 and SHA-256 hashing. Receipts may be chained via parent_receipts to
 form auditable governance trails.
 
@@ -981,7 +981,7 @@ tool names in `com.sanna.manifest`.
 
 ## 3. Canonicalization
 
-Sanna uses a canonical JSON serialization derived from RFC 8785 (JSON
+Sanna uses a canonical JSON serialization derived from [RFC8785] (JSON
 Canonicalization Scheme) for all hash computations.
 
 ### 3.1 Sanna Canonical JSON
@@ -994,7 +994,7 @@ NOT required to NFC-normalize all strings globally; the hashing
 functions handle it.
 
 The canonical form is produced by `json.dumps()` with:
-- `sort_keys=True` -- keys are sorted by byte-wise comparison of their UTF-8 encoded representations, consistent with RFC 8785 section 3.2.3
+- `sort_keys=True` -- keys are sorted by byte-wise comparison of their UTF-8 encoded representations, consistent with [RFC8785] section 3.2.3
 - `separators=(",", ":")` (no whitespace)
 - `ensure_ascii=False`
 
@@ -1320,12 +1320,12 @@ When `enforcement` is absent or null, this check does not apply.
 
 ### 5.1 Algorithm
 
-All signatures use **Pure Ed25519** as defined in RFC 8032. This means
+All signatures use **Pure Ed25519** as defined in [RFC8032]. This means
 no context string and no pre-hashing (Ed25519, not Ed25519ctx or
 Ed25519ph). Signatures are 64 bytes: the concatenation of R (32 bytes
 compressed Edwards point) and S (32 bytes scalar).
 
-All Base64 encoding in Sanna uses **RFC 4648 standard Base64** with
+All Base64 encoding in Sanna uses **[RFC4648] standard Base64** with
 padding (alphabet: `A`-`Z`, `a`-`z`, `0`-`9`, `+`, `/`; padding:
 `=`). Base64url (alphabet: `+` replaced by `-`, `/` replaced by `_`)
 MUST NOT be used. Implementations that encounter Base64url-encoded
@@ -1336,7 +1336,7 @@ U+0009, `\n` U+000A, `\r` U+000D, ` ` U+0020) from Base64 input
 before decoding. The canonical form of a Base64-encoded value is a
 single unbroken string with no whitespace. After stripping,
 implementations MUST use strict Base64 decoding that rejects any
-character not in the RFC 4648 standard alphabet (including padding).
+character not in the [RFC4648] standard alphabet (including padding).
 In Python, this corresponds to `base64.b64decode(value, validate=True)`.
 
 ### 5.2 Receipt Signing
@@ -1752,7 +1752,7 @@ Where:
 - `cwd` is the absolute path of the current working directory.
 - `env_keys` is a sorted (lexicographic, case-sensitive) array of environment variable names. Values are excluded (may contain secrets).
 
-Canonical JSON key ordering (per RFC 8785, alphabetical): `args`, `command`, `cwd`, `env_keys`.
+Canonical JSON key ordering (per [RFC8785], alphabetical): `args`, `command`, `cwd`, `env_keys`.
 
 **`reasoning_hash`:**
 Same as Section 7.2. SHA-256 of the justification string, or SHA-256 of empty bytes if no justification.
@@ -2268,7 +2268,7 @@ An implementation claiming to be a compatible generator MUST:
    for identical receipt content.
 3. Use Sanna Canonical JSON (Section 3.1) for all hash computations,
    including content hashes, checks hash, and fingerprint components.
-4. Generate UUID v4 `receipt_id` values (RFC 4122, lowercase hex with
+4. Generate UUID v4 `receipt_id` values ([RFC4122], lowercase hex with
    dashes).
 5. Compute `status`, `checks_passed`, and `checks_failed` according to
    the rules in Section 2.4.
@@ -2427,7 +2427,7 @@ Sanna Protocol v1.5 implements AARM Core (R1-R6) conformance, mechanically verif
 Manifest implements the Composition layer (GCD reference model Layer 3) that AARM v1.0 does not address. R7 (semantic distance) and R9 (JIT credentials) are addressed in future protocol versions.
 
 Sanna receipts exceed AARM R5 on three axes:
-- Offline third-party verifiability via Ed25519 + RFC 8785 + 21-field fingerprint (cv=10)
+- Offline third-party verifiability via Ed25519 + [RFC8785] + 21-field fingerprint (cv=10)
 - Hash-chained `parent_receipts` for cross-receipt integrity
 - Model-identity binding (`agent_model`, `agent_model_provider`, `agent_model_version` fields)
 
@@ -2497,7 +2497,7 @@ Sanna implements requirements that AARM v1.0 does not enumerate:
 - **Operator/agent credential isolation** (PRD AC-5): a SOC 2 CC6.1 / ISO 42001 access-control exceedance over R6.
 - **Static composition** (G1 D10): pre-execution capability filtering at session start; consistent with the R9 JIT-credentials gap.
 - **Hash-chained `parent_receipts`** (Section 2.10): cross-receipt integrity beyond R5's per-receipt scope.
-- **Offline third-party verifiability** (Section 5): Ed25519 signatures + RFC 8785 canonical JSON allow auditors to verify receipts without contacting Sanna infrastructure.
+- **Offline third-party verifiability** (Section 5): Ed25519 signatures + [RFC8785] canonical JSON allow auditors to verify receipts without contacting Sanna infrastructure.
 
 These are normative requirements within the Sanna Protocol; they are exceedances when measured against AARM v1.0.
 
@@ -2598,12 +2598,42 @@ A PASS exit code (0) means the receipt set is AARM Core conformant. A PARTIAL ex
 |-------------|-------------|---------|
 | 1.0 | 0.13.0 | Initial specification. Field renames: `schema_version` to `spec_version`, `trace_id` to `correlation_id`, `coherence_status` to `status`, `halt_event` to `enforcement`. Added `full_fingerprint`. UUID v4 receipt IDs. Full 64-hex content hashes. 12-field fingerprint formula. Custom evaluator fail-closed default. |
 | 1.0.1 | 0.13.0 | 28 precision fixes from cross-platform security review. Key ID uses raw Ed25519 bytes (not DER). NFC normalization documented. Float rejection in signing contexts. hash_text default truncation corrected to 64. Status computation handles all severity levels. Receipt Triad hashing byte-precise. HMAC token format documented. Threat model added. Schemas for authority_decisions, escalation_events, source_trust_evaluations, identity_verification documented. Key file encoding specified. correlation_id pipe constraint. checks_hash ordering and null key rules. |
-| 1.0.2 | 0.13.2 | 7 cross-platform review fixes. Redaction Marker schema (Section 2.11): marker structure, original_hash computation, pre-existing marker injection guard, file naming convention, hash recomputation rules. Authority Name Normalization algorithm (Appendix D): NFKC + camelCase splitting + separator normalization + casefold + dot-join, with 16 test vectors, matching semantics, and separatorless fallback. HMAC token binding corrections (Section 8.2): `esc_` prefix on escalation IDs, Python-default separators for args_digest (not Sanna Canonical JSON), original tool name (not normalized). Canonical JSON cross-language guidance (Section 3.1): Go HTML-escaping warning, float rejection clarified for Go/Rust number parsing. Base64 pinned to RFC 4648 standard with padding (Section 5.1), whitespace stripping scope clarified. Exit code accumulation rule: highest-priority code wins (Section 9.2). |
+| 1.0.2 | 0.13.2 | 7 cross-platform review fixes. Redaction Marker schema (Section 2.11): marker structure, original_hash computation, pre-existing marker injection guard, file naming convention, hash recomputation rules. Authority Name Normalization algorithm (Appendix D): NFKC + camelCase splitting + separator normalization + casefold + dot-join, with 16 test vectors, matching semantics, and separatorless fallback. HMAC token binding corrections (Section 8.2): `esc_` prefix on escalation IDs, Python-default separators for args_digest (not Sanna Canonical JSON), original tool name (not normalized). Canonical JSON cross-language guidance (Section 3.1): Go HTML-escaping warning, float rejection clarified for Go/Rust number parsing. Base64 pinned to [RFC4648] standard with padding (Section 5.1), whitespace stripping scope clarified. Exit code accumulation rule: highest-priority code wins (Section 9.2). |
 | 1.1.0 | 0.13.7 | **Breaking change:** Fingerprint formula expanded from 12 fields to 14 fields. No backward compatibility with 12-field formula. New first-class fields: `parent_receipts` (receipt chaining, fingerprint field 13), `workflow_id` (workflow grouping, fingerprint field 14). New metadata fields: `content_mode`, `content_mode_source` (Cloud content handling, NOT in fingerprint). `checks_version` incremented to `"6"`. Gateway extension namespace (`com.sanna.gateway`) documented (Appendix E). Canonical YAML hash specification (Appendix F). 1,000+ cross-language canonicalization test vectors. Golden receipts regenerated for 14-field formula. |
 | 1.2.0 | 1.0.0 | **Fingerprint formula correction:** Section 4.1 corrected to match reference implementations (sanna v1.0.0, sanna-ts v1.0.2). Not a breaking change. **Multi-surface governance:** `event_type` field (9 values), `context_limitation` field (5 values). Receipt Triad for CLI boundary (Section 7.6) and API boundary (Section 7.7). Constitution blocks: `cli_permissions`, `api_permissions`. Multi-surface test vectors. **NOTE: v1.2 was never released in SDK form. Any receipt claiming `spec_version="1.2"` is spurious and MUST be treated as such by verifiers. SDKs skip directly from "1.1" to "1.3".** |
 | 1.3.0 | 1.1.0 | **Two new required top-level fields:** `enforcement_surface` (enum: `middleware`, `gateway`, `cli_interceptor`, `http_interceptor`) and `invariants_scope` (enum: `full`, `authority_only`, `limited`, `none`). Both participate in fingerprint computation (fields 15 and 16). **Status derivation mapping (normative):** when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` (halted -> FAIL, warned -> WARN, allowed -> PASS, escalated -> WARN). **Cross-field consistency rule (normative):** verifiers MUST assert `status` matches `enforcement.action` per the derivation mapping; mismatch is a verification error indicating compromised receipt integrity. **`checks_version` incremented to `"8"`**, fingerprint formula expanded from 14 to 16 fields. **JSON Schema `$id` bumped to `receipt/v1.3.json`.** Architectural asymmetry note for C1-C5 invocation across Python vs TypeScript SDKs documented (non-normative, Section 2.16.4). |
 | 1.4.0 | 1.4.0 | **New required field `tool_name`** (required at cv>=9): enum `"sanna"` \| `"sanna-ts"`. Separates SDK identity from SDK version -- `tool_version` stays bare semver; `tool_name` is a registered enum. Third-party SDKs register values via spec PR. Participates in fingerprint (field 17). **New optional agent-model fields** `agent_model`, `agent_model_provider`, `agent_model_version` (all string or null): capture the LLM model running when the receipt was generated. Nullable for explicit opt-out; absent = not captured. Tri-valued absent/null/string semantics are normative (Section 2.18.4); aggregators MUST NOT conflate absent with null. Participate in fingerprint at fields 18-20 (EMPTY_HASH for null or absent). **`checks_version` incremented to `"9"`**, fingerprint formula expanded from 16 to 20 fields. **JSON Schema `$id` bumped to `receipt/v1.4.json`.** **Section 13 rewritten** to describe cv-based dispatch for both generators and verifiers (closes stale 14-field reference -- Codex F-013). SAN-222. |
 | 1.5.0 | 1.5.0 | **New required field `agent_identity`** at cv=10 (Section 2.19): binds the receipt to AARM R6 identity layers (`agent_session_id` REQUIRED; `human_principal`, `service_account`, `role`, `privilege_scope` OPTIONAL). Participates in fingerprint at field 21 (`agent_identity_hash = hash_obj(agent_identity)`). **`checks_version` incremented to `"10"`**, fingerprint formula expanded from 20 to 21 fields. **JSON Schema `$id` bumped to `receipt/v1.5.json`**. **MODIFY decision parameter recording** (Section 2.7): `tool_input_original`, `tool_input_transformed`, `transformations_applied` recorded inside `authority_decisions[i]` for `modify_with_constraints` decisions (no fingerprint formula change; per-decision fields hash via `authority_hash`). **CV9_LEGACY-prefixed verifier warning** for cv=9 receipts (partial R6 conformance only; receipts remain valid). **New Section 14 "AARM Conformance and Mapping"**: public conformance claim text, decision-enum mapping (Sanna<->AARM R4), receipt-field mapping (R5), Manifest framing as Layer 3 (Composition), R7/R9 gap acknowledgment, R5/R6 exceedances. SAN-204, SAN-369, SAN-370, SAN-371, SAN-361. |
+
+---
+
+## 16. References
+
+### 16.1 Normative References
+
+[RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, DOI 10.17487/RFC2119, March 1997, <https://www.rfc-editor.org/info/rfc2119>.
+
+[RFC4122]  Leach, P., Mealling, M., and R. Salz, "A Universally Unique IDentifier (UUID) URN Namespace", RFC 4122, DOI 10.17487/RFC4122, July 2005, <https://www.rfc-editor.org/info/rfc4122>.
+
+[RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006, <https://www.rfc-editor.org/info/rfc4648>.
+
+[RFC8032]  Josefsson, S. and I. Liusvaara, "Edwards-Curve Digital Signature Algorithm (EdDSA)", RFC 8032, DOI 10.17487/RFC8032, January 2017, <https://www.rfc-editor.org/info/rfc8032>.
+
+[RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174, May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+[RFC8785]  Rundgren, A., Jordan, B., and S. Erdtman, "JSON Canonicalization Scheme (JCS)", RFC 8785, DOI 10.17487/RFC8785, June 2020, <https://www.rfc-editor.org/info/rfc8785>.
+
+[UAX15]    Davis, M. and K. Whistler, "Unicode Normalization Forms", Unicode Standard Annex #15, Unicode Consortium, <https://www.unicode.org/reports/tr15/>.
+
+[ISO8601]  International Organization for Standardization, "Date and time -- Representations for information interchange", ISO 8601:2019, 2019, <https://www.iso.org/standard/70907.html>.
+
+[JSONSchema2020-12]  JSON Schema Working Group, "JSON Schema Specification: 2020-12 Draft", <https://json-schema.org/draft/2020-12/json-schema-core.html>.
+
+### 16.2 Informative References
+
+[AARM]     "Agentic Action Risk Management v1.0", arXiv:2602.09433v1, <https://arxiv.org/abs/2602.09433>.
+
+[ISO42001] International Organization for Standardization, "Information technology -- Artificial intelligence -- Management system", ISO/IEC 42001:2023, 2023, <https://www.iso.org/standard/81230.html>.
 
 ---
 
