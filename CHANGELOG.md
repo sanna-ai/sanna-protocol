@@ -1,3 +1,27 @@
+## [Unreleased] -- 2026-05-18 (SAN-666 -- absorbed into SAN-647 PR #46)
+
+### Changed
+
+- **`.github/workflows/ci.yml`** (Verify golden receipts step in cross-sdk-smoke-python job): broadened tampered-fixture glob from `"999_tampered"*` to `*tampered*` to match sanna-repo's CI script (which was broadened by SAN-533 when per-cv tampered fixtures were added at `golden/receipts/v{cv}_tampered.json` for cv in {5, 6, 7, 8, 10}). Added 4-line explanatory comment block above the for loop documenting both tampered conventions, matching the comment block in `sanna-repo/.github/workflows/ci.yml`.
+
+### Why this matters
+
+The cross-SDK gate (added by SAN-491) is intended to mirror sanna-repo's CI script for cross-SDK consumption smoke testing. SAN-533 broadened sanna-repo's tampered detection glob to catch per-cv tampered fixtures; the sanna-protocol mirror script was not updated in lockstep. The drift was masked until SAN-665 landed the schema mirror update on sanna main, allowing SAN-647's cross-sdk-smoke-python re-run to pass the diff -q gate and reach the Verify golden receipts step -- which then failed because per-cv tampered fixtures fall through to the expect-to-pass branch.
+
+This fix restores the script-mirror invariant. No schema / spec / fixture / runtime code changes; CI workflow only.
+
+### Notes
+
+This fix was originally filed as SAN-666 with its own PR (sanna-protocol PR #47). Per discovery-gap remediation: the underlying issue should have been caught during SAN-647's original discovery (the cross-SDK CI script was read with a partial-Read truncation, missing the verify-golden-receipts step with the stale glob). The fix is absorbed back into SAN-647 PR #46 as a second commit so a single squash-merge captures both the spec change and the CI fix. SAN-666 PR #47 closes unmerged; SAN-666 ticket closes as Won't Do with rationale capturing this absorption.
+
+### Tickets
+
+- SAN-666 (this CI fix; ticket closes Won't Do / absorbed into SAN-647 PR #46)
+- SAN-647 (parent PR umbrella absorbing this fix as a second commit)
+- SAN-665 (sanna-repo Stage 2 schema mirror update; merged 2026-05-18)
+- SAN-533 (sanna-repo source change that broadened the tampered glob; the pattern this fix mirrors)
+- SAN-491 (the original cross-SDK gate addition; the mirror script that drifted)
+
 ## [Unreleased] -- 2026-05-18 (SAN-647)
 
 ### Added
