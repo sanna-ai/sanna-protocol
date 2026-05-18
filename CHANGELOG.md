@@ -1,3 +1,27 @@
+## [Unreleased] -- 2026-05-18 (SAN-647)
+
+### Added
+
+- **`schemas/receipt.schema.json`**: optional `enforcement.halt_reason` enum field (initial values `constitution_revoked`, `constitution_status_unavailable`) + optional `enforcement.constitution_status_evidence` object (constitution_policy_hash, version, status_observed enum, status_checked_at, status_etag, activated_at, revoked_at). Additive within receipt schema v1.5; existing receipts validate unchanged. Schema-level cross-field consistency conditionals encode CFC-A (halt_reason present requires action=halted), CFC-B (constitution-status halt_reason values require constitution_status_evidence non-null), and CFC-D (constitution_status_evidence present requires halt_reason present); CFC-C (constitution_policy_hash equality with constitution_ref.policy_hash) is verifier-side only.
+- **`spec/sanna-specification-v1.5.md` Section 2.5**: enforcement object field table extended with cross-references to the new Section 2.23.
+- **`spec/sanna-specification-v1.5.md` Section 2.23 "Constitution Status Evidence (v1.5+)"**: defines halt_reason enum semantics, constitution_status_evidence shape, the 60-second status_checked_at freshness rule for the constitution_revoked path, the constitution_policy_hash-must-match-constitution_ref binding rule, and the verifier-accepts-unknown-with-warning posture mirroring Section 2.21 and 2.22.3.
+- **`spec/sanna-specification-v1.5.md` Section 4.5**: halt_reason and constitution_status_evidence added to the Fields NOT in Fingerprint list with rationale (signature-protected; checks_version unchanged because SDK fingerprint contributors are unchanged).
+- **`spec/sanna-specification-v1.5.md` Section 4.6**: four new cross-field consistency rules (CFC-A, CFC-B, CFC-C, CFC-D). CFC-A, CFC-B, CFC-D are also encoded as conditionals in receipt.schema.json; CFC-C is verifier-side only.
+- **`spec/sanna-specification-v1.5.md` Section 5.2**: one-paragraph clarification that signature coverage extends to all enforcement.* fields including the two new ones.
+- **`spec/sanna-specification-v1.5.md` Appendix H "Constitution Status Endpoint Contract (v1.5+)"**: HTTP endpoint response shape (constitution_policy_hash, version, status enum, active_version, checked_at, cache_ttl_seconds, status_etag, rebind_policy enum, activated_at, revoked_at) plus revocation semantics, offline semantics, status freshness cross-reference, and deferred-fixtures note.
+
+### Why this matters
+
+SAN-568 (RC blocker for sanna-cloud receipt ingestion) requires the protocol to define machine-readable halt reasons for constitution-revocation enforcement, plus the binding evidence fields that let Cloud verify a halt receipt's observed-status claim against its own known constitution state. Without these spec fields, Cloud has no language to accept legitimate fail-closed halt evidence from the SDK or to reject inconsistent halt receipts that claim a revocation context without binding evidence. Per the receipt protocol's audit-quality requirement (cross-SDK coherence is load-bearing; verifier-side enforcement is non-negotiable), the spec defines the contract first; SDK fail-closed emission lands in a separate constitution-revocation implementation family and Cloud verifier-side enforcement is SAN-568.
+
+The new fields are additive within v1.5 (no SPEC_VERSION bump). They are excluded from the fingerprint (no checks_version bump) because the SDK fingerprint contributors are unchanged and per the principle that version numbers MUST mean the implementation actually conforms to the new semantics. Signature coverage protects the new fields from post-emission tampering.
+
+### Tickets
+
+- SAN-647 (this protocol/spec change)
+- SAN-568 (RC blocker; consumes the new language)
+- SAN-665 (companion sanna-repo: spec submodule bump + schema mirror update)
+
 ## [Unreleased] -- 2026-05-12 (SAN-292)
 
 ### Added

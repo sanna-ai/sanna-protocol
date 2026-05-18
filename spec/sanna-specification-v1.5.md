@@ -179,6 +179,8 @@ passed with no halt/warn enforcement configured):
 | `failed_checks` | array | Check IDs that triggered enforcement |
 | `enforcement_mode` | string | `"halt"`, `"warn"`, `"log"` |
 | `timestamp` | string | ISO 8601 date-time |
+| `halt_reason` | string/null | Machine-readable halt categorization when `action="halted"`. See Section 2.23 |
+| `constitution_status_evidence` | object/null | Audit-quality binding for constitution-revocation halts. See Section 2.23 |
 
 ### 2.6 Constitution Reference
 
@@ -980,6 +982,86 @@ tool names in `com.sanna.manifest`.
 
 ---
 
+### 2.23 Constitution Status Evidence (v1.5+)
+
+When the SDK halts because of an observed constitution status, the
+`enforcement` object SHOULD include the machine-readable categorization
+in `halt_reason` and the binding evidence in `constitution_status_evidence`.
+These fields turn a generic halt into audit-quality fail-closed evidence
+that downstream verifiers (Cloud or operator-side) can correlate to the
+known constitution lifecycle.
+
+#### 2.23.1 halt_reason enum
+
+| Value | Meaning |
+|-------|---------|
+| `constitution_revoked` | The SDK observed the bound constitution version in `revoked` state and halted before executing the governed action. |
+| `constitution_status_unavailable` | The SDK could not refresh constitution status within the cache TTL and chose to fail closed rather than act on stale data. |
+
+The `halt_reason` enum is operator-extensible; future spec versions or
+operator deployments MAY define additional values. Verifiers MUST
+accept unknown values with an informational warning (not error),
+matching the `unknown` fallback posture of Section 2.21 and the
+`suppression_basis` posture of Section 2.22.3.
+
+#### 2.23.2 constitution_status_evidence shape
+
+When `halt_reason` is in `{constitution_revoked, constitution_status_unavailable}`,
+`constitution_status_evidence` MUST be present and contain the
+following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `constitution_policy_hash` | string (SHA-256 hex; 64 lowercase) | YES | Identifies the constitution this halt relates to. MUST equal the receipt's `constitution_ref.policy_hash` (Section 4.6 CFC-C). |
+| `version` | string (semver) | YES | The constitution version the SDK observed during the status check. |
+| `status_observed` | string enum | YES | Lifecycle status observed: `active`, `superseded`, `revoked`, `draft`, `archived`, `rejected`. Extensible; verifiers MUST accept unknown values with informational warning. |
+| `status_checked_at` | string (ISO 8601 date-time) | YES | Server-reported observation time of the status check. |
+| `status_etag` | string | YES | Opaque etag the SDK received with the status; allows verifiers to correlate halt evidence to a specific server-side status response. Operators MAY use server-side etag verification for stronger binding (Appendix H). |
+| `activated_at` | string (ISO 8601 date-time) | NO (nullable) | When the observed version became active, as known to the status server. Permits time-window-bounded validation by downstream verifiers. |
+| `revoked_at` | string (ISO 8601 date-time) | NO (nullable) | When the observed version was revoked, as known to the status server. Permits time-window-bounded validation by downstream verifiers. |
+
+#### 2.23.3 Status freshness rule (constitution_revoked path)
+
+When the SDK emits a halt receipt with `halt_reason="constitution_revoked"`,
+the `status_checked_at` value MUST reflect a status observation no older
+than 60 seconds at the time the halt receipt is signed. This rule
+prevents an SDK from reusing a stale status snapshot to fabricate
+fresh-looking halt evidence.
+
+This freshness rule does NOT apply to `halt_reason="constitution_status_unavailable"`,
+which is precisely the case where the SDK could not refresh status within
+the cache TTL.
+
+#### 2.23.4 Relationship to constitution_ref
+
+`constitution_status_evidence.constitution_policy_hash` MUST equal the
+receipt's `constitution_ref.policy_hash` (the SHA-256 hex of the
+canonical constitution body the receipt cites). Verifiers MUST reject
+receipts where the two values do not match (cross-constitution
+halt-evidence laundering prevention). See Section 4.6 CFC-C. This rule
+is verifier-side only and cannot be expressed in receipt.schema.json
+because JSON Schema cannot express cross-field equality between
+sibling objects at different levels of the receipt body.
+
+#### 2.23.5 Relationship to fingerprint and signature
+
+`halt_reason` and `constitution_status_evidence` are NOT in the
+fingerprint (see Section 4.1 and Section 4.5 for the inventory of
+fields included and excluded). They ARE in signature coverage (Section
+5.2): the receipt signature signs the entire receipt body, so both
+fields are integrity-protected against post-emission tampering.
+
+The fields are excluded from the fingerprint because the SDK
+implementation participating in fingerprint computation has not yet
+been bumped to a checks_version that includes them; per the principle
+that version numbers MUST mean the implementation actually conforms to
+the new semantics, no checks_version bump is appropriate in this spec
+revision. A future spec revision MAY include these fields in the
+fingerprint at a higher checks_version, coordinated with SDK
+implementation.
+
+---
+
 ## 3. Canonicalization
 
 Sanna uses a canonical JSON serialization derived from [RFC8785] (JSON
@@ -1280,6 +1362,8 @@ The following fields are NOT included in fingerprint computation:
 - `content_mode_source` (Cloud metadata -- see Section 2.14)
 - `event_type` (governance surface metadata -- see Section 2.15)
 - `context_limitation` (governance surface metadata -- see Section 2.15)
+- `enforcement.halt_reason` (signature-protected per Section 5.2; not in fingerprint because checks_version has not been bumped for this addition; SDK fingerprint contributors are unchanged -- see Section 2.23.5)
+- `enforcement.constitution_status_evidence` (signature-protected per Section 5.2; not in fingerprint because checks_version has not been bumped for this addition; SDK fingerprint contributors are unchanged -- see Section 2.23.5)
 
 Note: `parent_receipts` and `workflow_id` ARE included in fingerprint
 computation (fields 13 and 14). `enforcement_surface` and
@@ -1314,6 +1398,32 @@ A mismatch between `enforcement.action` and `status` (e.g., `enforcement.action=
 A receipt that passes JSON schema validation but violates this cross-field rule is considered **cryptographically valid but semantically defective**. Its fingerprint and signature may verify, but the receipt's integrity claim is false: the audit trail misrepresents what governance actually did.
 
 When `enforcement` is absent or null, this check does not apply.
+
+A receipt with `enforcement.halt_reason` present MUST have
+`enforcement.action="halted"`. A receipt that contains `halt_reason`
+with any other action value MUST produce a verification error
+(CFC-A). This rule is also encoded as a conditional in
+receipt.schema.json.
+
+A receipt with `enforcement.halt_reason` in `{constitution_revoked,
+constitution_status_unavailable}` MUST contain a non-null
+`enforcement.constitution_status_evidence` object. A receipt that
+claims the halt reason without the binding evidence MUST produce a
+verification error (CFC-B). This rule is also encoded as a
+conditional in receipt.schema.json.
+
+A receipt with `enforcement.constitution_status_evidence.constitution_policy_hash`
+that does not equal the receipt's `constitution_ref.policy_hash` MUST
+produce a verification error (CFC-C). This rule is verifier-side only
+and cannot be expressed in receipt.schema.json because JSON Schema
+cannot express cross-field equality between sibling objects at
+different levels; verifiers MUST implement this check explicitly.
+
+A receipt with `enforcement.constitution_status_evidence` present MUST
+have `enforcement.halt_reason` present (evidence-without-claim
+prevention). A receipt that carries binding evidence without a
+claim MUST produce a verification error (CFC-D). This rule is also
+encoded as a conditional in receipt.schema.json.
 
 ---
 
@@ -1359,6 +1469,13 @@ The `receipt_signature` object contains:
 | `signed_by` | string | Human-readable signer identity |
 | `signed_at` | string | ISO 8601 timestamp |
 | `scheme` | string | `"receipt_sig_v1"` |
+
+Signature coverage extends to the entire receipt body including all
+fields of the `enforcement` object (whether required or optional).
+The optional `enforcement.halt_reason` and
+`enforcement.constitution_status_evidence` fields introduced in
+Section 2.23 are signature-protected against post-emission tampering
+even though they are excluded from the fingerprint (Section 2.23.5).
 
 ### 5.3 Constitution Canonical Form Versions (v1, v2; SAN-492)
 
@@ -2611,6 +2728,7 @@ A PASS exit code (0) means the receipt set is AARM Core conformant. A PARTIAL ex
 | 1.3.0 | 1.1.0 | **Two new required top-level fields:** `enforcement_surface` (enum: `middleware`, `gateway`, `cli_interceptor`, `http_interceptor`) and `invariants_scope` (enum: `full`, `authority_only`, `limited`, `none`). Both participate in fingerprint computation (fields 15 and 16). **Status derivation mapping (normative):** when `invariants_scope` is `authority_only` or `none`, `status` MUST be derived from `enforcement.action` (halted -> FAIL, warned -> WARN, allowed -> PASS, escalated -> WARN). **Cross-field consistency rule (normative):** verifiers MUST assert `status` matches `enforcement.action` per the derivation mapping; mismatch is a verification error indicating compromised receipt integrity. **`checks_version` incremented to `"8"`**, fingerprint formula expanded from 14 to 16 fields. **JSON Schema `$id` bumped to `receipt/v1.3.json`.** Architectural asymmetry note for C1-C5 invocation across Python vs TypeScript SDKs documented (non-normative, Section 2.16.4). |
 | 1.4.0 | 1.4.0 | **New required field `tool_name`** (required at cv>=9): enum `"sanna"` \| `"sanna-ts"`. Separates SDK identity from SDK version -- `tool_version` stays bare semver; `tool_name` is a registered enum. Third-party SDKs register values via spec PR. Participates in fingerprint (field 17). **New optional agent-model fields** `agent_model`, `agent_model_provider`, `agent_model_version` (all string or null): capture the LLM model running when the receipt was generated. Nullable for explicit opt-out; absent = not captured. Tri-valued absent/null/string semantics are normative (Section 2.18.4); aggregators MUST NOT conflate absent with null. Participate in fingerprint at fields 18-20 (EMPTY_HASH for null or absent). **`checks_version` incremented to `"9"`**, fingerprint formula expanded from 16 to 20 fields. **JSON Schema `$id` bumped to `receipt/v1.4.json`.** **Section 13 rewritten** to describe cv-based dispatch for both generators and verifiers (closes stale 14-field reference -- Codex F-013). SAN-222. |
 | 1.5.0 | 1.5.0 | **New required field `agent_identity`** at cv=10 (Section 2.19): binds the receipt to AARM R6 identity layers (`agent_session_id` REQUIRED; `human_principal`, `service_account`, `role`, `privilege_scope` OPTIONAL). Participates in fingerprint at field 21 (`agent_identity_hash = hash_obj(agent_identity)`). **`checks_version` incremented to `"10"`**, fingerprint formula expanded from 20 to 21 fields. **JSON Schema `$id` bumped to `receipt/v1.5.json`**. **MODIFY decision parameter recording** (Section 2.7): `tool_input_original`, `tool_input_transformed`, `transformations_applied` recorded inside `authority_decisions[i]` for `modify_with_constraints` decisions (no fingerprint formula change; per-decision fields hash via `authority_hash`). **CV9_LEGACY-prefixed verifier warning** for cv=9 receipts (partial R6 conformance only; receipts remain valid). **New Section 14 "AARM Conformance and Mapping"**: public conformance claim text, decision-enum mapping (Sanna<->AARM R4), receipt-field mapping (R5), Manifest framing as Layer 3 (Composition), R7/R9 gap acknowledgment, R5/R6 exceedances. SAN-204, SAN-369, SAN-370, SAN-371, SAN-361. |
+| 1.5.0 | 1.5.0 | **Additive fields within v1.5 (SAN-647):** optional `enforcement.halt_reason` (enum: `constitution_revoked`, `constitution_status_unavailable`) and optional `enforcement.constitution_status_evidence` (constitution_policy_hash, version, status_observed enum, status_checked_at, status_etag, activated_at, revoked_at). Signature-protected; not in fingerprint (checks_version unchanged; SDK fingerprint contributors unchanged). New Section 2.23 "Constitution Status Evidence" with 60-second freshness rule for the constitution_revoked path and CFC-C hash-equality binding rule. Section 4.6 extended with CFC-A, CFC-B, CFC-C, CFC-D cross-field consistency rules (CFC-A, CFC-B, CFC-D encoded in schema; CFC-C verifier-side only). New Appendix H "Constitution Status Endpoint Contract." Unblocks SAN-568. |
 
 ---
 
@@ -3151,6 +3269,78 @@ support multi-surface receipts:
 5. **Validate event_type values.** The `governance_events.event_type`
    column is an unconstrained TEXT field. Consider adding a CHECK
    constraint or application-level validation.
+
+---
+
+## Appendix H: Constitution Status Endpoint Contract (v1.5+)
+
+This appendix specifies the lightweight HTTP endpoint that SDKs poll
+to observe the lifecycle status of a bound constitution. The endpoint
+produces the data the SDK uses to populate
+`enforcement.constitution_status_evidence` (Section 2.23) when
+emitting fail-closed halt receipts.
+
+### H.1 Request
+
+The SDK issues an authenticated request keyed on `constitution_policy_hash`
+(SHA-256 hex of the constitution body the SDK has bound) plus the
+version. Request transport, auth shape, and exact URL path are
+operator-deployment-specific and not normative in this version of the
+spec.
+
+### H.2 Response shape
+
+The response is a JSON object with the following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `constitution_policy_hash` | string (SHA-256 hex; 64 lowercase) | YES | The constitution this status describes. Echoes the request value. |
+| `version` | string (semver) | YES | The version the SDK queried about. |
+| `status` | string enum | YES | Current lifecycle status: `active`, `superseded`, `revoked`, `draft`, `archived`, `rejected`. Verifiers and SDKs MUST accept unknown values with informational warning. |
+| `active_version` | string (semver) | NO (nullable) | The currently-active version of the same `constitution_policy_hash` lineage, or null if no version is active. |
+| `checked_at` | string (ISO 8601 date-time) | YES | Server-side time of this status check. SDK MUST populate `constitution_status_evidence.status_checked_at` from this value when emitting halt evidence. |
+| `cache_ttl_seconds` | integer | YES | The SDK MAY cache this response for at most this many seconds. SDKs SHOULD clamp values below 60 to 60 to prevent server-induced amplification. |
+| `status_etag` | string | YES | Opaque token allowing efficient revalidation; the SDK echoes this in `constitution_status_evidence.status_etag`. Operators MAY use server-side etag verification (e.g., HMAC of constitution_policy_hash + version + status + checked_at + server secret) for stronger halt-evidence binding; the construction is implementation-defined. |
+| `rebind_policy` | string enum | YES | `require_explicit_rebind` (default for any version that has been revoked) or `auto_track_active` (only when the operator has opted in via constitution config). Verifiers MUST accept unknown values with informational warning. |
+| `activated_at` | string (ISO 8601 date-time) | NO (nullable) | When the version became active, as known to the status server. Permits time-window-bounded validation by downstream verifiers. |
+| `revoked_at` | string (ISO 8601 date-time) | NO (nullable) | When the version was revoked, as known to the status server. Permits time-window-bounded validation by downstream verifiers. |
+
+### H.3 Status freshness rule cross-reference
+
+Section 2.23.3 specifies that SDKs emitting a halt receipt with
+`halt_reason="constitution_revoked"` MUST observe `checked_at` no
+older than 60 seconds at signature time. Operators SHOULD set
+`cache_ttl_seconds` accordingly.
+
+### H.4 Revocation semantics
+
+`status="revoked"` signals the version has been disabled and SHOULD
+not be the basis of new governed actions. SDKs that observe
+`status="revoked"` for a bound version SHOULD fail closed on the next
+governed operation and SHOULD emit a halt receipt with
+`halt_reason="constitution_revoked"` per Section 2.23.
+
+`status="superseded"` signals a newer version exists; the current
+version still works until explicit migration. The `rebind_policy`
+field tells the SDK whether auto-migration to `active_version` is
+permitted.
+
+### H.5 Offline / unavailable semantics
+
+When the SDK cannot reach the status endpoint within the cache TTL
+window, it SHOULD fail closed on the next governed operation and
+SHOULD emit a halt receipt with
+`halt_reason="constitution_status_unavailable"` per Section 2.23. The
+freshness rule of Section 2.23.3 does NOT apply to this path.
+
+### H.6 Cross-SDK fixtures
+
+Cross-SDK conformance fixtures for the status endpoint contract are
+deferred to the post-beta constitution-revocation fixture family
+(separate ticket). The pre-beta minimum is the spec language + receipt
+schema validation only.
+
+---
 
 ## Acknowledgments
 
