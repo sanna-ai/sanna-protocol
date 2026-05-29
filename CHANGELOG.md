@@ -1,3 +1,20 @@
+## [Unreleased] -- 2026-05-29 (SAN-745)
+
+### Added
+
+- **`fixtures/multi-surface-vectors.json`**: new `escalate_disposition_vectors` section (cli + http surfaces) pinning the cross-SDK escalate-in-enforce disposition -- blocked=true, event_type `*_escalated`, enforcement.action `escalated`, enforcement_mode `halt`, status `WARN`, enforcement_surface, invariants_scope `authority_only`, and the halted action_hash (reusing the existing "Halted" action-vector hashes). To be consumed by the sanna-ts and sanna-repo interceptor test suites in SAN-745 PR3 (PR3a/PR3b) to prove both SDKs agree on the escalate disposition.
+
+### Why this matters
+
+SAN-745 makes the SDK interceptors fail closed on `escalate` in enforce mode (previously TS executed). This fixture is the cross-SDK conformance contract: both SDKs, given an escalate decision in enforce mode, must block and emit a coherent escalated receipt. Per the audit-quality requirement (cross-SDK coherence is load-bearing; verifier-side enforcement is non-negotiable), the agreement is pinned in a shared fixture rather than asserted independently in each SDK.
+
+The vector deliberately does NOT pin `assurance`: TS interceptors emit it, Python interceptors do not yet (tracked in SAN-765). The Receipt Triad itself is emitted top-level by both SDKs, so it is already consistent. Pinning only the genuinely-agreed disposition fields keeps this an honest conformance contract, not a one-sided assertion.
+
+### Tickets
+
+- SAN-745 (escalate fail-closed + cross-SDK conformance; this fixture)
+- SAN-765 (the excluded assurance divergence, tracked separately)
+
 ## [Unreleased] -- 2026-05-18 (SAN-666 -- absorbed into SAN-647 PR #46)
 
 ### Changed

@@ -346,5 +346,45 @@
       "expected_canonical_json": "{\"body_hash\":\"29c8126155890e34dffea74b8841acc66833f629dfc4bc962be8e4ee1c5602df\",\"response_headers_keys\":[\"Content-Type\",\"Date\",\"Transfer-Encoding\"],\"status_code\":200}",
       "expected_hash": "d3f05f2e1f2e617362709db04130e5a3d1099258d99fcc9a0a76b73a9ab22863"
     }
+  ],
+  "escalate_disposition_vectors": [
+    {
+      "description": "CLI interceptor: a must_escalate command in enforce mode blocks (fails closed) and emits an escalated receipt; the action does not execute",
+      "surface": "cli",
+      "decision": "escalate",
+      "mode": "enforce",
+      "expected": {
+        "blocked": true,
+        "event_type": "cli_invocation_escalated",
+        "enforcement_action": "escalated",
+        "enforcement_mode": "halt",
+        "status": "WARN",
+        "enforcement_surface": "cli_interceptor",
+        "invariants_scope": "authority_only",
+        "action_obj": { "exit_code": null, "stderr": "", "stdout": "" },
+        "action_hash": "13a71368942de1868462bc420caedba78c14de622c0ce3d570eb20c826c63921"
+      },
+      "not_pinned": ["assurance"],
+      "notes": "assurance is intentionally NOT pinned: TS interceptors emit it (partial on a blocked escalate); Python interceptors do not yet emit assurance (tracked in SAN-765). The Receipt Triad (input/reasoning/action hashes) is emitted top-level by BOTH SDKs, so consumers read receipt.action_hash top-level from both. Consumers assert the fields under 'expected' AND that the action did not execute."
+    },
+    {
+      "description": "HTTP interceptor: a must_escalate endpoint in enforce mode blocks (fails closed) and emits an escalated receipt; the request is not sent",
+      "surface": "http",
+      "decision": "escalate",
+      "mode": "enforce",
+      "expected": {
+        "blocked": true,
+        "event_type": "api_invocation_escalated",
+        "enforcement_action": "escalated",
+        "enforcement_mode": "halt",
+        "status": "WARN",
+        "enforcement_surface": "http_interceptor",
+        "invariants_scope": "authority_only",
+        "action_obj": { "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "response_headers_keys": [], "status_code": null },
+        "action_hash": "cbe5315e53f1990397fa1a5b93485dc95fbb56ccc8c8ab7f12c0b0fe6ff95297"
+      },
+      "not_pinned": ["assurance"],
+      "notes": "See the cli vector's notes. body_hash e3b0c442... is sha256 of the empty string (EMPTY_HASH)."
+    }
   ]
 }
