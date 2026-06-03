@@ -1,3 +1,15 @@
+## [Unreleased] -- 2026-06-03 (SAN-788)
+
+### Changed
+
+- **`.github/workflows/ci.yml`** (`cross-sdk-smoke-python` job, "Verify operational schema copies" step): replaced the hard byte-diff with a sync-then-test pattern. The step now logs whether a mirror update will be needed, copies the PR-overridden submodule schemas into the consumer's operational path (`src/sanna/spec/`), and lets the consumer test suite run against the PR schema. This fixes a deadlock introduced by SAN-667: the is-ancestor pin guard correctly forbids a consumer from pre-mirroring to an unmerged protocol commit, which made the hard diff permanently un-greenable for any schema-change protocol PR. Consumer mirror consistency is still enforced by the consumer's own CI at pin-bump time; this step's job is to catch cross-SDK breaks by running the suite, not to enforce byte-level parity before the pin lands. No schema, fixture, test, or spec changes.
+
+### Tickets
+
+- SAN-788 (this CI fix)
+- SAN-667 (is-ancestor pin guard; the upstream constraint that creates the deadlock)
+- SAN-765 (schema-change PR unblocked by this fix)
+
 ## [Unreleased] -- 2026-05-29 (SAN-745)
 
 ### Added

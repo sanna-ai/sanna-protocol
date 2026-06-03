@@ -91,14 +91,20 @@ jobs:
         working-directory: consumer
         run: pip install -e ".[dev]" pytest-asyncio
 
-      - name: Verify operational schema copies match submodule (mirrors sanna-repo CI)
-        # SAN-326 governance gate: src/sanna/spec/*.json must mirror spec/schemas/*.json.
-        # If protocol PR adds/changes a schema but consumer hasn't updated its mirror,
-        # this catches it at protocol PR time instead of waiting for the consumer SDK PR.
+      - name: Sync operational schema copies from PR submodule, then test against it (SAN-788)
+        # The consumer's operational mirror (src/sanna/spec/) is updated AND enforced in the consumer's OWN
+        # pin-bump PR (sanna-repo ci.yml). A hard byte-diff against consumer main here DEADLOCKS against the
+        # SAN-667 is-ancestor pin guard: the consumer cannot pin to an unmerged protocol commit to pre-mirror,
+        # so a schema-change PR can never be green. Instead, log whether a mirror update will be needed, sync
+        # the operational copy from the PR-overridden submodule, and run the consumer suite against the PR
+        # schema -- which is what actually catches cross-SDK breaks. Mirror consistency stays enforced by the
+        # consumer's own CI at pin-bump time.
         working-directory: consumer
         run: |
-          diff -q spec/schemas/receipt.schema.json src/sanna/spec/receipt.schema.json
-          diff -q spec/schemas/constitution.schema.json src/sanna/spec/constitution.schema.json
+          diff -q spec/schemas/receipt.schema.json src/sanna/spec/receipt.schema.json || echo "NOTE: consumer will mirror receipt.schema.json in its pin-bump PR"
+          diff -q spec/schemas/constitution.schema.json src/sanna/spec/constitution.schema.json || echo "NOTE: consumer will mirror constitution.schema.json in its pin-bump PR"
+          cp spec/schemas/receipt.schema.json src/sanna/spec/receipt.schema.json
+          cp spec/schemas/constitution.schema.json src/sanna/spec/constitution.schema.json
 
       - name: Run sanna-repo test suite
         # Match sanna-repo's CI invocation EXACTLY: `python -m pytest tests/ -v`.
