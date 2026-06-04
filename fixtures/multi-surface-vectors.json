@@ -361,11 +361,12 @@
         "status": "WARN",
         "enforcement_surface": "cli_interceptor",
         "invariants_scope": "authority_only",
+        "assurance": "partial",
         "action_obj": { "exit_code": null, "stderr": "", "stdout": "" },
         "action_hash": "13a71368942de1868462bc420caedba78c14de622c0ce3d570eb20c826c63921"
       },
-      "not_pinned": ["assurance"],
-      "notes": "assurance is intentionally NOT pinned: TS interceptors emit it (partial on a blocked escalate); Python interceptors do not yet emit assurance (tracked in SAN-765). The Receipt Triad (input/reasoning/action hashes) is emitted top-level by BOTH SDKs, so consumers read receipt.action_hash top-level from both. Consumers assert the fields under 'expected' AND that the action did not execute."
+      "not_pinned": [],
+      "notes": "Both SDKs now emit assurance=partial on a blocked escalate (spec Section 7.3). The Receipt Triad (input/reasoning/action hashes) is emitted top-level by BOTH SDKs, so consumers read receipt.action_hash top-level from both. Consumers assert the fields under 'expected' AND that the action did not execute."
     },
     {
       "description": "HTTP interceptor: a must_escalate endpoint in enforce mode blocks (fails closed) and emits an escalated receipt; the request is not sent",
@@ -380,11 +381,50 @@
         "status": "WARN",
         "enforcement_surface": "http_interceptor",
         "invariants_scope": "authority_only",
+        "assurance": "partial",
         "action_obj": { "body_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "response_headers_keys": [], "status_code": null },
         "action_hash": "cbe5315e53f1990397fa1a5b93485dc95fbb56ccc8c8ab7f12c0b0fe6ff95297"
       },
-      "not_pinned": ["assurance"],
-      "notes": "See the cli vector's notes. body_hash e3b0c442... is sha256 of the empty string (EMPTY_HASH)."
+      "not_pinned": [],
+      "notes": "Both SDKs now emit assurance=partial on a blocked escalate (spec Section 7.3). body_hash e3b0c442... is sha256 of the empty string (EMPTY_HASH)."
+    }
+  ],
+  "allow_disposition_vectors": [
+    {
+      "description": "CLI interceptor: an allowed command in enforce mode executes and emits an allowed receipt with assurance=partial",
+      "surface": "cli",
+      "decision": "allow",
+      "mode": "enforce",
+      "expected": {
+        "blocked": false,
+        "event_type": "cli_invocation_allowed",
+        "enforcement_action": "allowed",
+        "enforcement_mode": "halt",
+        "status": "PASS",
+        "enforcement_surface": "cli_interceptor",
+        "invariants_scope": "authority_only",
+        "assurance": "partial"
+      },
+      "not_pinned": ["action_hash"],
+      "notes": "action_hash is not pinned because the executed action's output hash is environment-dependent. Both SDKs emit assurance=partial for an allowed action (spec Section 7.3); the prior TS halted?partial:full divergence emitted 'full' for allowed -- both SDKs must now emit 'partial'. Phase C/D consumers will drive an allowed action and assert the pinned fields."
+    },
+    {
+      "description": "HTTP interceptor: an allowed request in enforce mode executes and emits an allowed receipt with assurance=partial",
+      "surface": "http",
+      "decision": "allow",
+      "mode": "enforce",
+      "expected": {
+        "blocked": false,
+        "event_type": "api_invocation_allowed",
+        "enforcement_action": "allowed",
+        "enforcement_mode": "halt",
+        "status": "PASS",
+        "enforcement_surface": "http_interceptor",
+        "invariants_scope": "authority_only",
+        "assurance": "partial"
+      },
+      "not_pinned": ["action_hash"],
+      "notes": "action_hash is not pinned because the executed action's output hash is environment-dependent. Both SDKs emit assurance=partial for an allowed action (spec Section 7.3); the prior TS halted?partial:full divergence emitted 'full' for allowed -- both SDKs must now emit 'partial'. Phase C/D consumers will drive an allowed action and assert the pinned fields."
     }
   ]
 }

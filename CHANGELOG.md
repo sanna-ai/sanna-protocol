@@ -1,3 +1,16 @@
+## [Unreleased] -- 2026-06-03 (SAN-765)
+
+### Changed
+
+- **`schemas/receipt.schema.json`**: receipt schema now machine-enforces the spec Section 7.3 rule that a present Receipt Triad hash (input_hash, reasoning_hash, or action_hash as a non-null string) requires a non-null assurance field with value "full" or "partial". Previously this was prose-only; a triad receipt missing assurance now fails schema validation. No SPEC_VERSION / CHECKS_VERSION bump -- this enforces an existing v1.5 rule.
+- **`fixtures/multi-surface-vectors.json`**: cross-SDK escalate_disposition_vectors now pin assurance="partial" in both cli and http expected fields (previously left in not_pinned pending SAN-765); not_pinned cleared. New allow_disposition_vectors array (cli + http) pins the allowed-action case with assurance="partial"; action_hash left in not_pinned as it is environment-dependent. The prior TS halted?partial:full divergence emitted "full" for allowed actions -- both SDKs must now emit "partial" per Section 7.3.
+- **`tests/test_assurance_when_triad.py`**: new schema-validation test proving the triad-without-assurance constraint: (1) input_hash present + no assurance -> ValidationError; (2) input_hash present + assurance=partial -> valid; (3) input_hash present + assurance=null -> ValidationError.
+
+### Tickets
+
+- SAN-765 (this change: schema enforcement + cross-SDK vector pins)
+- Phase C/D: SDK-side interceptor changes (sanna-repo, sanna-ts) that consume these vectors and emit assurance on allowed actions
+
 ## [Unreleased] -- 2026-06-03 (SAN-788)
 
 ### Changed
