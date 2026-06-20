@@ -251,15 +251,20 @@ def main() -> None:
         timestamp = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         content = generate_full(root, timestamp)
         (root / "docs").mkdir(exist_ok=True)
-        state_path.write_text(content)
-        spec_version, _ = get_spec_version(root)
-        checks_version = get_checks_version(root)
-        fixture_count = count_fixtures(root)
-        print(
-            f"Generated docs/state.md "
-            f"(spec={spec_version}, cv={checks_version}, "
-            f"fixtures={fixture_count})"
-        )
+        if state_path.exists() and _comparable(state_path.read_text()) == _comparable(content):
+            # Idempotent: only the volatile timestamp would change. Skip the write so
+            # the auto-regen pre-commit hook does not churn docs/state.md every commit.
+            print("docs/state.md is already up to date (timestamp-only change skipped).")
+        else:
+            state_path.write_text(content)
+            spec_version, _ = get_spec_version(root)
+            checks_version = get_checks_version(root)
+            fixture_count = count_fixtures(root)
+            print(
+                f"Generated docs/state.md "
+                f"(spec={spec_version}, cv={checks_version}, "
+                f"fixtures={fixture_count})"
+            )
 
 
 if __name__ == "__main__":
