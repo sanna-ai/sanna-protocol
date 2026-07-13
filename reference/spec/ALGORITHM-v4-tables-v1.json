@@ -1,7 +1,7 @@
 {
   "tables_version": "c1c5-tables/1",
   "checks_version": 11,
-  "notes": "Single shared data artifact for ALGORITHM v4. Python and TypeScript MUST load tables from this file (vendored by content hash), never restate them in code. Additions are a CHECKS_VERSION bump with regenerated fixtures, justified by calibration-corpus measurement. definitive_v1/hedge_v1 are the EXACT v0 lists from sanna-repo receipt.py (ground truth); multi-word entries match as folded token sequences; '100%' matches via the PCT100 tokenizer rule. Round-20: negative benefit words are deny_triggers (explicit polarity; the NEG_v1 XOR deny rule makes 'nonrefundable' a NEG-polarity refund_availability frame); generic benefit normalization applies to BOTH polarities; contractions expand at tokenization and table entries are matched post-expansion. Round-21: Dec = {coefficient: signed BigInt, scale: nonneg int} with canonical trailing-zero removal; MAX_DEC_DIGITS/MAX_DEC_SCALE bound representation; comparators_v1 maps comparator token sequences to intervals over the parsed value v (null bound = unbounded); a bare scalar is [v, v]. Round-22: units_v1 flattened to token -> {group, factor}; concept_v1 normalizes condition-atom tokens (post-stem) to canonical concept forms so 'requires approval' and 'if approved' share the atom {approval} -- applied only inside Bool atoms, never extent terms.",
+  "notes": "Single shared data artifact for ALGORITHM v4. Python and TypeScript MUST load tables from this file (vendored by content hash), never restate them in code. Additions are a CHECKS_VERSION bump with regenerated fixtures, justified by calibration-corpus measurement. definitive_v1/hedge_v1 are the EXACT v0 lists from sanna-repo receipt.py (ground truth); multi-word entries match as folded token sequences; '100%' matches via the PCT100 tokenizer rule. Round-20: negative benefit words are deny_triggers (explicit polarity; the NEG_v1 XOR deny rule makes 'nonrefundable' a NEG-polarity refund_availability frame); generic benefit normalization applies to BOTH polarities; contractions expand at tokenization and table entries are matched post-expansion. Round-21: Dec = {coefficient: signed BigInt, scale: nonneg int} with canonical trailing-zero removal; MAX_DEC_DIGITS/MAX_DEC_SCALE bound representation; comparators_v1 maps comparator token sequences to intervals over the parsed value v (null bound = unbounded); a bare scalar is [v, v]. Round-22: units_v1 flattened to token -> {group, factor}; concept_v1 normalizes condition-atom tokens (post-stem) to canonical concept forms so 'requires approval' and 'if approved' share the atom {approval} -- applied only inside Bool atoms, never extent terms. Sol PR-52 review: participle_triggers_v1 classifies trigger words that are verb participles (passive-voice role extraction) vs stative adjectives; single source for both SDKs -- never restated in code.",
   "constants": {
     "ENV_MAX_FIELD_BYTES": 1048576,
     "ENV_MAX_SENTENCES": 2048,
@@ -751,5 +751,12 @@
     "register": "registration",
     "registered": "registration",
     "registering": "registration"
-  }
+  },
+  "participle_triggers_v1": [
+    "permitted",
+    "allowed",
+    "prohibited",
+    "forbidden",
+    "banned"
+  ]
 }

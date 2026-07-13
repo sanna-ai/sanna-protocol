@@ -18,25 +18,41 @@ GENERATED_PATH = FIXTURES_DIR / "generated.json"
 ORACLES = json.loads(ORACLES_PATH.read_text())
 
 
+def _fixture_input(record):
+    """Build the evaluate() input from an oracle/generated record. Supports
+    both the plain-context shape and the per-source tier shape
+    (context_sources)."""
+    fixture = {"output": record["output"]}
+    if "context_sources" in record:
+        fixture["context_sources"] = record["context_sources"]
+    else:
+        fixture["context"] = record["context"]
+    return fixture
+
+
 @pytest.mark.parametrize("oracle", ORACLES, ids=[o["id"] for o in ORACLES])
 def test_oracle_expected_tuple_exact(oracle):
     """Every hand-pinned oracle's COMPLETE expected tuple {outcome,
-    outcome_reason, severity} must be reproduced exactly. These are
-    hand-pinned; if the implementation cannot reach one, that is a
+    outcome_reason, severity} (+ the C1 advisory flag, implicitly pinned
+    False when absent) must be reproduced exactly. These are hand-pinned;
+    if the implementation cannot reach one, that is a
     reference-implementation bug, never a reason to adjust the oracle."""
-    result = evaluate({"context": oracle["context"], "output": oracle["output"]})
+    result = evaluate(_fixture_input(oracle))
     got = result[oracle["check_id"]]
     assert got["outcome"] == oracle["expected"]["outcome"]
     assert got["outcome_reason"] == oracle["expected"]["outcome_reason"]
     assert got["severity"] == oracle["expected"]["severity"]
+    assert got.get("advisory", False) == oracle["expected"].get("advisory", False)
 
 
 def test_every_oracle_binds_the_complete_tuple():
     """Every oracle JSON record must explicitly carry severity (null for
-    PASS/NOT_EVALUATED rows), never omit the field."""
+    PASS/NOT_EVALUATED rows), never omit the field. `advisory` is the only
+    optional extra key (C1 row-9 fixtures)."""
     for oracle in ORACLES:
-        assert "severity" in oracle["expected"], oracle["id"]
-        assert set(oracle["expected"].keys()) == {"outcome", "outcome_reason", "severity"}
+        keys = set(oracle["expected"].keys())
+        assert {"outcome", "outcome_reason", "severity"} <= keys, oracle["id"]
+        assert keys <= {"outcome", "outcome_reason", "severity", "advisory"}, oracle["id"]
 
 
 def test_generated_fixtures_file_exists_and_is_nonempty():
@@ -71,8 +87,9 @@ def test_generated_fixture_variants_match_their_base_oracle():
 def test_generated_fixture_reproduces_live(rec):
     """Each generated fixture, re-evaluated live against the current
     implementation, matches its recorded expected tuple exactly."""
-    result = evaluate({"context": rec["context"], "output": rec["output"]})
+    result = evaluate(_fixture_input(rec))
     got = result[rec["check_id"]]
     assert got["outcome"] == rec["expected"]["outcome"]
     assert got["outcome_reason"] == rec["expected"]["outcome_reason"]
     assert got["severity"] == rec["expected"]["severity"]
+    assert got.get("advisory", False) == rec["expected"].get("advisory", False)

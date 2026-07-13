@@ -15,7 +15,7 @@ run directly against either fixture file, or a future cross-SDK corpus.
 
 Output: a JSON array, one record per input fixture, each
 {"id": ..., "check_id": ..., "outcome": ..., "outcome_reason": ...,
-"severity": ...}, serialized with sorted keys and terminated with a
+"severity": ..., "advisory": ...}, serialized with sorted keys and terminated with a
 single trailing newline (LF) -- the exact byte shape a TypeScript
 differential run must reproduce for a byte-diff to be meaningful.
 
@@ -43,7 +43,12 @@ from reference.evaluate import evaluate  # noqa: E402
 def run(fixtures: list) -> list:
     results = []
     for fx in fixtures:
-        out = evaluate({"context": fx.get("context", ""), "output": fx.get("output", "")})
+        fixture = {"output": fx.get("output", "")}
+        if "context_sources" in fx:
+            fixture["context_sources"] = fx["context_sources"]
+        else:
+            fixture["context"] = fx.get("context", "")
+        out = evaluate(fixture)
         got = out[fx["check_id"]]
         results.append(
             {
@@ -52,6 +57,7 @@ def run(fixtures: list) -> list:
                 "outcome": got["outcome"],
                 "outcome_reason": got["outcome_reason"],
                 "severity": got["severity"],
+                "advisory": bool(got.get("advisory", False)),
             }
         )
     results.sort(key=lambda r: r["id"])

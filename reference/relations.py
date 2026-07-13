@@ -1,4 +1,4 @@
-"""Section 4.3 of ALGORITHM v4 draft 5.1: identity_relation and friends.
+"""Section 4.3 of ALGORITHM v4 draft 5.2: identity_relation and friends.
 Depends on reference.primitives (types) and reference.engine (DOMAIN, SAT,
 decompose/build_gamma for measure-facet disposition), NOT on
 reference.extraction (no cycle).
@@ -28,11 +28,15 @@ MATCH, CONFLICT = "MATCH", "CONFLICT"
 
 
 def _has_malformed(extent: Extent) -> bool:
-    """A carries any malformed value/modifier product -- our extraction
-    never produces a partially-malformed Extent (abstain propagates to
-    FIELD PARTIAL before an Extent is ever constructed), so this always
-    reports False; kept as an explicit named check per spec step 6
-    rather than silently omitted."""
+    """generalizes step 6: "A carries any malformed value/modifier
+    product". Structurally unreachable in this pipeline BY CONSTRUCTION,
+    not by fixture coverage: spec section 0's symmetric rule makes every
+    malformed value/modifier product abstain() DURING extraction (2.4,
+    2.5, 3.2 step 7, 3.2 adjunct rules), which raises before the Extent
+    is constructed and drives the FIELD to PARTIAL -- so no Extent
+    carrying a malformed product ever reaches identity comparison. The
+    step is kept as an explicit named check (returning the invariant's
+    value) so the numbered spec steps remain visibly total."""
     return False
 
 
@@ -144,6 +148,14 @@ def disposition(a: Frame, b: Frame):
     if is_measure_facet:
         if a.extent.values is None or b.extent.values is None:
             return (UNDECIDABLE, CONDITION_UNDECIDABLE)
+        # spec 2.4: comparisons are legal only within one unit group and
+        # one currency -- cross-group/cross-currency -> UnknownAtom with
+        # cause malformed_mention, so the disposition is UNDECIDABLE,
+        # never a silent MATCH of two independent quantities.
+        unit_a = a.extent.values[0].unit
+        unit_b = b.extent.values[0].unit
+        if unit_a != unit_b:
+            return (UNDECIDABLE, MALFORMED_MENTION)
         try:
             compiled = engine.build_varmap(
                 [_measure_atom(a.extent), _measure_atom(b.extent)]

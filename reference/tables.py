@@ -15,8 +15,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Spec section 1 / draft-5.1 header: sha256 of ALGORITHM-v4-tables-v1.json.
-TABLES_SHA256 = "6035c1b22969f84db43c444fefd53a7998b5d2114621a05fc566d87a8a335b71"
+# Spec section 1 / draft-5.2 header: sha256 of ALGORITHM-v4-tables-v1.json.
+TABLES_SHA256 = "0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc"
 
 _SPEC_DIR = Path(__file__).parent / "spec"
 _TABLES_PATH = _SPEC_DIR / "ALGORITHM-v4-tables-v1.json"
@@ -136,6 +136,11 @@ class Tables:
             for entry in data["comparators_v1"]
         )
         self.concept_v1: dict[str, str] = dict(data["concept_v1"])
+        # e7 (draft 5.2): participle-vs-stative trigger classification is
+        # DATA in the shared artifact, never a code list.
+        self.participle_triggers_v1: frozenset[str] = frozenset(
+            data["participle_triggers_v1"]
+        )
 
         # trigger / deny_trigger union index, built once here since
         # trigger_scan (3.1) requires "one pass over the union of all

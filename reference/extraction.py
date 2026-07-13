@@ -1,9 +1,14 @@
-"""Section 3 of ALGORITHM v4 draft 5.1: extraction (triggers, negation,
-polarity, roles, conditions, frames, obligations, evidence).
+"""Section 3 of ALGORITHM v4 draft 5.2: extraction (triggers, negation,
+polarity, roles, conditions, frames, obligations, evidence), including
+total span accounting (spec 2.6).
 
-Depends on reference.primitives (types + text primitives), reference.tables
-(raw table access for facet metadata) and reference.engine (only for the
-"engine-TOP-equivalent formula -> trivial" check inside aggregate()).
+Depends on reference.primitives (types + text primitives),
+reference.tables (raw table access for facet metadata) and
+reference.engine (the "engine-TOP-equivalent formula -> trivial" check,
+the UNSAT arm of the source-conflict prepass, and the MAX_EXPR_NODES
+envelope path in parse_bool). source_conflict_prepass additionally uses
+reference.relations via a local import (relations depends only on
+engine/primitives, so no cycle).
 """
 
 from __future__ import annotations
@@ -36,6 +41,7 @@ from reference.primitives import (
     NEGATION_EXCEPTIONS,
     NEGATORS_V1,
     Not,
+    PARTICIPLE_TRIGGERS_V1,
     Obligation,
     Or,
     POS,
@@ -45,6 +51,7 @@ from reference.primitives import (
     RELATIVE_MARKERS_V1,
     RESTRICTION,
     Roles,
+    STOP_V1,
     Span,
     TOP_,
     TRIGGER_INDEX,
@@ -95,14 +102,21 @@ def trigger_scan(tokens: List[Token]) -> List[Hit]:
             key = tuple(t.fold for t in tokens[i : i + length])
             candidates = TRIGGER_INDEX.get(key)
             if candidates:
-                # Equal-span precedence (OBLIGATION PASSIVE > generic
-                # passive > active) only matters when the SAME span
-                # matches triggers of more than one facet; the vendored
-                # tables.json has no such collisions among single tokens,
-                # so ties are resolved by table iteration order (stable,
-                # deterministic) -- documented rather than silently
-                # assumed complete.
-                facet_name, is_deny = candidates[0]
+                # Equal-span precedence (spec 3.1): OBLIGATION PASSIVE >
+                # generic passive > active, applied when the SAME span
+                # matches triggers of more than one facet. Class rank:
+                # 0 = approval_requirement trigger (obligation-passive
+                # capable), 1 = participle trigger (generic passive,
+                # T.participle_triggers_v1), 2 = active/stative.
+                def _precedence(candidate):
+                    facet_name, _ = candidate
+                    if facet_name == "facet:approval_requirement":
+                        return 0
+                    if key[0] in PARTICIPLE_TRIGGERS_V1:
+                        return 1
+                    return 2
+
+                facet_name, is_deny = sorted(candidates, key=_precedence)[0]
                 hits.append(
                     Hit(facet=facet_name, span=(i, i + length), is_deny=is_deny, trigger_key=key)
                 )
@@ -203,18 +217,19 @@ from reference.primitives import GENERIC_BENEFIT_TRIGGERS_V1 as _GENERIC_BENEFIT
 # --------------------------------------------------------------------------
 
 _COPULAS = frozenset({"is", "are", "was", "were", "been", "being"})
-PARTICIPLE_TRIGGERS = frozenset({"permitted", "allowed", "prohibited", "forbidden", "banned"})
 
 
-def noun_groups(
+def _conjunct_terms_and_heads(
     tokens: List[Token], span: Span, exclude: FrozenSet[int] = frozenset()
-) -> List[FrozenSet[str]]:
-    """Split at role-level 'and' into conjuncts; groups = content-token
-    runs unbroken by adjunct prepositions or relative markers; 'or' |
-    '/' | '|' between noun groups -> abstain. `exclude` is the set of
-    token indices already consumed by adjunct_modifiers() -- an adjunct
-    phrase is its own frame product (a modifier), not a subject/object
-    term, so its tokens are skipped here rather than double-counted."""
+) -> Tuple[List[FrozenSet[str]], List[str]]:
+    """Split at role-level 'and' into conjuncts; per conjunct return its
+    content-term set and its COMPOUND_HEAD-rule head (the RIGHTMOST
+    content token of the conjunct's group). 'or' | '/' | '|' between
+    noun groups -> abstain. `exclude` is the set of token indices
+    already consumed by another frame product (adjunct modifiers, the
+    dual-role negator, the VALUE span) -- those are skipped here rather
+    than double-counted as terms. Conjuncts with no content tokens are
+    dropped; the two returned lists stay parallel."""
     start, end = span
     conjuncts: List[List[Token]] = [[]]
     i = start
@@ -231,49 +246,23 @@ def noun_groups(
             continue
         conjuncts[-1].append(tok)
         i += 1
-    groups = []
+    groups: List[FrozenSet[str]] = []
+    heads: List[str] = []
     for conj in conjuncts:
         terms = frozenset(t.fold for t in conj if is_content_token(t))
+        if not terms:
+            continue
+        head_fold = next(t.fold for t in reversed(conj) if is_content_token(t))
         groups.append(terms)
-    return [g for g in groups if g]
+        heads.append(head_fold)
+    return groups, heads
 
 
-def head(group_terms: FrozenSet[str], group_tokens: Optional[List[Token]] = None) -> Optional[str]:
-    """COMPOUND_HEAD rule: head(group) = the rightmost content token of
-    the conjunct's group."""
-    if group_tokens is not None:
-        for tok in reversed(group_tokens):
-            if is_content_token(tok):
-                return tok.fold
-        return None
-    if not group_terms:
-        return None
-    return sorted(group_terms)[-1] if len(group_terms) == 1 else next(iter(group_terms))
-
-
-def _conjunct_token_lists(
+def noun_groups(
     tokens: List[Token], span: Span, exclude: FrozenSet[int] = frozenset()
-) -> List[List[Token]]:
-    start, end = span
-    conjuncts: List[List[Token]] = [[]]
-    for i in range(start, end):
-        if i in exclude:
-            continue
-        tok = tokens[i]
-        if tok.fold == "and":
-            conjuncts.append([])
-            continue
-        conjuncts[-1].append(tok)
-    return [c for c in conjuncts if c]
-
-
-def first_conjunct_tokens(
-    tokens: List[Token], span: Optional[Span], exclude: FrozenSet[int] = frozenset()
-) -> List[Token]:
-    if span is None:
-        return []
-    conjs = _conjunct_token_lists(tokens, span, exclude)
-    return conjs[0] if conjs else []
+) -> List[FrozenSet[str]]:
+    """Per-conjunct content-term sets (see _conjunct_terms_and_heads)."""
+    return _conjunct_terms_and_heads(tokens, span, exclude)[0]
 
 
 def adjunct_modifiers(tokens: List[Token], span: Span) -> Tuple[FrozenSet[Tuple[str, FrozenSet[str]]], List[int]]:
@@ -344,23 +333,10 @@ def extract_roles(hit: Hit, tokens: List[Token], seg_bounds: List[Span]) -> Role
     seg = next(((lo, hi) for lo, hi in seg_bounds if lo <= start < hi), (0, len(tokens)))
     seg_lo, seg_hi = seg
 
-    neg_idx = _consumed_negator_index(tokens, hit.span, seg_bounds)
-
-    def strip_negator(span: Optional[Span]) -> Optional[Span]:
-        if span is None or neg_idx is None:
-            return span
-        lo, hi = span
-        if lo <= neg_idx < hi:
-            # exclude the single consumed negator index by splitting is
-            # unnecessary for our fixtures (negator is always adjacent
-            # to the trigger, i.e. at a span boundary); shrink the span
-            # to exclude it when it sits at either edge.
-            if neg_idx == lo:
-                return (lo + 1, hi)
-            if neg_idx == hi - 1:
-                return (lo, hi - 1)
-        return span
-
+    # The consumed negator (dual-role, spec 3.1) is NOT stripped out of
+    # role spans here: role spans are grammar spans; the negator index is
+    # excluded from term extraction by extract_frames via the noun-group
+    # exclude sets, and accounted once as the negation product.
     facet_def = T.facets_v1[hit.facet] if hit.facet in T.facets_v1 else None
     valency = facet_def["valency"] if facet_def else []
 
@@ -375,19 +351,13 @@ def extract_roles(hit: Hit, tokens: List[Token], seg_bounds: List[Span]) -> Role
                 return Roles(subject=x_span, object=y_span, value=None, pattern="OP")
 
     # -- rule 2: PASSIVE: "[X] copula <participle> by [Y]" --
-    # The tables artifact has no POS tags, so distinguishing a true
-    # past-participle trigger (passive-voice capable: "permitted",
-    # "allowed", "prohibited", "forbidden", "banned") from a stative
-    # adjective trigger that happens to co-occur with a copula
-    # ("available", "refundable", "eligible", ...) needs a heuristic.
-    # PARTICIPLE_TRIGGERS below is scoped to exactly the words the spec
-    # itself discusses as participle-shaped (SAN-879 ticket note on the
-    # antonym-permission fixture: "the copular 'Entry is
-    # prohibited/permitted' form is rejected by role step 2 ... and
-    # would abstain"); every other trigger is treated as adjectival and
-    # falls through to rule 4 (ACTIVE) even when preceded by a copula.
+    # e7 (spec 3.2 rule 2): applies ONLY when the trigger's fold is in
+    # T.participle_triggers_v1 -- stative-adjective triggers like
+    # 'available' never enter this pattern and fall through to rule 4
+    # (ACTIVE) even when preceded by a copula. The classification is
+    # DATA from the vendored tables artifact.
     prev_tok = tokens[start - 1] if start - 1 >= seg_lo else None
-    if prev_tok is not None and prev_tok.fold in _COPULAS and hit.trigger_key[0] in PARTICIPLE_TRIGGERS:
+    if prev_tok is not None and prev_tok.fold in _COPULAS and hit.trigger_key[0] in PARTICIPLE_TRIGGERS_V1:
         by_idx = _find_operator_after(tokens, end, seg_hi, "by")
         if by_idx is None:
             raise Abstain(UNEXTRACTABLE)
@@ -402,12 +372,11 @@ def extract_roles(hit: Hit, tokens: List[Token], seg_bounds: List[Span]) -> Role
         # re-dispatches with the previous hit's subject span; signalled
         # here via pattern="COORD" and object-only span so the caller
         # can splice in the prior subject.
-        obj_span = strip_negator((end, seg_hi))
-        return Roles(subject=(start, start), object=obj_span, value=None, pattern="COORD")
+        return Roles(subject=(start, start), object=(end, seg_hi), value=None, pattern="COORD")
 
     # -- rule 4: ACTIVE (default) --
-    subj_span = strip_negator((seg_lo, start))
-    obj_span = strip_negator((end, seg_hi))
+    subj_span = (seg_lo, start)
+    obj_span = (end, seg_hi)
 
     # object stops at condition-marker start (rule 4)
     cond_start = _first_condition_marker_index(tokens, end, seg_hi)
@@ -432,7 +401,7 @@ def extract_roles(hit: Hit, tokens: List[Token], seg_bounds: List[Span]) -> Role
         cs = _first_condition_marker_index(tokens, end, sent_hi)
         if cs is not None:
             value_region_hi = cs
-        value_span = _find_unique_value_span(tokens, end, value_region_hi)
+        value_span = _find_unique_value_span(tokens, end, value_region_hi, trigger_span=hit.span)
         roles = Roles(subject=roles.subject, object=roles.object, value=value_span, pattern=roles.pattern)
 
     # -- rule 8: enforce valency --
@@ -465,12 +434,25 @@ def _first_condition_marker_index(tokens: List[Token], lo: int, hi: int) -> Opti
     return best
 
 
-def _find_unique_value_span(tokens: List[Token], lo: int, hi: int) -> Optional[Span]:
+def _find_unique_value_span(
+    tokens: List[Token], lo: int, hi: int, trigger_span: Optional[Span] = None
+) -> Optional[Span]:
     """Roles.value = the UNIQUE MAXIMAL span within [lo, hi) consisting
     of an optional comparator sequence + one NUMBER/PCT100 token + an
     optional adjacent unit WORD. ZERO or MORE THAN ONE candidate ->
-    abstain('malformed_mention')."""
-    from reference.primitives import COMPARATORS_V1, unit_of
+    abstain('malformed_mention').
+
+    Spec 2.4: an APPROX_v1 token immediately before the number (or its
+    sign/currency -- both are inside the NUMBER token here) -> abstain.
+
+    DUAL-ROLE TRIGGER (e8, spec 3.2 step 7): a token that is BOTH a
+    facet trigger and a comparator (currently only 'within') serves both
+    roles in one span: when no comparator precedes the number inside
+    [lo, hi) and the trigger's own fold sequence is a comparator ending
+    immediately before the number, the span extends to include the
+    trigger so its comparator interval template applies; the token is
+    accounted once (dual-role consumption, like negators)."""
+    from reference.primitives import APPROX_V1, COMPARATORS_V1, unit_of
 
     num_positions = [i for i in range(lo, hi) if tokens[i].kind in ("NUMBER", "PCT100")]
     if not num_positions:
@@ -479,6 +461,9 @@ def _find_unique_value_span(tokens: List[Token], lo: int, hi: int) -> Optional[S
         raise Abstain(MALFORMED_MENTION)
 
     idx = num_positions[0]
+    if idx > 0 and tokens[idx - 1].fold in APPROX_V1:
+        raise Abstain(MALFORMED_MENTION)
+
     span_lo = idx
     best_comp_len = 0
     for entry in COMPARATORS_V1:
@@ -490,6 +475,11 @@ def _find_unique_value_span(tokens: List[Token], lo: int, hi: int) -> Optional[S
         if window == seq and ln > best_comp_len:
             best_comp_len = ln
     span_lo = idx - best_comp_len
+
+    if best_comp_len == 0 and trigger_span is not None and trigger_span[1] == idx:
+        trigger_folds = tuple(t.fold for t in tokens[trigger_span[0] : trigger_span[1]])
+        if any(entry["folds"] == trigger_folds for entry in COMPARATORS_V1):
+            span_lo = trigger_span[0]
 
     span_hi = idx + 1
     if span_hi < hi and unit_of(tokens[span_hi]) is not None:
@@ -504,8 +494,10 @@ def _find_unique_value_span(tokens: List[Token], lo: int, hi: int) -> Optional[S
 
 def condition_marker_spans(tokens: List[Token], lo: int, hi: int):
     """COND_OPS_v1, longest-match, left-to-right, non-overlapping, over
-    [lo, hi)."""
-    out = []
+    [lo, hi). One marker scope = ONE formula (spec 3.3): each marker's
+    body runs from the marker's end to the next marker's start (or hi),
+    so multiple sequential markers each yield their own CondNode."""
+    markers = []
     i = lo
     while i < hi:
         matched = None
@@ -514,16 +506,18 @@ def condition_marker_spans(tokens: List[Token], lo: int, hi: int):
             if i + ln > hi:
                 continue
             if tuple(t.fold for t in tokens[i : i + ln]) == op["folds"]:
-                matched = (op, i + ln)
+                matched = (op, i, i + ln)
                 break
         if matched:
-            op, body_start = matched
-            out.append((op, body_start, hi, i))
-            i = hi  # spec: "one marker scope = ONE formula" over the
-            # remainder of the clause; multiple sequential markers in
-            # one sentence are out of scope for slice 1's fixture set.
+            markers.append(matched)
+            i = matched[2]
         else:
             i += 1
+
+    out = []
+    for k, (op, marker_start, body_start) in enumerate(markers):
+        body_end = markers[k + 1][1] if k + 1 < len(markers) else hi
+        out.append((op, body_start, body_end, marker_start))
     return out
 
 
@@ -557,7 +551,13 @@ def parse_bool(tokens: List[Token], lo: int, hi: int, restrictive: bool) -> Bool
             raise Abstain(MALFORMED_MENTION)
         conj_atoms = [_atom_from_conjunct(c, restrictive) for c in conj_spans]
         alt_atoms.append(conj_atoms[0] if len(conj_atoms) == 1 else And(tuple(conj_atoms)))
-    return alt_atoms[0] if len(alt_atoms) == 1 else Or(tuple(alt_atoms))
+    formula = alt_atoms[0] if len(alt_atoms) == 1 else Or(tuple(alt_atoms))
+    # spec 3.3: node/atom count > MAX_EXPR_NODES -> envelope path (sec 8)
+    if engine.bool_nodes(formula) > T.MAX_EXPR_NODES:
+        raise engine.EnvelopeExceeded(
+            f"envelope_exceeded: formula nodes > MAX_EXPR_NODES={T.MAX_EXPR_NODES}"
+        )
+    return formula
 
 
 def _atom_from_conjunct(conj_tokens: List[Token], restrictive: bool) -> Bool:
@@ -647,49 +647,77 @@ def _next_frame_id() -> int:
     return _frame_counter["n"]
 
 
-def extract_frames(field_id: str, text: str):
+def _is_filler(tok: Token) -> bool:
+    """FILLER per spec 2.6: STOP_v1 words in grammar positions,
+    structural punctuation in structural positions, sentence-terminal
+    '.'/'!' (the sentence-initial capitalized article is subsumed:
+    a/an/the are STOP_v1). SEMANTIC-FORCE tokens (negators, condition
+    operators, and/or, modals, quantifiers) are never in these filler
+    categories, so an unconsumed occurrence falls through to PARTIAL."""
+    if tok.kind == "PUNCT":
+        return tok.raw in T.structural_punctuation or tok.raw in (".", "!")
+    if tok.kind == "WORD":
+        return tok.fold in STOP_V1
+    return False
+
+
+def extract_frames(field_id: str, text: str, governed: bool = False):
     """Returns (list[Frame], partial: bool). PARTIAL when any abstention
     occurs anywhere while extracting the field's frames (spec 3.4: "any
-    abstention -> return PARTIAL")."""
+    abstention -> return PARTIAL"), OR when total span accounting (spec
+    2.6) finds an unconsumed non-filler span, OR when a governed-output
+    sentence is interrogative. Context '?' sentences are non-assertive,
+    excluded from every basis, spans accounted."""
     tokens = tokenize(text)
     frames: List[Frame] = []
     partial = False
-    for sent in sentences(tokens):
+    for sent in sentences(tokens, text):
         seg_bounds = _segment_bounds(sent)
+        interrogative = is_interrogative(sent)
+        if interrogative and governed:
+            # spec 2.6: governed-output sentence-terminal '?' -> FIELD PARTIAL
+            partial = True
+            continue
         try:
             hits = trigger_scan(sent)
         except Abstain:
             partial = True
             continue
-        assertive = not is_interrogative(sent)
+        assertive = not interrogative
+        consumed: set = set()
+        sentence_abstained = False
         prev_subject_span: Optional[Span] = None
         for hit in hits:
             try:
                 roles = extract_roles(hit, sent, seg_bounds)
+                coordinator_idx: Optional[int] = None
                 if roles.pattern == "COORD":
                     if prev_subject_span is None:
                         raise Abstain(UNEXTRACTABLE)
+                    coordinator_idx = hit.span[0] - 1
                     roles = Roles(subject=prev_subject_span, object=roles.object, value=roles.value, pattern="COORD")
                 prev_subject_span = roles.subject
+
+                neg_idx = _consumed_negator_index(sent, hit.span, seg_bounds)
+                neg_excl = frozenset() if neg_idx is None else frozenset({neg_idx})
 
                 mods_subj, consumed_subj = adjunct_modifiers(sent, roles.subject)
                 mods_obj, consumed_obj = adjunct_modifiers(sent, roles.object) if roles.object else (frozenset(), [])
                 mods = mods_subj | mods_obj
-                consumed_subj_set = frozenset(consumed_subj)
-                consumed_obj_set = frozenset(consumed_obj)
+                consumed_subj_set = frozenset(consumed_subj) | neg_excl
+                consumed_obj_set = frozenset(consumed_obj) | neg_excl
 
                 # the VALUE role's own span (measure facets) is its own
                 # frame product, not an object term -- exclude it too.
                 if roles.value is not None and roles.object is not None:
                     consumed_obj_set = consumed_obj_set | frozenset(range(roles.value[0], roles.value[1]))
 
-                subj_groups = noun_groups(sent, roles.subject, consumed_subj_set)
+                subj_groups, subj_heads = _conjunct_terms_and_heads(sent, roles.subject, consumed_subj_set)
                 subj_terms: FrozenSet[str] = frozenset().union(*subj_groups) if subj_groups else frozenset()
                 obj_groups = noun_groups(sent, roles.object, consumed_obj_set) if roles.object else []
                 obj_terms: FrozenSet[str] = frozenset().union(*obj_groups) if obj_groups else frozenset()
 
-                subj_head_tokens = first_conjunct_tokens(sent, roles.subject, consumed_subj_set)
-                subj_head = head(subj_groups[0] if subj_groups else frozenset(), subj_head_tokens)
+                subj_head = subj_heads[0] if subj_heads else None
 
                 fx = normalize_benefit_facet(hit, subj_head)
                 q = quant(sent[roles.subject[0] : roles.subject[1]])
@@ -699,6 +727,15 @@ def extract_frames(field_id: str, text: str):
                 values = None
                 if roles.value is not None:
                     values = parse_values(sent[roles.value[0] : roles.value[1]])
+
+                # requirement frames carry their parse_bool requirement
+                # product (spec 3.5: requirement_formula =
+                # parse_bool(required_span, restrictive = True))
+                req_formula: Optional[Bool] = None
+                if fx == "facet:approval_requirement" and roles.object is not None:
+                    req_formula = parse_bool(
+                        sent, roles.object[0], roles.object[1], restrictive=True
+                    )
 
                 extent = Extent(
                     facet=fx,
@@ -717,11 +754,47 @@ def extract_frames(field_id: str, text: str):
                         extent=extent,
                         conds=conds,
                         assertive=assertive,
+                        subject_conjuncts=tuple(subj_groups),
+                        subject_conjunct_heads=tuple(subj_heads),
+                        req_formula=req_formula,
                     )
                 )
+
+                # -- span consumption (spec 2.6 frame products) --
+                consumed.update(range(hit.span[0], hit.span[1]))
+                if neg_idx is not None:
+                    consumed.add(neg_idx)  # dual-role
+                if coordinator_idx is not None:
+                    consumed.add(coordinator_idx)
+                consumed.update(range(roles.subject[0], roles.subject[1]))
+                if roles.object is not None:
+                    consumed.update(range(roles.object[0], roles.object[1]))
+                if roles.value is not None:
+                    consumed.update(range(roles.value[0], roles.value[1]))
+                seg = next(((lo, hi) for lo, hi in seg_bounds if lo <= hit.span[0] < hi), (0, len(sent)))
+                for _op, _bstart, body_end, marker_start in condition_marker_spans(sent, hit.span[1], seg[1]):
+                    consumed.update(range(marker_start, body_end))
             except (Abstain, FramePartial):
                 partial = True
+                sentence_abstained = True
                 continue
+
+        if interrogative:
+            # context '?' sentence: excluded from every basis, spans accounted
+            continue
+        if not sentence_abstained:
+            # -- total span accounting (spec 2.6): every non-whitespace
+            # span is consumed by a frame product or by FILLER, else the
+            # FIELD is PARTIAL. Applies to untriggered sentences too
+            # (zero hits => zero products => any non-filler token is
+            # unconsumed, e.g. a triggerless retraction sentence). --
+            for i, tok in enumerate(sent):
+                if i in consumed:
+                    continue
+                if _is_filler(tok):
+                    continue
+                partial = True
+                break
     return frames, partial
 
 
@@ -731,9 +804,10 @@ def extract_frames(field_id: str, text: str):
 
 def extract_obligations(trusted_frames: List[Frame]) -> List[Obligation]:
     """EXPLICIT obligations from approval_requirement-facet frames
-    (governed conjunct = each SUBJECT conjunct), plus raw IMPLICIT
-    candidates (one per assertive, non-requirement-parent frame with
-    conds != []) which aggregate() groups by PropositionIdentity."""
+    (governed conjunct = each SUBJECT conjunct, spec 3.5 "per governed
+    conjunct"), plus raw IMPLICIT candidates (one per assertive,
+    non-requirement-parent frame with conds != []) which aggregate()
+    groups by PropositionIdentity."""
     explicit: List[Obligation] = []
     implicit_candidates: List[Frame] = []
 
@@ -741,10 +815,21 @@ def extract_obligations(trusted_frames: List[Frame]) -> List[Obligation]:
         if not frame.assertive:
             continue
         if frame.extent.facet == "facet:approval_requirement":
-            for conjunct_terms in _split_subject_conjuncts(frame.extent.subject):
-                head_term = sorted(conjunct_terms)[-1] if conjunct_terms else None
-                proj_facet = FACETPROJ_V1.get(head_term) if head_term else None
+            if frame.extent.polarity != POS:
+                # A negated requirement statement asserts the ABSENCE of
+                # a requirement. The spec's EXPLICIT extraction pattern
+                # (3.5: 'X require(s) Y' / 'Y is required for X', with
+                # source_polarity pinned POS) covers the positive form;
+                # a NEG requirement frame contributes no explicit
+                # obligation, and -- being a requirement-parent frame --
+                # no implicit one either.
+                continue
+            for conjunct_terms, conjunct_head in zip(
+                frame.subject_conjuncts, frame.subject_conjunct_heads
+            ):
+                proj_facet = FACETPROJ_V1.get(conjunct_head) if conjunct_head else None
                 if proj_facet is None:
+                    # spec 3.5: facetproj miss -> PARTIAL
                     raise FramePartial(UNEXTRACTABLE)
                 governed_identity = Extent(
                     facet=proj_facet,
@@ -755,11 +840,13 @@ def extract_obligations(trusted_frames: List[Frame]) -> List[Obligation]:
                     polarity=POS,
                     values=None,
                 )
-                required_terms = frame.extent.object
+                # spec 3.5: requirement_formula = parse_bool(required_span,
+                # restrictive = True) -- the parse product is carried on
+                # the frame (req_formula); Boolean structure like
+                # "approval and receipt" is preserved, never collapsed
+                # into one term bag.
                 requirement_formula = (
-                    TermAtom(required_terms, POS, RESTRICTION_FLAG(True))
-                    if required_terms
-                    else TOP_
+                    frame.req_formula if frame.req_formula is not None else TOP_
                 )
                 applicability_scope = conds_as_formula(frame.conds)
                 explicit.append(
@@ -780,15 +867,9 @@ def extract_obligations(trusted_frames: List[Frame]) -> List[Obligation]:
     return explicit + aggregate(implicit_candidates)
 
 
-def _split_subject_conjuncts(subject_terms: FrozenSet[str]) -> List[FrozenSet[str]]:
-    # Slice-1 simplification: the vendored trigger/table set never
-    # produces multi-conjunct EXPLICIT-requirement subjects in the
-    # required oracle/generated fixture corpus, so each frame's whole
-    # subject term set is treated as a single governed conjunct.
-    return [subject_terms] if subject_terms else []
-
-
 def _extent_identity_key(extent: Extent):
+    """EQUAL PropositionIdentity = byte-equal enc_extent (spec 3.5/7):
+    every enc_extent component participates, including values."""
     return (
         extent.facet,
         extent.subject,
@@ -796,6 +877,7 @@ def _extent_identity_key(extent: Extent):
         extent.modifiers,
         extent.quant,
         extent.polarity,
+        extent.values,
     )
 
 
@@ -848,13 +930,36 @@ def aggregate(frames: List[Frame]) -> List[Obligation]:
     return out
 
 
-def source_conflict_prepass(obligations: List[Obligation]):
-    """conflicted iff (a) aggregated requirement_formula UNSAT, or (b) two
-    comparable-identity trusted source frames with disposition CONFLICT
-    -- (b) is out of slice-1 scope (no required fixture exercises
-    cross-source-frame conflicted obligations); (a) is implemented."""
+def source_conflict_prepass(obligations: List[Obligation], trusted_frames: List[Frame]):
+    """conflicted iff (a) aggregated requirement_formula UNSAT (DECIDED:
+    basis_conflict, never deny-all inference) or (b) two
+    comparable-identity trusted source frames with disposition CONFLICT.
+    For (b), the conflicting pair may span two different obligations'
+    source frames (e.g. opposite-polarity frames aggregate into separate
+    PropositionIdentity groups); an obligation is conflicted when any of
+    its source frames participates in such a pair."""
+    # local import: relations depends only on engine/primitives, so this
+    # cannot cycle; kept local because relations is otherwise a consumer
+    # of extraction products, not a dependency of extraction.
+    from itertools import combinations
+
+    from reference import relations as rel
+
+    conflicted_frame_ids: set = set()
+    assertive = [f for f in trusted_frames if f.assertive]
+    for a, b in combinations(assertive, 2):
+        r = rel.identity_relation(
+            a.extent, conds_as_formula(a.conds), b.extent, conds_as_formula(b.conds), False
+        )
+        if r == rel.COMPARABLE and rel.disposition(a, b) == rel.CONFLICT:
+            conflicted_frame_ids.add(a.frame_id)
+            conflicted_frame_ids.add(b.frame_id)
+
     conflicted = set()
     for i, ob in enumerate(obligations):
+        if any(fid in conflicted_frame_ids for fid in ob.source_frame_ids):
+            conflicted.add(i)
+            continue
         try:
             compiled = engine.build_varmap([ob.requirement_formula])
         except engine.EnvelopeExceeded:
@@ -868,19 +973,26 @@ def source_conflict_prepass(obligations: List[Obligation]):
 
 def extract_evidence(out_frames: List[Frame], field_id: str) -> List[Evidence]:
     """(a) requirement statements in governed output -- out-frames whose
-    facet is facet:approval_requirement; (b) condition-bearing assertive
-    output frames."""
+    facet is facet:approval_requirement, per governed conjunct, with
+    asserted_formula = the frame's parse_bool requirement product and
+    assertion_polarity = NEG_v1(statement.trigger) (the frame's own
+    polarity; the requirement facet has no deny triggers, so
+    polarity == NEG_v1(trigger)); (b) condition-bearing assertive output
+    frames."""
     evidence: List[Evidence] = []
     span_counter = 0
     for fr in out_frames:
         if not fr.assertive:
             continue
         if fr.extent.facet == "facet:approval_requirement":
-            for conjunct_terms in _split_subject_conjuncts(fr.extent.subject):
-                head_term = sorted(conjunct_terms)[-1] if conjunct_terms else None
-                proj_facet = FACETPROJ_V1.get(head_term) if head_term else None
+            for conjunct_terms, conjunct_head in zip(
+                fr.subject_conjuncts, fr.subject_conjunct_heads
+            ):
+                proj_facet = FACETPROJ_V1.get(conjunct_head) if conjunct_head else None
                 if proj_facet is None:
-                    continue
+                    # spec 3.5 evidence (a) mirrors the EXPLICIT
+                    # projection: a facetproj miss -> PARTIAL
+                    raise FramePartial(UNEXTRACTABLE)
                 governed_identity = Extent(
                     facet=proj_facet,
                     subject=conjunct_terms,
@@ -890,11 +1002,7 @@ def extract_evidence(out_frames: List[Frame], field_id: str) -> List[Evidence]:
                     polarity=POS,
                     values=None,
                 )
-                asserted = (
-                    TermAtom(fr.extent.object, POS, RESTRICTION_FLAG(True))
-                    if fr.extent.object
-                    else TOP_
-                )
+                asserted = fr.req_formula if fr.req_formula is not None else TOP_
                 span_counter += 1
                 evidence.append(
                     Evidence(
@@ -904,7 +1012,7 @@ def extract_evidence(out_frames: List[Frame], field_id: str) -> List[Evidence]:
                         governed_identity=governed_identity,
                         domain=conds_as_formula(fr.conds),
                         asserted_formula=asserted,
-                        assertion_polarity=POS,
+                        assertion_polarity=fr.extent.polarity,
                     )
                 )
         if fr.conds:

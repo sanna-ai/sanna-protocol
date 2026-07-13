@@ -1,6 +1,16 @@
-# ALGORITHM v4 (DRAFT 5.1): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
+# ALGORITHM v4 (DRAFT 5.2): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
 
-> STATUS: DRAFT 5.1 after round 23 -- MECHANICAL ERRATA ONLY, then
+> STATUS: DRAFT 5.2 -- three NARROW errata directed by Sol's PR-52
+> implementation review (no design reopening): (e7) PARTICIPLE_TRIGGERS_v1
+> moves into the shared tables artifact (passive-voice participle vs
+> stative-adjective trigger classification is DATA, never a code list);
+> (e8) `within` dual-role value span defined (sec 3.2 step 7 note); (e9)
+> the ENTAILS structural flag check is generalized per the RATIFIED
+> symmetric principle: ANY atom pairing with mismatched restrictive flags
+> provides no entailment, and an H atom (either flag) with no flag-matching
+> F counterpart on its variable -> NO (a restrictive-only evidence formula
+> never entails AND(grant, restrictive)).
+> DRAFT 5.1 was: MECHANICAL ERRATA ONLY, then
 > dispatch: (e1) the flagship compliant variant is "available only if
 > approved" (restrictive flag matches the explicit requirement); (e2)
 > support() has an explicit return and total recursion (TOP/BOTTOM
@@ -26,7 +36,7 @@
 > JSON shape exactly; (6) THIS DOCUMENT IS STANDALONE -- every previously
 > "unchanged" section is inlined; no reference to prior drafts is
 > normative. Tables artifact: **ALGORITHM-v4-tables-v1.json, SHA-256
-> 6035c1b22969f84db43c444fefd53a7998b5d2114621a05fc566d87a8a335b71**.
+> 0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc**.
 > C5 is EXCLUDED from vertical slice 1 (C_COV uncalibrated).
 > Authority: DECISION-01 + A1 (LOCKED) own ontology/enforcement; A2 rev 3
 > owns wrapper scope/applicability; FREEZE v18.5 owns per-check
@@ -102,7 +112,7 @@ def eff_quant(q) -> UNIVERSAL|EXISTENTIAL:          # TOTAL (e5)
 ## 1. Tables
 
 Both SDKs vendor `ALGORITHM-v4-tables-v1.json` (sha256
-6035c1b22969f84db43c444fefd53a7998b5d2114621a05fc566d87a8a335b71),
+0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc),
 verify the hash at build time, and load EVERY table from it: constants
 (incl. MAX_DEC_DIGITS/MAX_DEC_SCALE, W_HEDGE, NEG_WINDOW, ENV_* and
 MAX_* caps), WS_v1 code points, STOP_v1, DEFINITIVE_v1 + HEDGE_v1 (exact
@@ -231,7 +241,10 @@ def normalize_benefit_facet(hit, subject_head) -> str:
 def extract_roles(hit, sentence) -> Roles:
  1 OBLIGATION-PASSIVE "[Y] {is|are|was|were|been|being} required for [X]":
      Roles(subject = X groups, object = Y groups)
- 2 PASSIVE "[X] {is|are|was|were|been|being} <participle> by [Y]":
+ 2 PASSIVE (applies ONLY when the trigger's fold is in
+   T.participle_triggers_v1 -- stative-adjective triggers like 'available'
+   never enter this pattern) "[X] {is|are|was|were|been|being}
+   <participle> by [Y]":
      Roles(subject = Y, object = X);
    participle + copula with NO 'by'-agent: abstain (never active)
  3 COORDINATION: a second trigger joined to a previous one by 'and' with
@@ -251,6 +264,13 @@ def extract_roles(hit, sentence) -> Roles:
      an optional adjacent unit WORD (a T.units_v1 key). ZERO candidate
      spans, or MORE THAN ONE candidate span, -> abstain('malformed_mention').
      Roles.value is None for non-measure facets.
+     DUAL-ROLE TRIGGER (e8): a token that is BOTH a facet trigger and a
+     comparator (currently only 'within') serves both roles in one span:
+     it is the frame's trigger AND the comparator introducing the value
+     span that starts at the immediately following NUMBER (+unit); its
+     comparator interval template applies ([0, v] for 'within'); the token
+     is accounted once (dual-role consumption, like negators). 'Shipping
+     within 5 days' = duration frame with value [0, 5 day].
  8 enforce T.facets_v1 valency (subject / object / value); a required
      role with no tokens (incl. a measure facet whose step-7 value is
      None) -> abstain
@@ -411,12 +431,16 @@ SAT(F)  = nonzero(F & G);   UNSAT = !SAT
 EQUIV   = zero((F ^ H) & G)
 NEGATE(F) = mask & ~F
 ENTAILS(F, H) -> YES|NO:
-  STRUCTURAL PRE-CHECK (draft 5, item 2): collect the TermAtoms of F and
-  H. For any atom pairing (same variable) where the flags differ --
-  F-atom restrictive=0 vs H-atom restrictive=1, OR restrictive=1 vs 0 --
-  the pairing provides NO entailment: if H contains a restrictive atom
-  with no flag-matching F counterpart on its variable, return NO ("if
-  verified" never entails "only if verified", and vice versa).
+  STRUCTURAL PRE-CHECK (draft 5 item 2; GENERALIZED at e9 per the ratified
+  symmetric principle): collect the TermAtoms of F and H. An atom pairing
+  (same variable) with mismatched restrictive flags provides NO
+  entailment, in EITHER direction. If ANY H TermAtom -- grant or
+  restrictive -- has no flag-matching F counterpart on a variable that F
+  constrains, return NO. Consequences: "if verified" never entails "only
+  if verified" and vice versa; a restrictive-only F never entails
+  AND(grant_atom, restrictive_atom) (the grant atom lacks flag-matching
+  evidence). COMPLEMENT_v1 pair lookup operates on the SAME normalized
+  form as Bool atoms (post-stem, post-CONCEPT_v1).
   Then: YES iff zero(F & NEGATE(H) & G), else NO.
 DOMAIN(D1, D2) = UNKNOWN (uncompilable) | DISJOINT (UNSAT either or
                  !SAT(D1 & D2)) | OVERLAP

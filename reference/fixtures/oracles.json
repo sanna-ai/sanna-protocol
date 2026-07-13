@@ -124,5 +124,99 @@
     "output": "Users may enter. Users may not enter after hours.",
     "check_id": "C4",
     "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "span-question-output",
+    "context": "Items are nonrefundable.",
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "span-retraction-unconsumed",
+    "context": "Items are nonrefundable.",
+    "output": "Items are nonrefundable. Actually, disregard that.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "self-conflicted-basis",
+    "context": "Basic costs $10. Basic costs $20.",
+    "output": "Basic costs over $5.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_conflict", "severity": null}
+  },
+  {
+    "id": "conjunct-obligations",
+    "context": "Refunds and exchanges require approval.",
+    "output": "Exchanges are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "requirement-boolean-structure",
+    "context": "Refunds require approval and receipt.",
+    "output": "Refunds are available only if approval and receipt.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "requirement-negation-evidence",
+    "context": "Refunds require approval.",
+    "output": "Refunds are available. Refunds do not require approval.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "conflicting-source-frames",
+    "context": "Users may enter if verified. Users may not enter if verified.",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_conflict", "severity": null}
+  },
+  {
+    "id": "restrictive-not-entails-mixed",
+    "context": "Users may enter if verified. Users may enter only if verified.",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "complement-tautology",
+    "context": "Users may enter if verified. Users may enter if unverified.",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "approx-value-abstains",
+    "context": "Basic costs $25.",
+    "output": "Basic costs around $30.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "cross-group-undecidable",
+    "context": "Shipping takes 30 days.",
+    "output": "Shipping takes 1 month.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "unsupported_claim_form", "severity": null}
+  },
+  {
+    "id": "within-dual-role",
+    "context": "Shipping takes 3 days.",
+    "output": "Shipping within 5 days.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "tier3-advisory",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null, "advisory": true}
   }
 ]

@@ -1,5 +1,5 @@
 """Section 0 (types) and section 2 (text primitives) of ALGORITHM v4 draft
-5.1. Hosts the shared type vocabulary (Bool AST, Extent, Frame, Evidence,
+5.2. Hosts the shared type vocabulary (Bool AST, Extent, Frame, Evidence,
 Obligation, Dec, Interval, Token, Roles) because section 0 precedes every
 other section in the spec and every other module in this package depends
 on these types. Tables are never restated here -- every constant/list is
@@ -258,6 +258,16 @@ class Frame:
     extent: Extent
     conds: Tuple[CondNode, ...]
     assertive: bool
+    # Per-conjunct subject structure (spec 3.5: explicit obligations and
+    # requirement evidence are "per governed conjunct"; the flat
+    # extent.subject union loses conjunct boundaries, so they are carried
+    # here alongside their COMPOUND_HEAD-rule heads).
+    subject_conjuncts: Tuple[FrozenSet[str], ...] = ()
+    subject_conjunct_heads: Tuple[Optional[str], ...] = ()
+    # For approval_requirement-facet frames: the parse_bool product over
+    # the required span (restrictive=True per spec 3.5 "an explicit
+    # requirement IS a necessary condition"). None for other facets.
+    req_formula: Optional[Bool] = None
 
 
 @dataclass(frozen=True)
@@ -669,22 +679,38 @@ def parse_values(value_span_tokens) -> Optional[Tuple[Interval, ...]]:
 # 2.6 sentences / segments / span accounting
 # --------------------------------------------------------------------------
 
-def _line_starts_new_sentence(tokens, idx) -> bool:
-    tok = tokens[idx]
-    if tok.kind == "PUNCT" and tok.raw in ("-", "*"):
+def _token_starts_line(text: str, tok: Token) -> bool:
+    if tok.start == 0:
         return True
-    if tok.kind == "NUMBER" and idx + 1 < len(tokens) and tokens[idx + 1].raw == ".":
-        return True
-    return False
+    # every non-newline whitespace char between the last newline and the
+    # token means the token still "starts" its line for the bullet rule
+    i = tok.start - 1
+    while i >= 0 and text[i] != "\n" and text[i] in T.ws_v1:
+        i -= 1
+    return i >= 0 and text[i] == "\n"
 
 
-def sentences(tokens):
+def sentences(tokens, text: Optional[str] = None):
     """Sentence ends at PUNCT '.', '!', '?' whose next raw char is WS_v1 or
     EOF (numeric '.' is inside NUMBER tokens, so it can never be a
-    sentence-terminator PUNCT token). Returns list[list[Token]]."""
+    sentence-terminator PUNCT token); a line whose first token is '-',
+    '*', or NUMBER+'.' starts a new sentence (spec 2.6 -- requires the
+    original `text` for line positions; without it only the terminator
+    rule applies). Returns list[list[Token]]."""
     out = []
     cur = []
-    for tok in tokens:
+    for i, tok in enumerate(tokens):
+        if cur and text is not None and _token_starts_line(text, tok):
+            bullet = tok.kind == "PUNCT" and tok.raw in ("-", "*")
+            numbered = (
+                tok.kind == "NUMBER"
+                and i + 1 < len(tokens)
+                and tokens[i + 1].kind == "PUNCT"
+                and tokens[i + 1].raw == "."
+            )
+            if bullet or numbered:
+                out.append(cur)
+                cur = []
         cur.append(tok)
         if tok.kind == "PUNCT" and tok.raw in T.sentence_terminators:
             out.append(cur)
@@ -759,12 +785,27 @@ RELATIVE_MARKERS_V1 = frozenset(fold_sequence(w)[0] for w in T.raw["relative_mar
 EXCL_V1 = frozenset(
     frozenset(fold_sequence(w)[0] for w in pair) for pair in T.raw["excl_v1"]
 )
-COMPLEMENT_V1 = tuple(
-    tuple(fold_sequence(w)[0] for w in pair) for pair in T.raw["complement_v1"]
-)
 GENERIC_BENEFIT_TRIGGERS_V1 = frozenset(fold_sequence(w)[0] for w in T.raw["generic_benefit_triggers_v1"])
 FACETPROJ_V1 = {fold_sequence(k)[0]: v for k, v in T.raw["facetproj_v1"].items()}
 CONCEPT_V1 = {fold_sequence(k)[0]: v for k, v in T.raw["concept_v1"].items()}
+
+
+def _bool_atom_normalize(word: str) -> str:
+    """The normalized form Bool-atom terms carry: post-stem
+    (fold_sequence) then post-CONCEPT_v1. e9 (spec 4.2): COMPLEMENT_v1
+    pair lookup operates on this SAME normalized form."""
+    fold = fold_sequence(word)[0]
+    return CONCEPT_V1.get(fold, fold)
+
+
+COMPLEMENT_V1 = tuple(
+    tuple(_bool_atom_normalize(w) for w in pair) for pair in T.raw["complement_v1"]
+)
+# e7: participle-vs-stative trigger classification comes from the tables
+# artifact (folded forms; never a code list).
+PARTICIPLE_TRIGGERS_V1 = frozenset(
+    fold_sequence(w)[0] for w in T.raw["participle_triggers_v1"]
+)
 APPROX_V1 = frozenset(fold_sequence(w)[0] for w in T.raw["approx_v1"])
 APPROX_FOLDS = APPROX_V1
 

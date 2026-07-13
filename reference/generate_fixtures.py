@@ -81,29 +81,44 @@ VARIANT_BUILDERS = {
 
 
 def build_variants(oracle: dict) -> list[dict]:
+    """Surface variants per oracle. For per-source-tier oracles
+    (context_sources shape) only output-side variants are generated; the
+    tiered context is carried through verbatim."""
     variants = []
+    tiered = "context_sources" in oracle
+    fields = ("output",) if tiered else ("context", "output")
     for kind, builder in VARIANT_BUILDERS.items():
-        for field in ("context", "output"):
-            base_text = oracle[field]
+        for field in fields:
+            base_text = oracle.get(field)
             if not base_text:
                 continue
             new_text = builder(base_text)
             if new_text is None or new_text == base_text:
                 continue
-            fixture = dict(context=oracle["context"], output=oracle["output"])
-            fixture[field] = new_text
-            variants.append(
-                {
-                    "id": f"{oracle['id']}__{kind}__{field}",
-                    "base_oracle": oracle["id"],
-                    "variant_kind": kind,
-                    "variant_field": field,
-                    "context": fixture["context"],
-                    "output": fixture["output"],
-                    "check_id": oracle["check_id"],
-                }
-            )
+            record = {
+                "id": f"{oracle['id']}__{kind}__{field}",
+                "base_oracle": oracle["id"],
+                "variant_kind": kind,
+                "variant_field": field,
+                "output": oracle["output"],
+                "check_id": oracle["check_id"],
+            }
+            if tiered:
+                record["context_sources"] = oracle["context_sources"]
+            else:
+                record["context"] = oracle["context"]
+            record[field] = new_text
+            variants.append(record)
     return variants
+
+
+def _evaluate_input(record: dict) -> dict:
+    fixture = {"output": record["output"]}
+    if "context_sources" in record:
+        fixture["context_sources"] = record["context_sources"]
+    else:
+        fixture["context"] = record["context"]
+    return fixture
 
 
 def generate() -> list[dict]:
@@ -111,24 +126,18 @@ def generate() -> list[dict]:
     out = []
     for oracle in oracles:
         for variant in build_variants(oracle):
-            result = evaluate({"context": variant["context"], "output": variant["output"]})
+            result = evaluate(_evaluate_input(variant))
             got = result[variant["check_id"]]
-            out.append(
-                {
-                    "id": variant["id"],
-                    "base_oracle": variant["base_oracle"],
-                    "variant_kind": variant["variant_kind"],
-                    "variant_field": variant["variant_field"],
-                    "context": variant["context"],
-                    "output": variant["output"],
-                    "check_id": variant["check_id"],
-                    "expected": {
-                        "outcome": got["outcome"],
-                        "outcome_reason": got["outcome_reason"],
-                        "severity": got["severity"],
-                    },
-                }
-            )
+            expected = {
+                "outcome": got["outcome"],
+                "outcome_reason": got["outcome_reason"],
+                "severity": got["severity"],
+            }
+            if got.get("advisory"):
+                expected["advisory"] = True
+            rec = dict(variant)
+            rec["expected"] = expected
+            out.append(rec)
     out.sort(key=lambda r: r["id"])
     return out
 

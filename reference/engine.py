@@ -1,4 +1,4 @@
-"""Section 4.1/4.2 of ALGORITHM v4 draft 5.1: bitsets, varmap, elementary
+"""Section 4.1/4.2 of ALGORITHM v4 draft 5.2: bitsets, varmap, elementary
 interval decomposition, GAMMA, and the boolean queries (SAT/UNSAT/EQUIV/
 NEGATE/ENTAILS/DOMAIN/IMPLIES). Depends only on reference.primitives
 (Bool AST + Dec/Interval) and reference.tables (MAX_BOOL_ATOMS); does not
@@ -14,6 +14,7 @@ from reference.primitives import (
     And,
     BOTTOM,
     Bool,
+    COMPLEMENT_V1,
     Dec,
     MeasureAtom,
     Not,
@@ -248,10 +249,14 @@ def _canonical_term_key(terms: frozenset) -> Tuple[frozenset, bool]:
     Only applies when `terms` is a single-term atom whose sole term is
     the "negated side" of a configured complement pair; multi-term
     atoms are never complement-folded (COMPLEMENT_v1 entries are single
-    words)."""
+    words). e9 (spec 4.2): the pair lookup operates on the SAME
+    normalized form as Bool atoms (post-stem, post-CONCEPT_v1) -- the
+    normalized pairs are compiled once in reference.primitives
+    (COMPLEMENT_V1), so 'if verified' (atom term 'verification' via
+    CONCEPT_v1) and 'if unverified' collapse to one variable."""
     if len(terms) == 1:
         (term,) = tuple(terms)
-        for positive, negative in T.complement_v1:
+        for positive, negative in COMPLEMENT_V1:
             if term == negative:
                 return frozenset({positive}), True
             if term == positive:
@@ -319,6 +324,38 @@ def build_varmap(task_formulas: List[Bool]):
     gamma = build_gamma(n, list(qty_var_groups.values()))
 
     return Compiled(n, term_var_index, negated_of, qty_var_groups, qty_indicators, gamma)
+
+
+def preflight_atom_count(task_formulas: List[Bool]) -> int:
+    """SET ARITHMETIC ONLY (spec section 8): the number of boolean
+    variables the task would materialize -- canonical TermAtom keys
+    (complement-folded) plus 2k+1 elementary-interval indicators per
+    MeasureAtom quantity -- computed without building any bitset.
+    Mirrors build_varmap's counting phase exactly."""
+    term_atoms: list = []
+    measure_atoms: list = []
+    for f in task_formulas:
+        _collect_atoms(f, term_atoms, measure_atoms)
+    canonical_keys = {_canonical_term_key(a.terms)[0] for a in term_atoms}
+    qty_intervals: Dict[tuple, list] = {}
+    for atom in measure_atoms:
+        qty_intervals.setdefault(atom.qty, []).extend(atom.intervals)
+    n = len(canonical_keys)
+    for qty, intervals in qty_intervals.items():
+        n += len(decompose(intervals))
+    return n
+
+
+def bool_nodes(node: Bool) -> int:
+    """Node count of a formula AST (COMPILE(F) = nodes(F) in the pinned
+    BOOLISA_v1 cost macros, spec section 8)."""
+    if isinstance(node, (TOP, BOTTOM, TermAtom, MeasureAtom, UnknownAtom)):
+        return 1
+    if isinstance(node, Not):
+        return 1 + bool_nodes(node.child)
+    if isinstance(node, (And, Or)):
+        return 1 + sum(bool_nodes(c) for c in node.children)
+    raise TypeError(f"unrecognized Bool node {node!r}")  # pragma: no cover
 
 
 class Compiled:
@@ -438,24 +475,16 @@ def _term_atoms_of(node: Bool, out: list):
 
 
 def ENTAILS(compiled: Compiled, F: Bool, H: Bool) -> str:
-    """YES|NO. STRUCTURAL PRE-CHECK (draft 5, item 2).
-
-    Spec text (section 4.2) states the rule twice at different scopes:
-    the general statement is that "for any atom pairing (same variable)
-    where the flags differ ... the pairing provides NO entailment" for
-    EITHER mismatch direction (F=0/H=1 or F=1/H=0), and explicitly says
-    "and vice versa" after the "if verified" / "only if verified"
-    example. The specific operational sentence that follows, however,
-    only spells out the H-restrictive-with-no-F-counterpart case. None
-    of the required SAN-879 oracle fixtures exercise the reverse
-    direction (a non-restrictive H against a restrictive F), so this is
-    not a fixture-blocking ambiguity, but it is a real tension between
-    the general statement/"vice versa" clause and the narrower
-    operational sentence. Resolved here as a SYMMETRIC check (same
-    variable + differing restrictive flags in EITHER direction => NO),
-    since that is both the more conservative reading and the one
-    consistent with "and vice versa" -- flagged in SAN-879's final
-    report rather than silently picked.
+    """YES|NO. STRUCTURAL PRE-CHECK, GENERALIZED at e9 (draft 5.2, spec
+    4.2, normative): collect the TermAtoms of F and H. An atom pairing
+    (same variable) with mismatched restrictive flags provides NO
+    entailment, in EITHER direction. If ANY H TermAtom -- grant or
+    restrictive -- has no flag-matching F counterpart on a variable that
+    F constrains, return NO. Consequences: "if verified" never entails
+    "only if verified" and vice versa; a restrictive-only F never entails
+    AND(grant_atom, restrictive_atom) (the grant atom lacks flag-matching
+    evidence). Variables F does NOT constrain carry no structural
+    verdict (so BOTTOM still entails everything semantically).
     """
     f_atoms: list = []
     h_atoms: list = []
@@ -469,33 +498,16 @@ def ENTAILS(compiled: Compiled, F: Bool, H: Bool) -> str:
         if idx is not None:
             f_by_var.setdefault(idx, set()).add(a.restrictive)
 
-    h_by_var: Dict[int, set] = {}
     for a in h_atoms:
-        key, _ = _canonical_term_key(a.terms)
-        idx = compiled.term_var_index.get(key)
-        if idx is not None:
-            h_by_var.setdefault(idx, set()).add(a.restrictive)
-
-    for a in h_atoms:
-        if a.restrictive != 1:
-            continue
         key, _ = _canonical_term_key(a.terms)
         idx = compiled.term_var_index.get(key)
         if idx is None:
-            return "NO"
+            continue
         flags_on_f = f_by_var.get(idx)
-        if not flags_on_f or 1 not in flags_on_f:
-            return "NO"
-
-    for a in f_atoms:
-        if a.restrictive != 1:
+        if flags_on_f is None:
+            # F does not constrain this variable: no structural verdict.
             continue
-        key, _ = _canonical_term_key(a.terms)
-        idx = compiled.term_var_index.get(key)
-        if idx is None:
-            continue
-        flags_on_h = h_by_var.get(idx)
-        if flags_on_h and 1 not in flags_on_h:
+        if a.restrictive not in flags_on_f:
             return "NO"
 
     fb = compiled.compile(F)

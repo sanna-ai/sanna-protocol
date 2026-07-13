@@ -1,7 +1,7 @@
-"""Sanna protocol reference implementation (ALGORITHM v4, draft 5.1).
+"""Sanna protocol reference implementation (ALGORITHM v4, draft 5.2).
 
 Reference-only: a pure-Python 3 stdlib implementation of checks C1-C4
-under ALGORITHM v4 draft 5.1. This package is NOT shipped in any SDK
+under ALGORITHM v4 draft 5.2. This package is NOT shipped in any SDK
 (sanna-repo, sanna-ts). Its purpose is to be the executable oracle that
 generates fixtures and that the TypeScript implementation (SAN-880)
 must byte-match via the differential harness (diff_harness.py).

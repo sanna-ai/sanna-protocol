@@ -315,3 +315,32 @@ def test_segments_split_on_structural_punctuation():
     segs = segments(sent)
     assert len(segs) == 3
     assert [t.raw for t in segs[0]] == ["Refunds"]
+
+
+def test_sentences_bullet_line_starts_new_sentence():
+    # spec 2.6: a line whose first token is '-' or '*' starts a new
+    # sentence even without a preceding terminator
+    text = "Refunds apply\n- Fees apply"
+    toks = tokenize(text)
+    sents = sentences(toks, text)
+    assert len(sents) == 2
+    assert sents[1][0].raw == "-"
+
+
+def test_sentences_numbered_line_starts_new_sentence():
+    # spec 2.6: a line whose first token is NUMBER+'.' starts a new
+    # sentence. Composed literally with the terminator rule (a '.'
+    # followed by WS_v1 ends a sentence), the list marker "1." forms its
+    # own sentence and the item body follows as the next one.
+    text = "Terms follow\n1. Refunds apply"
+    toks = tokenize(text)
+    sents = sentences(toks, text)
+    assert len(sents) == 3
+    assert sents[1][0].kind == "NUMBER"
+    assert [t.raw for t in sents[2]] == ["Refunds", "apply"]
+
+
+def test_sentences_without_text_applies_terminator_rule_only():
+    text = "Refunds apply\n- Fees apply"
+    toks = tokenize(text)
+    assert len(sentences(toks)) == 1

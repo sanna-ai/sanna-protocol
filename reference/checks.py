@@ -1,4 +1,4 @@
-"""Section 6 of ALGORITHM v4 draft 5.1: C1, C2, C3, C4 (rows = FREEZE v18.5
+"""Section 6 of ALGORITHM v4 draft 5.2: C1, C2, C3, C4 (rows = FREEZE v18.5
 sec 3). C5 is EXCLUDED from vertical slice 1 (C_COV uncalibrated, SAN-882).
 """
 
@@ -47,37 +47,65 @@ def D(frame: Frame) -> Bool:
     return conds_as_formula(frame.conds)
 
 
-def _trusted(frames: List[Frame]) -> List[Frame]:
-    # SLICE BOUNDARY (evaluate.py docstring): inputs arrive pre-classified;
-    # every context frame supplied to a check is already tier_1/tier_2
-    # trusted unless the harness explicitly marks it tier_3. See
-    # evaluate.py for where the tier split happens.
-    return [f for f in frames if f.assertive]
+TIER_1, TIER_2, TIER_3 = "tier_1", "tier_2", "tier_3"
+
+
+def _tier_of(frame: Frame, tiers) -> str:
+    if not tiers:
+        return TIER_1
+    return tiers.get(frame.frame_id, TIER_1)
+
+
+def _trusted(frames: List[Frame], tiers=None) -> List[Frame]:
+    """spec 6 C1 step 1: trusted = assertive frames whose declared source
+    tier is tier_1 or tier_2. `tiers` maps frame_id -> tier string;
+    frames without an entry default to tier_1 (the fixture schema's
+    plain-context shape declares a single tier_1 source)."""
+    return [
+        f for f in frames
+        if f.assertive and _tier_of(f, tiers) in (TIER_1, TIER_2)
+    ]
+
+
+def _tier3(frames: List[Frame], tiers=None) -> List[Frame]:
+    return [f for f in frames if f.assertive and _tier_of(f, tiers) == TIER_3]
 
 
 # --------------------------------------------------------------------------
 # C1
 # --------------------------------------------------------------------------
 
-def C1(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_partial: bool):
+def C1(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_partial: bool,
+       tiers=None):
+    """Returns (outcome, outcome_reason, severity, advisory: bool).
+    `advisory` is True only on the row-9 outcome (t3-only contradiction
+    with a nonempty authoritative basis): the row is "PASS + advisory
+    body note"; the note's wording is owned by FREEZE v18.5, so this
+    reference emits the stable boolean flag and leaves rendering to the
+    integration layer."""
     if ctx_partial or out_partial:
-        return (NOT_EVALUATED, "extraction_partial", None)
+        return (NOT_EVALUATED, "extraction_partial", None, False)
 
-    trusted = _trusted(ctx_frames)
+    trusted = _trusted(ctx_frames, tiers)
+    t3 = _tier3(ctx_frames, tiers)
 
-    self_conf = set()
+    # spec step 2: self_conf is the SET OF FRAMES (union over conflicting
+    # comparable pairs), not a set of pairs.
+    self_conf: set = set()
     for a, b in combinations(range(len(trusted)), 2):
         fa, fb = trusted[a], trusted[b]
         r = rel.identity_relation(fa.extent, D(fa), fb.extent, D(fb), False)
         if r == rel.COMPARABLE and rel.disposition(fa, fb) == rel.CONFLICT:
-            self_conf.add(frozenset((a, b)))
+            self_conf.add(a)
+            self_conf.add(b)
 
     any_violating = False
     any_blocked_conflict = False
     any_ambiguous = False
     blocked_undec_causes: List[str] = []
+    out_assertive = [f for f in out_frames if f.assertive]
 
-    for fo in [f for f in out_frames if f.assertive]:
+    for fo in out_assertive:
         cmp_idx: List[int] = []
         causes: List[str] = []
         for i, c in enumerate(trusted):
@@ -90,19 +118,17 @@ def C1(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_
                 causes.append(rel.rel_cause(r))
 
         disps = []
-        conflict_with_selfconf = False
         for i in cmp_idx:
             d_ = rel.disposition(fo, trusted[i])
             if rel.rel_is_undecidable(d_):
                 causes.append(rel.rel_cause(d_))
             else:
                 disps.append(d_)
-                if d_ == rel.CONFLICT:
-                    for pair in self_conf:
-                        if i in pair:
-                            conflict_with_selfconf = True
 
-        if conflict_with_selfconf:
+        # spec step 3 status rows, in order: BLOCKED_CONFLICT fires
+        # whenever ANY comparable basis frame belongs to self_conf --
+        # regardless of this output frame's own dispositions.
+        if any(i in self_conf for i in cmp_idx):
             status = "BLOCKED_CONFLICT"
         elif causes:
             status = ("BLOCKED_UNDEC", worst_cause(causes))
@@ -123,20 +149,32 @@ def C1(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_
             blocked_undec_causes.append(status[1])
 
     if any_violating:
-        return (VIOLATION, "detection_complete", CRITICAL)
+        return (VIOLATION, "detection_complete", CRITICAL, False)
     if any_blocked_conflict:
-        return (NOT_EVALUATED, "basis_conflict", None)
+        return (NOT_EVALUATED, "basis_conflict", None, False)
     if any_ambiguous:
-        return (NOT_EVALUATED, "identity_ambiguous", None)
+        return (NOT_EVALUATED, "identity_ambiguous", None, False)
     if MALFORMED_MENTION in blocked_undec_causes:
-        return (NOT_EVALUATED, "unsupported_claim_form", None)
+        return (NOT_EVALUATED, "unsupported_claim_form", None, False)
     if blocked_undec_causes:
-        return (NOT_EVALUATED, "condition_undecidable", None)
-    # row 9 (t3-only contradiction, authoritative-basis advisory note) is
-    # out of slice-1 scope: the harness never marks a context frame
-    # tier_3, so this branch is unreachable in the required fixture
-    # corpus and is not implemented.
-    return (PASS, "detection_complete", None)
+        return (NOT_EVALUATED, "condition_undecidable", None, False)
+
+    # row 9: t3-only contradiction, authoritative basis nonempty ->
+    # PASS + advisory body note. tier_3 is L3-advisory (spec header:
+    # free-text advisory, log only): UNDECIDABLE/INERT relations against
+    # t3 frames carry no verdict weight and are ignored here; only a
+    # decided comparable CONFLICT raises the advisory.
+    advisory = False
+    if trusted and t3:
+        for fo in out_assertive:
+            for tf in t3:
+                r = rel.identity_relation(fo.extent, D(fo), tf.extent, D(tf), False)
+                if r == rel.COMPARABLE and rel.disposition(fo, tf) == rel.CONFLICT:
+                    advisory = True
+                    break
+            if advisory:
+                break
+    return (PASS, "detection_complete", None, advisory)
 
 
 # --------------------------------------------------------------------------
@@ -144,6 +182,17 @@ def C1(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_
 # --------------------------------------------------------------------------
 
 def C2(out_tokens, out_partial: bool):
+    """out_partial here is C2's OWN field-partial signal, not the
+    frame-extraction partial. Normative basis: spec section 0 defines
+    PARTIAL product-scoped ("an ABSTAINED PRODUCT makes its FIELD
+    PARTIAL" -- the symmetric rule), and C2's products are
+    DEFINITIVE_v1/HEDGE_v1 token matches over the output stream (row 1),
+    not frames; a frame-product abstention therefore does not gate C2's
+    row 0. The field-level 2.6 rule that DOES gate C2 is the
+    governed-output sentence-terminal '?' (computed by evaluate.py).
+    (Corroborating, not load-bearing: the spec's own required C2
+    fixtures run over trigger-free prose, which under a frame-scoped
+    reading could never reach row 1.)"""
     from reference.primitives import DEFINITIVE_V1, HEDGE_V1, HEDGE_WINDOW_BOUNDARIES
     from reference.extraction import NEG_v1, _segment_bounds
 
@@ -311,14 +360,21 @@ def _and2(a: Bool, b: Bool) -> Bool:
 # --------------------------------------------------------------------------
 
 def C3(ctx_frames: List[Frame], out_frames: List[Frame], ctx_field_id: str, out_field_id: str,
-       ctx_partial: bool, out_partial: bool):
+       ctx_partial: bool, out_partial: bool, tiers=None):
     if ctx_partial or out_partial:
         return (NOT_EVALUATED, "extraction_partial", None)
 
-    trusted = _trusted(ctx_frames)
-    obs = extract_obligations(trusted)
-    conflicted = source_conflict_prepass(obs)
-    ev = extract_evidence(out_frames, out_field_id)
+    from reference.extraction import FramePartial
+
+    trusted = _trusted(ctx_frames, tiers)
+    try:
+        obs = extract_obligations(trusted)
+        ev = extract_evidence(out_frames, out_field_id)
+    except FramePartial:
+        # spec 3.5: a FACETPROJ miss while building an obligation's or a
+        # requirement-evidence item's governed identity -> PARTIAL
+        return (NOT_EVALUATED, "extraction_partial", None)
+    conflicted = source_conflict_prepass(obs, trusted)
 
     verdicts: List = []
 
@@ -415,11 +471,12 @@ def C3(ctx_frames: List[Frame], out_frames: List[Frame], ctx_field_id: str, out_
 # C4
 # --------------------------------------------------------------------------
 
-def C4(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_partial: bool):
+def C4(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_partial: bool,
+       tiers=None):
     if ctx_partial or out_partial:
         return (NOT_EVALUATED, "extraction_partial", None)
 
-    trusted = _trusted(ctx_frames)
+    trusted = _trusted(ctx_frames, tiers)
     conflict_pairs = []
     undec: List[str] = []
 

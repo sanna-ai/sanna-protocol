@@ -85,7 +85,12 @@ def test_varmap_at_cap_succeeds():
 
 
 def test_varmap_complement_pair_collapses_to_one_variable():
-    verified = TermAtom(frozenset({"verified"}), 0, 0)
+    # e9 (spec 4.2): COMPLEMENT_v1 pair lookup operates on the SAME
+    # normalized form as Bool atoms (post-stem, post-CONCEPT_v1), so the
+    # ('verified', 'unverified') table pair matches atoms carrying
+    # 'verification' (the CONCEPT_v1 image of 'verified') and
+    # 'unverified' (no CONCEPT_v1 entry; identity).
+    verified = TermAtom(frozenset({"verification"}), 0, 0)
     unverified = TermAtom(frozenset({"unverified"}), 0, 0)
     compiled = build_varmap([verified, unverified])
     assert compiled.n == 1
@@ -93,6 +98,25 @@ def test_varmap_complement_pair_collapses_to_one_variable():
     # both be satisfiable simultaneously (they're logical complements)
     assert not SAT(compiled, And((verified, unverified)))
     assert SAT(compiled, Or((verified, unverified)))
+
+
+def test_varmap_complement_or_is_tautology():
+    # the mechanism behind the complement-tautology oracle: OR over a
+    # complement pair is engine-TOP-equivalent
+    verified = TermAtom(frozenset({"verification"}), 0, 0)
+    unverified = TermAtom(frozenset({"unverified"}), 0, 0)
+    compiled = build_varmap([verified, unverified])
+    assert EQUIV(compiled, Or((verified, unverified)), TOP_)
+
+
+def test_varmap_raw_unnormalized_word_does_not_complement_fold():
+    # a term carrying the RAW table word 'verified' (which real Bool
+    # atoms never carry post-CONCEPT_v1) matches neither normalized side
+    # -- the e9 normalization is exact, not fuzzy
+    raw_verified = TermAtom(frozenset({"verified"}), 0, 0)
+    unverified = TermAtom(frozenset({"unverified"}), 0, 0)
+    compiled = build_varmap([raw_verified, unverified])
+    assert compiled.n == 2
 
 
 def test_varmap_same_terms_opposite_polarity_collapses_to_one_variable():
@@ -202,13 +226,34 @@ def test_entails_restrictive_flag_structural_no_forward():
 
 
 def test_entails_restrictive_flag_structural_no_reverse():
-    # "and vice versa" (spec 4.2 prose): the reverse direction is also
-    # blocked under the symmetric reading adopted here (see engine.py's
-    # ENTAILS docstring for the documented spec-tension rationale).
+    # e9 (spec 4.2, normative in draft 5.2): an atom pairing with
+    # mismatched restrictive flags provides no entailment in EITHER
+    # direction -- "only if verified" never entails "if verified".
     if_verified = TermAtom(frozenset({"verification"}), 0, 0)
     only_if_verified = TermAtom(frozenset({"verification"}), 0, 1)
     compiled = build_varmap([if_verified, only_if_verified])
     assert ENTAILS(compiled, only_if_verified, if_verified) == "NO"
+
+
+def test_entails_restrictive_only_f_never_entails_mixed_and():
+    # e9 flagship consequence: ENTAILS(A_restrictive,
+    # AND(A_grant, A_restrictive)) == NO -- the grant atom lacks
+    # flag-matching evidence even though both atoms share one variable.
+    a_grant = TermAtom(frozenset({"verification"}), 0, 0)
+    a_restrictive = TermAtom(frozenset({"verification"}), 0, 1)
+    compiled = build_varmap([a_grant, a_restrictive])
+    assert ENTAILS(compiled, a_restrictive, And((a_grant, a_restrictive))) == "NO"
+    # per-atom flag matching in the other direction is fine
+    assert ENTAILS(compiled, And((a_grant, a_restrictive)), a_restrictive) == "YES"
+
+
+def test_entails_structural_check_scoped_to_f_constrained_variables():
+    # e9 scopes the missing-counterpart rule to "a variable that F
+    # constrains": BOTTOM constrains nothing, so it still entails a
+    # restrictive atom semantically.
+    a_restrictive = TermAtom(frozenset({"verification"}), 0, 1)
+    compiled = build_varmap([BOTTOM_, a_restrictive])
+    assert ENTAILS(compiled, BOTTOM_, a_restrictive) == "YES"
 
 
 def test_entails_matching_restrictive_flags_succeeds():

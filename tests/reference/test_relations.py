@@ -203,3 +203,17 @@ def test_disposition_measure_match_on_overlapping_intervals():
     a = DummyFrame(_extent(facet="facet:cost", values=ivs_a))
     b = DummyFrame(_extent(facet="facet:cost", values=ivs_b))
     assert disposition(a, b) == MATCH
+
+
+def test_disposition_measure_cross_group_is_undecidable_malformed():
+    # spec 2.4: comparisons are legal only within one unit group and one
+    # currency; cross-group -> UnknownAtom(malformed_mention) -> the
+    # disposition is UNDECIDABLE with cause malformed_mention (mapping
+    # to unsupported_claim_form in the C1 rows), never a silent MATCH.
+    ivs_a = (Interval(Dec(43200, 0), False, Dec(43200, 0), False, "time_a"),)
+    ivs_b = (Interval(Dec(1, 0), False, Dec(1, 0), False, "time_b"),)
+    a = DummyFrame(_extent(facet="facet:duration", subject={"shipping"}, values=ivs_a))
+    b = DummyFrame(_extent(facet="facet:duration", subject={"shipping"}, values=ivs_b))
+    d = disposition(a, b)
+    assert rel_is_undecidable(d)
+    assert rel_cause(d) == "malformed_mention"
