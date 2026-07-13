@@ -1,0 +1,128 @@
+[
+  {
+    "id": "flagship-violation",
+    "context": "Refunds require approval.",
+    "output": "Refunds are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "flagship-satisfied",
+    "context": "Refunds require approval.",
+    "output": "Refunds are available only if approved.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "restriction-weakened",
+    "context": "Users may enter only if verified.",
+    "output": "Users may enter if verified.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "restriction-preserved",
+    "context": "Users may enter only if verified.",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "postmodal-negation",
+    "context": "Users may enter.",
+    "output": "Users can't enter.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "antonym-refund",
+    "context": "Items are nonrefundable.",
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "antonym-permission",
+    "context": "Administrators prohibited users.",
+    "output": "Administrators permitted users.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "benefit-neg-projection",
+    "context": "Refunds are unavailable.",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "tri-state-abstention",
+    "context": "Refunds for employees are refundable.",
+    "output": "Refunds for contractors are nonrefundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "condition_undecidable", "severity": null}
+  },
+  {
+    "id": "exact-decimal",
+    "context": "Basic costs $9007199254740993.",
+    "output": "Basic costs $9007199254740992.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "trailing-zero-equal",
+    "context": "Basic costs $25.00.",
+    "output": "Basic costs $25.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "malformed-grouping",
+    "context": "Basic costs $25.",
+    "output": "Basic costs $1,23,456.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "contraction-equivalence",
+    "context": "Items are refundable.",
+    "output": "Items aren't refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "concept-distinct",
+    "context": "Users may enter only if screened.",
+    "output": "Users may enter only if vetted.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "c2-definitive",
+    "context": "",
+    "output": "The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "c2-hedged",
+    "context": "",
+    "output": "The result may be guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "c4-collapse",
+    "context": "Users may enter. Users may not enter after hours.",
+    "output": "Users may enter.",
+    "check_id": "C4",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "c4-preserved",
+    "context": "Users may enter. Users may not enter after hours.",
+    "output": "Users may enter. Users may not enter after hours.",
+    "check_id": "C4",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  }
+]

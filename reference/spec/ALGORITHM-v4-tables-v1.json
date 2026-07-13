@@ -1,0 +1,755 @@
+{
+  "tables_version": "c1c5-tables/1",
+  "checks_version": 11,
+  "notes": "Single shared data artifact for ALGORITHM v4. Python and TypeScript MUST load tables from this file (vendored by content hash), never restate them in code. Additions are a CHECKS_VERSION bump with regenerated fixtures, justified by calibration-corpus measurement. definitive_v1/hedge_v1 are the EXACT v0 lists from sanna-repo receipt.py (ground truth); multi-word entries match as folded token sequences; '100%' matches via the PCT100 tokenizer rule. Round-20: negative benefit words are deny_triggers (explicit polarity; the NEG_v1 XOR deny rule makes 'nonrefundable' a NEG-polarity refund_availability frame); generic benefit normalization applies to BOTH polarities; contractions expand at tokenization and table entries are matched post-expansion. Round-21: Dec = {coefficient: signed BigInt, scale: nonneg int} with canonical trailing-zero removal; MAX_DEC_DIGITS/MAX_DEC_SCALE bound representation; comparators_v1 maps comparator token sequences to intervals over the parsed value v (null bound = unbounded); a bare scalar is [v, v]. Round-22: units_v1 flattened to token -> {group, factor}; concept_v1 normalizes condition-atom tokens (post-stem) to canonical concept forms so 'requires approval' and 'if approved' share the atom {approval} -- applied only inside Bool atoms, never extent terms.",
+  "constants": {
+    "ENV_MAX_FIELD_BYTES": 1048576,
+    "ENV_MAX_SENTENCES": 2048,
+    "ENV_MAX_FRAMES": 512,
+    "ENV_MAX_OBLIGATIONS": 256,
+    "ENV_MAX_EVIDENCE": 256,
+    "MAX_EXPR_NODES": 256,
+    "MAX_BOOL_ATOMS": 16,
+    "MAX_ENGINE_WORK": 67108864,
+    "MAX_ENGINE_BYTES": 16777216,
+    "L_MAX": 4096,
+    "W_HEDGE": 8,
+    "NEG_WINDOW": 3,
+    "MAX_DEC_DIGITS": 38,
+    "MAX_DEC_SCALE": 12
+  },
+  "ws_v1_codepoints": [
+    "0009",
+    "000A",
+    "000B",
+    "000C",
+    "000D",
+    "0020",
+    "0085",
+    "00A0",
+    "1680",
+    "2000",
+    "2001",
+    "2002",
+    "2003",
+    "2004",
+    "2005",
+    "2006",
+    "2007",
+    "2008",
+    "2009",
+    "200A",
+    "2028",
+    "2029",
+    "202F",
+    "205F",
+    "3000"
+  ],
+  "stop_v1": [
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "of",
+    "to",
+    "in",
+    "on",
+    "at",
+    "by",
+    "for",
+    "with",
+    "from",
+    "as",
+    "it",
+    "its",
+    "this",
+    "that",
+    "these",
+    "those",
+    "there",
+    "their",
+    "they"
+  ],
+  "definitive_v1": [
+    "definitely",
+    "certainly",
+    "always",
+    "never",
+    "guaranteed",
+    "absolutely",
+    "without doubt",
+    "100%"
+  ],
+  "hedge_v1": [
+    "may",
+    "might",
+    "could",
+    "possibly",
+    "likely",
+    "appears",
+    "seems",
+    "suggest",
+    "indicate",
+    "probably",
+    "perhaps",
+    "it's possible"
+  ],
+  "hedge_window_boundaries": [
+    "because",
+    "since"
+  ],
+  "negators_v1": [
+    "not",
+    "no",
+    "never",
+    "n't",
+    "without",
+    "cannot"
+  ],
+  "negation_exceptions": [
+    [
+      "not",
+      "only"
+    ],
+    [
+      "not",
+      "just"
+    ]
+  ],
+  "quant_v1": {
+    "universal": [
+      "all",
+      "every",
+      "each",
+      "any"
+    ],
+    "existential": [
+      "some"
+    ],
+    "abstain": [
+      "most",
+      "many",
+      "few",
+      "several",
+      "certain",
+      "no"
+    ]
+  },
+  "condition_operators_v1": [
+    {
+      "tokens": [
+        "if"
+      ],
+      "kind": "IF",
+      "polarity": "+",
+      "force": "grant"
+    },
+    {
+      "tokens": [
+        "when"
+      ],
+      "kind": "IF",
+      "polarity": "+",
+      "force": "grant"
+    },
+    {
+      "tokens": [
+        "provided",
+        "that"
+      ],
+      "kind": "IF",
+      "polarity": "+",
+      "force": "grant"
+    },
+    {
+      "tokens": [
+        "as",
+        "long",
+        "as"
+      ],
+      "kind": "IF",
+      "polarity": "+",
+      "force": "grant"
+    },
+    {
+      "tokens": [
+        "unless"
+      ],
+      "kind": "IF",
+      "polarity": "-",
+      "force": "grant"
+    },
+    {
+      "tokens": [
+        "except"
+      ],
+      "kind": "IF",
+      "polarity": "-",
+      "force": "grant"
+    },
+    {
+      "tokens": [
+        "only",
+        "if"
+      ],
+      "kind": "ONLY_IF",
+      "polarity": "+",
+      "force": "restriction"
+    },
+    {
+      "tokens": [
+        "subject",
+        "to"
+      ],
+      "kind": "SUBJECT_TO",
+      "polarity": "+",
+      "force": "restriction"
+    },
+    {
+      "tokens": [
+        "depending",
+        "on"
+      ],
+      "kind": "SUBJECT_TO",
+      "polarity": "+",
+      "force": "restriction"
+    },
+    {
+      "tokens": [
+        "must",
+        "first"
+      ],
+      "kind": "SUBJECT_TO",
+      "polarity": "+",
+      "force": "restriction"
+    }
+  ],
+  "modal_abstain_v1": [
+    "should",
+    "ought",
+    "might",
+    "could",
+    "would",
+    "typically",
+    "generally"
+  ],
+  "adjunct_prepositions_v1": [
+    "after",
+    "before",
+    "for",
+    "with",
+    "of",
+    "to",
+    "in",
+    "on",
+    "at",
+    "by",
+    "from",
+    "during",
+    "via",
+    "per"
+  ],
+  "relative_markers_v1": [
+    "which",
+    "that",
+    "who",
+    "whose",
+    "including",
+    "containing",
+    "such",
+    "as"
+  ],
+  "excl_v1": [
+    [
+      "digital",
+      "physical"
+    ],
+    [
+      "refundable",
+      "nonrefundable"
+    ],
+    [
+      "verified",
+      "unverified"
+    ],
+    [
+      "active",
+      "inactive"
+    ],
+    [
+      "internal",
+      "external"
+    ]
+  ],
+  "complement_v1": [
+    [
+      "verified",
+      "unverified"
+    ],
+    [
+      "approved",
+      "unapproved"
+    ],
+    [
+      "active",
+      "inactive"
+    ],
+    [
+      "enabled",
+      "disabled"
+    ],
+    [
+      "eligible",
+      "ineligible"
+    ]
+  ],
+  "units_v1": {
+    "min": {
+      "group": "time_a",
+      "factor": 1
+    },
+    "hour": {
+      "group": "time_a",
+      "factor": 60
+    },
+    "day": {
+      "group": "time_a",
+      "factor": 1440
+    },
+    "week": {
+      "group": "time_a",
+      "factor": 10080
+    },
+    "month": {
+      "group": "time_b",
+      "factor": 1
+    },
+    "year": {
+      "group": "time_b",
+      "factor": 12
+    }
+  },
+  "currency_symbols_v1": {
+    "$": "USD"
+  },
+  "facets_v1": {
+    "facet:availability": {
+      "triggers": [
+        "available",
+        "offered"
+      ],
+      "deny_triggers": [
+        "unavailable"
+      ],
+      "valency": [
+        "subject"
+      ],
+      "measure": false,
+      "benefit": true
+    },
+    "facet:refund_availability": {
+      "triggers": [
+        "refundable"
+      ],
+      "deny_triggers": [
+        "nonrefundable"
+      ],
+      "valency": [
+        "subject"
+      ],
+      "measure": false,
+      "benefit": true
+    },
+    "facet:exchange_availability": {
+      "triggers": [
+        "exchangeable"
+      ],
+      "deny_triggers": [],
+      "valency": [
+        "subject"
+      ],
+      "measure": false,
+      "benefit": true
+    },
+    "facet:discount_availability": {
+      "triggers": [],
+      "deny_triggers": [],
+      "valency": [
+        "subject"
+      ],
+      "measure": false,
+      "benefit": true,
+      "note": "projection-only: reached via benefit normalization of generic triggers"
+    },
+    "facet:access_permission": {
+      "triggers": [
+        "may",
+        "can",
+        "permitted",
+        "allowed"
+      ],
+      "deny_triggers": [
+        "prohibited",
+        "forbidden",
+        "banned"
+      ],
+      "valency": [
+        "subject",
+        "object"
+      ],
+      "measure": false,
+      "benefit": true
+    },
+    "facet:approval_requirement": {
+      "triggers": [
+        "require",
+        "requires",
+        "required",
+        "needs"
+      ],
+      "deny_triggers": [],
+      "valency": [
+        "subject",
+        "object"
+      ],
+      "measure": false,
+      "benefit": false
+    },
+    "facet:eligibility": {
+      "triggers": [
+        "eligible"
+      ],
+      "deny_triggers": [
+        "ineligible"
+      ],
+      "valency": [
+        "subject"
+      ],
+      "measure": false,
+      "benefit": true
+    },
+    "facet:cost": {
+      "triggers": [
+        "cost",
+        "costs",
+        "fee",
+        "price",
+        "charge"
+      ],
+      "deny_triggers": [],
+      "valency": [
+        "subject",
+        "value"
+      ],
+      "measure": true,
+      "benefit": false
+    },
+    "facet:duration": {
+      "triggers": [
+        "takes",
+        "lasts",
+        "within"
+      ],
+      "deny_triggers": [],
+      "valency": [
+        "subject",
+        "value"
+      ],
+      "measure": true,
+      "benefit": false
+    },
+    "facet:limit": {
+      "triggers": [
+        "limit",
+        "maximum",
+        "minimum"
+      ],
+      "deny_triggers": [],
+      "valency": [
+        "subject",
+        "value"
+      ],
+      "measure": true,
+      "benefit": false
+    }
+  },
+  "generic_benefit_triggers_v1": [
+    "available",
+    "unavailable",
+    "offered"
+  ],
+  "facetproj_v1": {
+    "refund": "facet:refund_availability",
+    "refunds": "facet:refund_availability",
+    "exchange": "facet:exchange_availability",
+    "exchanges": "facet:exchange_availability",
+    "access": "facet:access_permission",
+    "entry": "facet:access_permission",
+    "login": "facet:access_permission",
+    "discount": "facet:discount_availability",
+    "discounts": "facet:discount_availability"
+  },
+  "stem_v1_rules": [
+    {
+      "if_ends": "ies",
+      "min_len": 5,
+      "replace_with": "y"
+    },
+    {
+      "if_ends": "sses",
+      "min_len": 6,
+      "replace_with": "ss"
+    },
+    {
+      "if_ends": "es",
+      "min_len": 5,
+      "only_after": [
+        "s",
+        "x",
+        "z",
+        "ch",
+        "sh"
+      ],
+      "replace_with": ""
+    },
+    {
+      "if_ends": "s",
+      "min_len": 4,
+      "not_ends": "ss",
+      "replace_with": ""
+    }
+  ],
+  "structural_punctuation": [
+    ",",
+    ";",
+    ":",
+    "(",
+    ")"
+  ],
+  "sentence_terminators": [
+    ".",
+    "!",
+    "?"
+  ],
+  "approx_v1": [
+    "about",
+    "around",
+    "roughly",
+    "approximately",
+    "nearly",
+    "almost"
+  ],
+  "contractions_v1": {
+    "aren't": [
+      "are",
+      "not"
+    ],
+    "isn't": [
+      "is",
+      "not"
+    ],
+    "wasn't": [
+      "was",
+      "not"
+    ],
+    "weren't": [
+      "were",
+      "not"
+    ],
+    "can't": [
+      "can",
+      "not"
+    ],
+    "cannot": [
+      "can",
+      "not"
+    ],
+    "won't": [
+      "will",
+      "not"
+    ],
+    "don't": [
+      "do",
+      "not"
+    ],
+    "doesn't": [
+      "does",
+      "not"
+    ],
+    "didn't": [
+      "did",
+      "not"
+    ],
+    "couldn't": [
+      "could",
+      "not"
+    ],
+    "shouldn't": [
+      "should",
+      "not"
+    ],
+    "wouldn't": [
+      "would",
+      "not"
+    ],
+    "hasn't": [
+      "has",
+      "not"
+    ],
+    "haven't": [
+      "have",
+      "not"
+    ],
+    "hadn't": [
+      "had",
+      "not"
+    ],
+    "it's": [
+      "it",
+      "is"
+    ]
+  },
+  "compound_head_v1": {
+    "rule": "head(noun group) = the rightmost content token of the conjunct's group; compound tokens are retained in the term set; supersession never crosses a conjunct boundary"
+  },
+  "comparators_v1": [
+    {
+      "tokens": [
+        "over"
+      ],
+      "interval": {
+        "lo": "v",
+        "lo_open": true,
+        "hi": null,
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "above"
+      ],
+      "interval": {
+        "lo": "v",
+        "lo_open": true,
+        "hi": null,
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "more",
+        "than"
+      ],
+      "interval": {
+        "lo": "v",
+        "lo_open": true,
+        "hi": null,
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "at",
+        "least"
+      ],
+      "interval": {
+        "lo": "v",
+        "lo_open": false,
+        "hi": null,
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "under"
+      ],
+      "interval": {
+        "lo": null,
+        "lo_open": true,
+        "hi": "v",
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "below"
+      ],
+      "interval": {
+        "lo": null,
+        "lo_open": true,
+        "hi": "v",
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "less",
+        "than"
+      ],
+      "interval": {
+        "lo": null,
+        "lo_open": true,
+        "hi": "v",
+        "hi_open": true
+      }
+    },
+    {
+      "tokens": [
+        "at",
+        "most"
+      ],
+      "interval": {
+        "lo": null,
+        "lo_open": true,
+        "hi": "v",
+        "hi_open": false
+      }
+    },
+    {
+      "tokens": [
+        "up",
+        "to"
+      ],
+      "interval": {
+        "lo": null,
+        "lo_open": true,
+        "hi": "v",
+        "hi_open": false
+      }
+    },
+    {
+      "tokens": [
+        "within"
+      ],
+      "interval": {
+        "lo": "0",
+        "lo_open": false,
+        "hi": "v",
+        "hi_open": false
+      }
+    }
+  ],
+  "concept_v1": {
+    "approve": "approval",
+    "approved": "approval",
+    "approving": "approval",
+    "verify": "verification",
+    "verified": "verification",
+    "verifying": "verification",
+    "authorize": "authorization",
+    "authorized": "authorization",
+    "authorizing": "authorization",
+    "confirm": "confirmation",
+    "confirmed": "confirmation",
+    "confirming": "confirmation",
+    "register": "registration",
+    "registered": "registration",
+    "registering": "registration"
+  }
+}
