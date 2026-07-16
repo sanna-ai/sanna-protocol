@@ -3,8 +3,8 @@ import) and exposes typed accessors. Tables are NEVER restated in code
 here -- every value returned by this module is read out of the vendored
 JSON artifact. See ALGORITHM-v4-c1c5-reference.md section 1.
 
-The single hash constant below is integrity metadata for the vendored
-artifact (mandated by spec section 1: "verify the hash at build time"),
+The hash constants below are integrity metadata for the vendored
+artifacts (mandated by spec section 1: "verify the hash at build time"),
 not a restatement of table content.
 """
 
@@ -15,15 +15,20 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Spec section 1 / draft-5.2 header: sha256 of ALGORITHM-v4-tables-v1.json.
+# Spec section 1 / draft-5.3 header: sha256 of ALGORITHM-v4-tables-v1.json.
 TABLES_SHA256 = "0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc"
+# sha256 of the vendored ALGORITHM-v4-c1c5-reference.md (draft 5.3) --
+# the normative source this package implements; verified at import so a
+# silently swapped spec cannot masquerade as the reviewed one.
+ALGORITHM_SHA256 = "73310234a67da6226f069f467d90d86f53d161aa44a7f3cb155de855adcd112d"
 
 _SPEC_DIR = Path(__file__).parent / "spec"
 _TABLES_PATH = _SPEC_DIR / "ALGORITHM-v4-tables-v1.json"
+_ALGORITHM_PATH = _SPEC_DIR / "ALGORITHM-v4-c1c5-reference.md"
 
 
 class TablesIntegrityError(RuntimeError):
-    """Raised when the vendored tables artifact does not match TABLES_SHA256."""
+    """Raised when a vendored spec artifact does not match its pinned hash."""
 
 
 def _load_and_verify(path: Path) -> dict[str, Any]:
@@ -32,6 +37,11 @@ def _load_and_verify(path: Path) -> dict[str, Any]:
     if digest != TABLES_SHA256:
         raise TablesIntegrityError(
             f"{path} sha256 mismatch: expected {TABLES_SHA256}, got {digest}"
+        )
+    algo_digest = hashlib.sha256(_ALGORITHM_PATH.read_bytes()).hexdigest()
+    if algo_digest != ALGORITHM_SHA256:
+        raise TablesIntegrityError(
+            f"{_ALGORITHM_PATH} sha256 mismatch: expected {ALGORITHM_SHA256}, got {algo_digest}"
         )
     return json.loads(raw.decode("utf-8"))
 

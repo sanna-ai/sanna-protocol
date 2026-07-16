@@ -64,6 +64,7 @@ from reference.primitives import (
     UnknownAtom,
     is_content_token,
     is_interrogative,
+    list_marker_indices,
     parse_values,
     sentences,
     tokenize,
@@ -787,9 +788,13 @@ def extract_frames(field_id: str, text: str, governed: bool = False):
             # span is consumed by a frame product or by FILLER, else the
             # FIELD is PARTIAL. Applies to untriggered sentences too
             # (zero hits => zero products => any non-filler token is
-            # unconsumed, e.g. a triggerless retraction sentence). --
+            # unconsumed, e.g. a triggerless retraction sentence).
+            # e10: line-initial LIST MARKER tokens are structural markers
+            # of the item's sentence, accounted like structural
+            # punctuation. --
+            markers = list_marker_indices(sent, text)
             for i, tok in enumerate(sent):
-                if i in consumed:
+                if i in consumed or i in markers:
                     continue
                 if _is_filler(tok):
                     continue

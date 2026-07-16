@@ -218,5 +218,47 @@
     "output": "Items are refundable.",
     "check_id": "C1",
     "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null, "advisory": true}
+  },
+  {
+    "id": "basis-empty-c1",
+    "context_sources": [
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-c3",
+    "context_sources": [
+      {"text": "Refunds require approval.", "tier": "tier_3"}
+    ],
+    "output": "Refunds are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-c4",
+    "context_sources": [
+      {"text": "Users may enter.", "tier": "tier_3"},
+      {"text": "Users may not enter after hours.", "tier": "tier_3"}
+    ],
+    "output": "Users may enter.",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "envelope-per-check-c2",
+    "context_repeat": {"text": "x", "count": 1048577},
+    "output": "The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "numbered-list-output",
+    "context": "Items are nonrefundable.",
+    "output": "1. Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
   }
 ]

@@ -46,6 +46,8 @@ def run(fixtures: list) -> list:
         fixture = {"output": fx.get("output", "")}
         if "context_sources" in fx:
             fixture["context_sources"] = fx["context_sources"]
+        elif "context_repeat" in fx:
+            fixture["context_repeat"] = fx["context_repeat"]
         else:
             fixture["context"] = fx.get("context", "")
         out = evaluate(fixture)

@@ -690,29 +690,56 @@ def _token_starts_line(text: str, tok: Token) -> bool:
     return i >= 0 and text[i] == "\n"
 
 
+def list_marker_indices(tokens, text: Optional[str]) -> FrozenSet[int]:
+    """e10 (spec 2.6): indices of line-initial structural LIST MARKER
+    tokens -- a '-'/'*' PUNCT, or a NUMBER plus its immediately following
+    '.' PUNCT, at the start of a line. The marker belongs to the item's
+    sentence and is accounted like structural punctuation; the numbered
+    marker's period is NOT a sentence terminator. Requires the original
+    `text` for line positions; without it, no markers are identified."""
+    if text is None:
+        return frozenset()
+    marked = set()
+    for i, tok in enumerate(tokens):
+        if not _token_starts_line(text, tok):
+            continue
+        if tok.kind == "PUNCT" and tok.raw in ("-", "*"):
+            marked.add(i)
+        elif (
+            tok.kind == "NUMBER"
+            and i + 1 < len(tokens)
+            and tokens[i + 1].kind == "PUNCT"
+            and tokens[i + 1].raw == "."
+        ):
+            marked.add(i)
+            marked.add(i + 1)
+    return frozenset(marked)
+
+
 def sentences(tokens, text: Optional[str] = None):
     """Sentence ends at PUNCT '.', '!', '?' whose next raw char is WS_v1 or
     EOF (numeric '.' is inside NUMBER tokens, so it can never be a
-    sentence-terminator PUNCT token); a line whose first token is '-',
-    '*', or NUMBER+'.' starts a new sentence (spec 2.6 -- requires the
+    sentence-terminator PUNCT token). LIST MARKERS (e10): a line whose
+    first token is '-', '*', or NUMBER+'.' starts a new sentence, and the
+    marker BELONGS TO that sentence; the numbered marker's period is NOT
+    a sentence terminator, so '1. Items are refundable.' is ONE sentence,
+    behaviorally identical to '- Items are refundable.'. Requires the
     original `text` for line positions; without it only the terminator
-    rule applies). Returns list[list[Token]]."""
+    rule applies. Returns list[list[Token]]."""
+    markers = list_marker_indices(tokens, text)
     out = []
     cur = []
     for i, tok in enumerate(tokens):
-        if cur and text is not None and _token_starts_line(text, tok):
-            bullet = tok.kind == "PUNCT" and tok.raw in ("-", "*")
-            numbered = (
-                tok.kind == "NUMBER"
-                and i + 1 < len(tokens)
-                and tokens[i + 1].kind == "PUNCT"
-                and tokens[i + 1].raw == "."
-            )
-            if bullet or numbered:
-                out.append(cur)
-                cur = []
+        if cur and i in markers and (i == 0 or (i - 1) not in markers):
+            # a marker's FIRST token opens the item's sentence
+            out.append(cur)
+            cur = []
         cur.append(tok)
-        if tok.kind == "PUNCT" and tok.raw in T.sentence_terminators:
+        if (
+            tok.kind == "PUNCT"
+            and tok.raw in T.sentence_terminators
+            and i not in markers  # e10: the numbered marker's '.' never terminates
+        ):
             out.append(cur)
             cur = []
     if cur:

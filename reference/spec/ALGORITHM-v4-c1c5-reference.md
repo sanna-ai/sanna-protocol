@@ -1,6 +1,20 @@
-# ALGORITHM v4 (DRAFT 5.2): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
+# ALGORITHM v4 (DRAFT 5.3): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
 
-> STATUS: DRAFT 5.2 -- three NARROW errata directed by Sol's PR-52
+> STATUS: DRAFT 5.3 -- three NARROW errata from Sol's fa2a50a delta
+> review (adjudications adopted; no design reopening): (e10) LIST MARKERS
+> -- a line-initial bullet/number marker ('-', '*', NUMBER+'.') begins the
+> item's sentence and BELONGS to it as a structural list marker; the
+> marker's '.' is NOT a sentence terminator ('1. Items are refundable.' is
+> ONE sentence, identical in behavior to '- Items are refundable.'; the
+> prior marker-only-sentence reading is REJECTED); (e11) C2-LOCAL PARTIAL
+> (operator-ratified text): C2 field PARTIAL is local to C2's own
+> normalization/tokenization/lexical scan, plus governed-output
+> interrogatives; C2 does NOT inherit proposition-frame extraction
+> partiality; (e12) ENVELOPE SCOPING clarified as already normative per
+> A2: cap breaches attach ONLY to checks consuming the breached field, and
+> task/engine overflows ONLY to the owning check -- other checks evaluate
+> normally; there is no global envelope result.
+> DRAFT 5.2 was: three NARROW errata directed by Sol's PR-52
 > implementation review (no design reopening): (e7) PARTICIPLE_TRIGGERS_v1
 > moves into the shared tables artifact (passive-voice participle vs
 > stative-adjective trigger classification is DATA, never a code list);
@@ -186,8 +200,14 @@ token immediately before the number (or its sign/currency) -> abstain.
 
 ### 2.6 sentences / segments / accounting
 Sentence ends at PUNCT '.', '!', '?' whose next raw char is WS_v1 or EOF
-(numeric '.' is inside NUMBER tokens); a line whose first token is '-',
-'*', or NUMBER+'.' starts a new sentence; EOF closes the last. Segments
+(numeric '.' is inside NUMBER tokens). LIST MARKERS (e10): a line whose
+first token is '-', '*', or NUMBER+'.' starts a new sentence, and the
+marker BELONGS TO that sentence as a structural list marker (accounted
+like structural punctuation; the NUMBER+'.' marker's period is NOT a
+sentence terminator) -- the item's sentence runs to the next genuine
+terminator or EOF, so '1. Items are refundable.' is ONE sentence,
+behaviorally identical to '- Items are refundable.'. EOF closes the
+last. Segments
 split at T.structural_punctuation PUNCT tokens. Content token := fold
 length >= 3 and fold not in T.stop_v1. LOSSLESS IDENTITY STREAM + TOTAL
 SPAN ACCOUNTING: every non-whitespace span is consumed by a frame
@@ -500,7 +520,12 @@ def disposition(a: Frame, b: Frame) -> MATCH|CONFLICT|UNDECIDABLE(cause):
 ```
 Stage R   raw caps (ENV_MAX_FIELD_BYTES; UTF-8 validity); no semantics;
           a breach records envelope_exceeded, selected at its LOCKED A1
-          position (only if no earlier gate fires)
+          position (only if no earlier gate fires). SCOPING (e12,
+          normative per A2's check-scoped envelope_exceeded): a breached
+          FIELD affects ONLY the checks that consume it (an oversized
+          context never suppresses output-only C2); a task/engine
+          overflow affects ONLY the owning check; unaffected checks
+          evaluate normally -- there is no global envelope result
 Stage W1  extraction-free gates: case-A, malformed_structured_input,
           runtime_binding_missing, dynamic_config_rejected,
           context_disabled, input_empty (WS_v1), attestation gates per
@@ -555,7 +580,12 @@ def C1(ctx_frames, out_frames) -> (outcome, reason):
 10 else                -> (PASS, detection_complete)
 
 def C2(out_field) -> (outcome, reason):
- 0 out_field PARTIAL -> (NOT_EVALUATED, extraction_partial)
+ 0 C2-LOCAL PARTIAL (e11, operator-ratified): "out_field PARTIAL" for C2
+   means C2's OWN normalization/tokenization/lexical scan is incomplete,
+   OR the governed output is interrogative (sentence-terminal '?'). C2
+   does NOT inherit proposition-frame extraction partiality -- its
+   products are DEFINITIVE_v1/HEDGE_v1 token matches, not frames.
+   C2-local PARTIAL -> (NOT_EVALUATED, extraction_partial)
  1 for d in folded-sequence matches of T.definitive_v1 in out_field
        where not NEG_v1(d):
      w = tokens within W_HEDGE each side of d, clipped at segment bounds,
@@ -747,7 +777,8 @@ Enumerate every potential task with SET ARITHMETIC ONLY (identity
 screens, EXCL lookups -- no engine calls): C1 = (out x trusted-ctx) +
 ctx pairs; C3 = every identity-screened (obligation, out frame) pair
 budgeted AS IF activated with its full bindable evidence; C4 = ctx pairs
-+ pair x out. envelope_exceeded when any of:
++ pair x out. envelope_exceeded when any of the following trips -- evaluated PER CHECK
+over that check's OWN consumed fields and tasks only (e12):
 ```
 n(task) > MAX_BOOL_ATOMS
 W_total > MAX_ENGINE_WORK   # BOOLISA_v1 op sums, macros PINNED here

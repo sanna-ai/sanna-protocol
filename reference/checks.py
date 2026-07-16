@@ -182,17 +182,15 @@ def C1(ctx_frames: List[Frame], out_frames: List[Frame], ctx_partial: bool, out_
 # --------------------------------------------------------------------------
 
 def C2(out_tokens, out_partial: bool):
-    """out_partial here is C2's OWN field-partial signal, not the
-    frame-extraction partial. Normative basis: spec section 0 defines
-    PARTIAL product-scoped ("an ABSTAINED PRODUCT makes its FIELD
-    PARTIAL" -- the symmetric rule), and C2's products are
-    DEFINITIVE_v1/HEDGE_v1 token matches over the output stream (row 1),
-    not frames; a frame-product abstention therefore does not gate C2's
-    row 0. The field-level 2.6 rule that DOES gate C2 is the
-    governed-output sentence-terminal '?' (computed by evaluate.py).
-    (Corroborating, not load-bearing: the spec's own required C2
-    fixtures run over trigger-free prose, which under a frame-scoped
-    reading could never reach row 1.)"""
+    """out_partial here is C2's OWN field-partial signal. Normative
+    basis: e11 (spec 6, C2 row 0, operator-ratified; FREEZE v18.6 3.2):
+    C2 field PARTIAL means C2's OWN normalization/tokenization/lexical
+    scan is incomplete, OR the governed output is interrogative
+    (sentence-terminal '?'). C2 does NOT inherit proposition-frame
+    extraction partiality -- its products are DEFINITIVE_v1/HEDGE_v1
+    token matches, not frames. evaluate.py computes the signal (in this
+    total implementation the lexical scan cannot be incomplete, so the
+    realizable source is the interrogative-output rule)."""
     from reference.primitives import DEFINITIVE_V1, HEDGE_V1, HEDGE_WINDOW_BOUNDARIES
     from reference.extraction import NEG_v1, _segment_bounds
 

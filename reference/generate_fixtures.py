@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -72,21 +73,36 @@ def contraction_contract_variant(text: str) -> str | None:
     return None
 
 
+_NUMBERED_MARKER_RE = re.compile(r"^(\d+)\.\s+")
+
+
+def list_marker_variant(text: str) -> str | None:
+    """e10: a numbered list marker and the bullet form are behaviorally
+    identical -- swap 'N. item' for '- item' so both stay locked to the
+    same expected tuple."""
+    m = _NUMBERED_MARKER_RE.match(text)
+    if m is None:
+        return None
+    return "- " + text[m.end() :]
+
+
 VARIANT_BUILDERS = {
     "case": case_variant,
     "whitespace": whitespace_variant,
     "contraction_expand": contraction_expand_variant,
     "contraction_contract": contraction_contract_variant,
+    "list_marker": list_marker_variant,
 }
 
 
 def build_variants(oracle: dict) -> list[dict]:
-    """Surface variants per oracle. For per-source-tier oracles
-    (context_sources shape) only output-side variants are generated; the
-    tiered context is carried through verbatim."""
+    """Surface variants per oracle. For per-source-tier
+    (context_sources) and repeat-shaped (context_repeat) oracles only
+    output-side variants are generated; the context spec is carried
+    through verbatim."""
     variants = []
-    tiered = "context_sources" in oracle
-    fields = ("output",) if tiered else ("context", "output")
+    non_literal_ctx = "context_sources" in oracle or "context_repeat" in oracle
+    fields = ("output",) if non_literal_ctx else ("context", "output")
     for kind, builder in VARIANT_BUILDERS.items():
         for field in fields:
             base_text = oracle.get(field)
@@ -103,8 +119,10 @@ def build_variants(oracle: dict) -> list[dict]:
                 "output": oracle["output"],
                 "check_id": oracle["check_id"],
             }
-            if tiered:
+            if "context_sources" in oracle:
                 record["context_sources"] = oracle["context_sources"]
+            elif "context_repeat" in oracle:
+                record["context_repeat"] = oracle["context_repeat"]
             else:
                 record["context"] = oracle["context"]
             record[field] = new_text
@@ -116,6 +134,8 @@ def _evaluate_input(record: dict) -> dict:
     fixture = {"output": record["output"]}
     if "context_sources" in record:
         fixture["context_sources"] = record["context_sources"]
+    elif "context_repeat" in record:
+        fixture["context_repeat"] = record["context_repeat"]
     else:
         fixture["context"] = record["context"]
     return fixture

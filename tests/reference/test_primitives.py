@@ -328,16 +328,26 @@ def test_sentences_bullet_line_starts_new_sentence():
 
 
 def test_sentences_numbered_line_starts_new_sentence():
-    # spec 2.6: a line whose first token is NUMBER+'.' starts a new
-    # sentence. Composed literally with the terminator rule (a '.'
-    # followed by WS_v1 ends a sentence), the list marker "1." forms its
-    # own sentence and the item body follows as the next one.
+    # e10 (spec 2.6): a line whose first token is NUMBER+'.' starts a
+    # new sentence and the marker BELONGS to the item's sentence as a
+    # structural list marker -- its period is NOT a sentence terminator.
     text = "Terms follow\n1. Refunds apply"
     toks = tokenize(text)
     sents = sentences(toks, text)
-    assert len(sents) == 3
-    assert sents[1][0].kind == "NUMBER"
-    assert [t.raw for t in sents[2]] == ["Refunds", "apply"]
+    assert len(sents) == 2
+    assert [t.raw for t in sents[1]] == ["1", ".", "Refunds", "apply"]
+
+
+def test_sentences_numbered_item_is_one_sentence():
+    # e10: '1. Items are refundable.' is ONE sentence, behaviorally
+    # identical to '- Items are refundable.'
+    text = "1. Items are refundable."
+    toks = tokenize(text)
+    sents = sentences(toks, text)
+    assert len(sents) == 1
+    bullet_text = "- Items are refundable."
+    bullet_sents = sentences(tokenize(bullet_text), bullet_text)
+    assert len(bullet_sents) == 1
 
 
 def test_sentences_without_text_applies_terminator_rule_only():

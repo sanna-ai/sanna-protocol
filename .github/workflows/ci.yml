@@ -47,6 +47,39 @@ jobs:
         # SAN-404: detect-private-key hook config in .pre-commit-config.yaml
         run: pre-commit run --all-files --show-diff-on-failure --color=always
 
+  reference-implementation:
+    # SAN-879: protocol-reference gate. Runs the full repo pytest suite
+    # (including tests/reference/), verifies generated.json is a
+    # deterministic product of oracles.json + the reference
+    # implementation, and runs the differential harness self-check on
+    # both fixture files (the byte-stability contract the TypeScript
+    # implementation must match).
+    name: Reference implementation (C1-C4)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned test dependencies
+        run: pip install pytest==9.0.3 jsonschema==4.26.0
+
+      - name: Run test suite
+        run: python -m pytest tests/ -q
+
+      - name: Verify generated fixtures are current and deterministic
+        run: python3 reference/generate_fixtures.py --check
+
+      - name: Differential harness self-check (oracles)
+        run: python3 reference/diff_harness.py reference/fixtures/oracles.json --self-check
+
+      - name: Differential harness self-check (generated)
+        run: python3 reference/diff_harness.py reference/fixtures/generated.json --self-check
+
   cross-sdk-smoke-python:
     # SAN-491: cross-SDK consumption smoke gate (Python side).
     # Mirrors sanna-repo's spec-touching CI gates: schema parity diff, full

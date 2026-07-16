@@ -168,6 +168,128 @@
     }
   },
   {
+    "id": "basis-empty-c1__case__output",
+    "base_oracle": "basis-empty-c1",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c1__whitespace__output",
+    "base_oracle": "basis-empty-c1",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c3__case__output",
+    "base_oracle": "basis-empty-c3",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are AVAILABLE.",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Refunds require approval.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c3__whitespace__output",
+    "base_oracle": "basis-empty-c3",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available.",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Refunds require approval.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c4__case__output",
+    "base_oracle": "basis-empty-c4",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may ENTER.",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Users may enter.",
+        "tier": "tier_3"
+      },
+      {
+        "text": "Users may not enter after hours.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c4__whitespace__output",
+    "base_oracle": "basis-empty-c4",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter.",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Users may enter.",
+        "tier": "tier_3"
+      },
+      {
+        "text": "Users may not enter after hours.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
     "id": "benefit-neg-projection__case__context",
     "base_oracle": "benefit-neg-projection",
     "variant_kind": "case",
@@ -742,6 +864,40 @@
     }
   },
   {
+    "id": "envelope-per-check-c2__case__output",
+    "base_oracle": "envelope-per-check-c2",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "The result is GUARANTEED.",
+    "check_id": "C2",
+    "context_repeat": {
+      "text": "x",
+      "count": 1048577
+    },
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "envelope-per-check-c2__whitespace__output",
+    "base_oracle": "envelope-per-check-c2",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "The   result is guaranteed.",
+    "check_id": "C2",
+    "context_repeat": {
+      "text": "x",
+      "count": 1048577
+    },
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
     "id": "exact-decimal__case__context",
     "base_oracle": "exact-decimal",
     "variant_kind": "case",
@@ -963,6 +1119,76 @@
       "outcome": "NOT_EVALUATED",
       "outcome_reason": "extraction_partial",
       "severity": null
+    }
+  },
+  {
+    "id": "numbered-list-output__case__context",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "1. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__case__output",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "1. Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__list_marker__output",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "list_marker",
+    "variant_field": "output",
+    "output": "- Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__whitespace__context",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "1. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__whitespace__output",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "1.   Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
     }
   },
   {

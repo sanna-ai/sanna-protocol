@@ -20,11 +20,13 @@ ORACLES = json.loads(ORACLES_PATH.read_text())
 
 def _fixture_input(record):
     """Build the evaluate() input from an oracle/generated record. Supports
-    both the plain-context shape and the per-source tier shape
-    (context_sources)."""
+    the plain-context shape, the per-source tier shape (context_sources),
+    and the repeat shape (context_repeat, for envelope-cap fixtures)."""
     fixture = {"output": record["output"]}
     if "context_sources" in record:
         fixture["context_sources"] = record["context_sources"]
+    elif "context_repeat" in record:
+        fixture["context_repeat"] = record["context_repeat"]
     else:
         fixture["context"] = record["context"]
     return fixture
