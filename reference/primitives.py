@@ -683,11 +683,13 @@ def _token_starts_line(text: str, tok: Token) -> bool:
     if tok.start == 0:
         return True
     # every non-newline whitespace char between the last newline and the
-    # token means the token still "starts" its line for the bullet rule
+    # token means the token still "starts" its line for the bullet rule;
+    # walking past beginning-of-field (i < 0) is equally line-starting
+    # (an indented marker on the field's first line).
     i = tok.start - 1
     while i >= 0 and text[i] != "\n" and text[i] in T.ws_v1:
         i -= 1
-    return i >= 0 and text[i] == "\n"
+    return i < 0 or text[i] == "\n"
 
 
 def list_marker_indices(tokens, text: Optional[str]) -> FrozenSet[int]:

@@ -8,6 +8,7 @@ from reference.primitives import (
     Abstain,
     Dec,
     dec_cmp,
+    list_marker_indices,
     parse_dec,
     parse_values,
     segments,
@@ -354,3 +355,42 @@ def test_sentences_without_text_applies_terminator_rule_only():
     text = "Refunds apply\n- Fees apply"
     toks = tokenize(text)
     assert len(sentences(toks)) == 1
+
+
+def test_indented_bullet_marker_single_leading_space_recognized():
+    # e10 + Sol 914f832 delta: leading whitespace that reaches
+    # beginning-of-field still starts a line
+    text = " - Items are refundable."
+    toks = tokenize(text)
+    assert 0 in list_marker_indices(toks, text)
+
+
+def test_indented_bullet_marker_multiple_leading_spaces_recognized():
+    text = "   * Items are refundable."
+    toks = tokenize(text)
+    assert 0 in list_marker_indices(toks, text)
+
+
+def test_indented_bullet_marker_leading_tab_recognized():
+    text = "\t- Items are refundable."
+    toks = tokenize(text)
+    assert 0 in list_marker_indices(toks, text)
+
+
+def test_indented_numbered_marker_recognized_and_one_sentence():
+    # " 12. Items are refundable." must behave identically to the
+    # bullet form: marker recognized (NUMBER + '.' indices), period not
+    # a terminator, ONE sentence
+    text = " 12. Items are refundable."
+    toks = tokenize(text)
+    markers = list_marker_indices(toks, text)
+    assert 0 in markers and 1 in markers
+    assert len(sentences(toks, text)) == 1
+
+
+def test_indented_numbered_marker_after_newline_with_indent():
+    text = "Terms follow.\n  3. Fees apply."
+    toks = tokenize(text)
+    sents = sentences(toks, text)
+    assert len(sents) == 2
+    assert sents[1][0].kind == "NUMBER"

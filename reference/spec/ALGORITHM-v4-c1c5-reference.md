@@ -53,7 +53,7 @@
 > 0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc**.
 > C5 is EXCLUDED from vertical slice 1 (C_COV uncalibrated).
 > Authority: DECISION-01 + A1 (LOCKED) own ontology/enforcement; A2 rev 3
-> owns wrapper scope/applicability; FREEZE v18.5 owns per-check
+> owns wrapper scope/applicability; FREEZE v18.6 owns per-check
 > outcome/reason tables and attestation schemas. This document owns
 > EXECUTABLE SEMANTICS. Reference implementation location (operator
 > decision, round 22): `sanna-protocol/reference/`.
@@ -529,7 +529,7 @@ Stage R   raw caps (ENV_MAX_FIELD_BYTES; UTF-8 validity); no semantics;
 Stage W1  extraction-free gates: case-A, malformed_structured_input,
           runtime_binding_missing, dynamic_config_rejected,
           context_disabled, input_empty (WS_v1), attestation gates per
-          FREEZE v18.5 2.5.2 (SubjectTuple joins, non-circular signed
+          FREEZE v18.6 2.5.2 (SubjectTuple joins, non-circular signed
           containers, P/C/A role authorization, direct signer-identity
           binding, key-identity invariant, per-run coverage)
 Stage X   bounded extraction (secs 2-3) on surviving fields
@@ -541,7 +541,7 @@ Reason SELECTION = first hit in the LOCKED A1.2b order over computed
 gate results; iteration scopes per A2 rev 3 Tables A/B (until A2 locks,
 A1's text controls traversal).
 
-## 6. Checks (rows = FREEZE v18.5 sec 3)
+## 6. Checks (rows = FREEZE v18.6 sec 3)
 
 ```
 def C1(ctx_frames, out_frames) -> (outcome, reason):
@@ -839,7 +839,7 @@ aborts -> EVALUATOR_ERROR per the LOCKED A1.2b.
   grouping "1,23,456" -> abstain.
 - CONCEPT_v1 vectors (approve/approved/approval unify; misses stay
   distinct); contraction vectors ("aren't" == "are not"); table-miss
-  abstention vectors; all FREEZE v18.5 sec 9 families; BOOLISA
+  abstention vectors; all FREEZE v18.6 sec 9 families; BOOLISA
   cost-conformance probes.
 - Vertical slice 1 = C1-C4 only, Python first, then TypeScript, both
   loading the tables artifact by content hash; measured

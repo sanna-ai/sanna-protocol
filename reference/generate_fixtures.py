@@ -73,17 +73,22 @@ def contraction_contract_variant(text: str) -> str | None:
     return None
 
 
-_NUMBERED_MARKER_RE = re.compile(r"^(\d+)\.\s+")
+_NUMBERED_MARKER_RE = re.compile(r"^([ \t]*)(\d+)\.\s+")
+_BULLET_MARKER_RE = re.compile(r"^([ \t]*)[-*]\s+")
 
 
 def list_marker_variant(text: str) -> str | None:
     """e10: a numbered list marker and the bullet form are behaviorally
-    identical -- swap 'N. item' for '- item' so both stay locked to the
-    same expected tuple."""
+    identical (including indented markers) -- swap 'N. item' for
+    '- item' and vice versa, preserving any leading indentation, so both
+    forms stay locked to the same expected tuple."""
     m = _NUMBERED_MARKER_RE.match(text)
-    if m is None:
-        return None
-    return "- " + text[m.end() :]
+    if m is not None:
+        return m.group(1) + "- " + text[m.end() :]
+    m = _BULLET_MARKER_RE.match(text)
+    if m is not None:
+        return m.group(1) + "1. " + text[m.end() :]
+    return None
 
 
 VARIANT_BUILDERS = {

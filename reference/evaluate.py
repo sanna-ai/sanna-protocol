@@ -62,10 +62,12 @@ support() recursion cost is bounded above by nodes(req) * (6*|bound| +
 ADVISORY FIELD GUARD: the "advisory" key in these result dicts is
 differential-harness / internal rendering metadata ONLY (the C1 row-9
 "PASS + advisory body note" flag; its wording is owned by FREEZE). It
-MUST NEVER become an extra cv=11 CheckResult field -- the locked
-CheckResult tuple is exactly {outcome, outcome_reason, severity}, and
-any integration layer emitting receipts must not serialize "advisory"
-into them.
+MUST NEVER become an extra cv=11 CheckResult field: {outcome,
+outcome_reason, severity} is the REFERENCE DETECTION PROJECTION of a
+CheckResult -- the slice of the locked eight-field cv=11 CheckResult
+tuple that this reference implementation computes -- and "advisory" is
+not part of that projection nor of the full tuple; any integration
+layer emitting receipts must not serialize it into them.
 """
 
 from __future__ import annotations
@@ -273,9 +275,11 @@ def _context_sources(fixture: Dict[str, Any]) -> List[Tuple[str, str]]:
 def evaluate(fixture: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """fixture: {"context" | "context_sources" | "context_repeat", plus
     "output": str, ...}. Returns per-check result dicts {"outcome",
-    "outcome_reason", "severity", "advisory"} for C1..C4. "advisory" is
-    the C1 row-9 flag and is harness/rendering metadata ONLY -- never
-    part of the locked cv=11 CheckResult tuple (see module docstring)."""
+    "outcome_reason", "severity", "advisory"} for C1..C4. The first
+    three keys are the reference detection projection of a cv=11
+    CheckResult; "advisory" is the C1 row-9 flag and is
+    harness/rendering metadata ONLY -- never a CheckResult field (see
+    module docstring)."""
     sources = _context_sources(fixture)
     out_text = fixture.get("output", "")
 
@@ -312,6 +316,21 @@ def evaluate(fixture: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
         if all(cid in results for cid in CHECK_IDS):
             return results
 
+    # -- basis_empty: PRE-DETECTION wrapper gate (locked A1). The basis
+    # tier composition comes from the DECLARED context_sources, not from
+    # extraction: a context declaring no tier_1/tier_2 source has an
+    # empty authoritative basis regardless of either field's extraction
+    # partiality (extraction_partial is a detection-stage reason and
+    # cannot pre-empt a wrapper gate). When an authoritative source IS
+    # declared, partiality keeps precedence via the checks' row-0 gate. --
+    declared_authoritative = any(
+        tier in (checks.TIER_1, checks.TIER_2)
+        for text, tier in sources
+        if not _is_empty(text)
+    )
+    if not declared_authoritative:
+        gate(CTX_CONSUMERS, "basis_empty")
+
     # -- Stage X: frame extraction (C1/C3/C4 products only, per e11/e12) --
     ctx_frames: List[Frame] = []
     tiers: Dict[int, str] = {}
@@ -338,7 +357,7 @@ def evaluate(fixture: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
             # frame products are consumed by C1/C3/C4; C2 is unaffected
             gate(CTX_CONSUMERS, "envelope_exceeded")
 
-    # -- Stage W2: basis gate + per-check budgets --
+    # -- Stage W2: post-extraction basis arm + per-check budgets --
     if (
         any(cid not in results for cid in CTX_CONSUMERS)
         and not ctx_partial
@@ -346,8 +365,11 @@ def evaluate(fixture: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     ):
         trusted = checks._trusted(ctx_frames, tiers)
         if not trusted:
-            # basis_empty: no authoritative tier_1/tier_2 basis after
-            # extraction and tier resolution (W2 basis gates, A2)
+            # basis_empty, post-extraction arm: an authoritative source
+            # was DECLARED (the wrapper arm above didn't fire) but tier
+            # resolution over the cleanly-extracted frames left no
+            # trusted basis (e.g. a tier_1 source whose only sentences
+            # are non-assertive context questions).
             gate(CTX_CONSUMERS, "basis_empty")
         else:
             if "C1" not in results:

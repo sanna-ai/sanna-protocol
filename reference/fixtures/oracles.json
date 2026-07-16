@@ -260,5 +260,105 @@
     "output": "1. Items are refundable.",
     "check_id": "C1",
     "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "indented-numbered-list",
+    "context": "Items are nonrefundable.",
+    "output": " 12. Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "tab-indented-bullet",
+    "context": "Items are nonrefundable.",
+    "output": "\t- Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "basis-empty-partial-output-c1",
+    "context_sources": [{"text": "Items are nonrefundable.", "tier": "tier_3"}],
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-output-c3",
+    "context_sources": [{"text": "Items are nonrefundable.", "tier": "tier_3"}],
+    "output": "Items are refundable?",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-output-c4",
+    "context_sources": [{"text": "Items are nonrefundable.", "tier": "tier_3"}],
+    "output": "Items are refundable?",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c1",
+    "context_sources": [{"text": "Items are nonrefundable. Actually, disregard that.", "tier": "tier_3"}],
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c3",
+    "context_sources": [{"text": "Items are nonrefundable. Actually, disregard that.", "tier": "tier_3"}],
+    "output": "Items are refundable.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c4",
+    "context_sources": [{"text": "Items are nonrefundable. Actually, disregard that.", "tier": "tier_3"}],
+    "output": "Items are refundable.",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "mixed-tier-partial-output-c1",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "mixed-tier-partial-output-c3",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable?",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "mixed-tier-partial-output-c4",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable?",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "c2-frame-partial-not-inherited",
+    "context": "",
+    "output": "The result may be guaranteed. Actually, disregard that.",
+    "check_id": "C2",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "c2-interrogative-output",
+    "context": "",
+    "output": "Is the result guaranteed?",
+    "check_id": "C2",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
   }
 ]

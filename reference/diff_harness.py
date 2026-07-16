@@ -7,11 +7,16 @@ Usage:
     python3 reference/diff_harness.py <fixtures.json>
     python3 reference/diff_harness.py <fixtures.json> --self-check
 
-<fixtures.json> is a JSON array of {"id": str, "context": str, "output":
-str, "check_id": "C1"|"C2"|"C3"|"C4", ...} records (the same shape as
-reference/fixtures/oracles.json and generated.json). Only "id", "context",
-"output", and "check_id" are read; extra fields are ignored so this can
-run directly against either fixture file, or a future cross-SDK corpus.
+<fixtures.json> is a JSON array of records, each {"id": str,
+"check_id": "C1"|"C2"|"C3"|"C4", "output": str, plus exactly one
+context shape: "context": str (one tier_1 source), "context_sources":
+[{"text": str, "tier": "tier_1"|"tier_2"|"tier_3"}], or
+"context_repeat": {"text": str, "count": int} (expanded to text*count
+as one tier_1 source; used for envelope-cap fixtures)} -- the same
+shapes as reference/fixtures/oracles.json and generated.json. Only
+"id", the context shape, "output", and "check_id" are read; extra
+fields are ignored so this can run directly against either fixture
+file, or a future cross-SDK corpus.
 
 Output: a JSON array, one record per input fixture, each
 {"id": ..., "check_id": ..., "outcome": ..., "outcome_reason": ...,
