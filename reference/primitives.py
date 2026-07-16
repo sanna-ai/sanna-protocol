@@ -348,7 +348,15 @@ def stem_v1(w: str) -> str:
 
 
 def ascii_lower(s: str) -> str:
-    return s.lower()
+    """Spec section 2.3: ascii_lower maps ONLY ASCII A-Z (0x41-0x5A) to
+    a-z; every other code point -- including non-ASCII letters -- passes
+    through UNCHANGED. This is deliberately narrower than Python's
+    str.lower(), which folds per the full Unicode casing tables (e.g.
+    KELVIN SIGN U+212A -> ASCII 'k'; LATIN CAPITAL LETTER I WITH DOT
+    ABOVE U+0130 -> 'i' + COMBINING DOT ABOVE, two code points) and would
+    manufacture token-fold collisions the spec's discipline does not
+    intend."""
+    return "".join(chr(ord(ch) + 32) if "A" <= ch <= "Z" else ch for ch in s)
 
 
 def fold_of(raw: str) -> str:
@@ -731,6 +739,7 @@ def sentences(tokens, text: Optional[str] = None):
     markers = list_marker_indices(tokens, text)
     out = []
     cur = []
+    n = len(tokens)
     for i, tok in enumerate(tokens):
         if cur and i in markers and (i == 0 or (i - 1) not in markers):
             # a marker's FIRST token opens the item's sentence
@@ -742,8 +751,21 @@ def sentences(tokens, text: Optional[str] = None):
             and tok.raw in T.sentence_terminators
             and i not in markers  # e10: the numbered marker's '.' never terminates
         ):
-            out.append(cur)
-            cur = []
+            # SPLIT_v1 (spec 2.6): terminates ONLY when the next raw
+            # character is WS_v1 or EOF -- e.g. "refundable.Items" does
+            # NOT split. `text` answers this directly; without it,
+            # token adjacency is an exact proxy, since the tokenizer
+            # only ever skips whitespace BETWEEN two token spans (every
+            # other character is captured into some token) -- a gap
+            # before the next token (or no next token at all) is
+            # equivalent to "next raw char is WS_v1 or EOF".
+            if text is not None:
+                terminates = tok.end == len(text) or text[tok.end] in T.ws_v1
+            else:
+                terminates = i + 1 >= n or tokens[i + 1].start > tok.end
+            if terminates:
+                out.append(cur)
+                cur = []
     if cur:
         out.append(cur)
     return out

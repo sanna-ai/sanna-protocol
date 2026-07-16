@@ -1,5 +1,61 @@
 [
   {
+    "id": "adjacent-punct-partial__case__context",
+    "base_oracle": "adjacent-punct-partial",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Items are refundable.Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjacent-punct-partial__case__output",
+    "base_oracle": "adjacent-punct-partial",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are refundable.Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjacent-punct-partial__whitespace__context",
+    "base_oracle": "adjacent-punct-partial",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Items are refundable.Items are refundable.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjacent-punct-partial__whitespace__output",
+    "base_oracle": "adjacent-punct-partial",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
     "id": "antonym-permission__case__context",
     "base_oracle": "antonym-permission",
     "variant_kind": "case",
@@ -164,6 +220,62 @@
     "expected": {
       "outcome": "NOT_EVALUATED",
       "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "ascii-lower-discriminator__case__context",
+    "base_oracle": "ascii-lower-discriminator",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "\u00e5ccounts are nonrefundable.",
+    "check_id": "C1",
+    "context": "\u00c5ccounts are REFUNDABLE.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "ascii-lower-discriminator__case__output",
+    "base_oracle": "ascii-lower-discriminator",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "\u00e5ccounts are NONREFUNDABLE.",
+    "check_id": "C1",
+    "context": "\u00c5ccounts are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "ascii-lower-discriminator__whitespace__context",
+    "base_oracle": "ascii-lower-discriminator",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "\u00e5ccounts are nonrefundable.",
+    "check_id": "C1",
+    "context": "\u00c5ccounts   are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "ascii-lower-discriminator__whitespace__output",
+    "base_oracle": "ascii-lower-discriminator",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "\u00e5ccounts   are nonrefundable.",
+    "check_id": "C1",
+    "context": "\u00c5ccounts are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
       "severity": null
     }
   },
@@ -574,6 +686,34 @@
     }
   },
   {
+    "id": "c2-adjacent-question-split__case__output",
+    "base_oracle": "c2-adjacent-question-split",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Is the result guaranteed?The result is GUARANTEED.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c2-adjacent-question-split__whitespace__output",
+    "base_oracle": "c2-adjacent-question-split",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Is   the result guaranteed?The result is guaranteed.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
     "id": "c2-definitive__case__output",
     "base_oracle": "c2-definitive",
     "variant_kind": "case",
@@ -683,6 +823,34 @@
       "outcome": "NOT_EVALUATED",
       "outcome_reason": "extraction_partial",
       "severity": null
+    }
+  },
+  {
+    "id": "c2-locality-e13__case__output",
+    "base_oracle": "c2-locality-e13",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "The result is guaranteed.The result is GUARANTEED.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c2-locality-e13__whitespace__output",
+    "base_oracle": "c2-locality-e13",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "The   result is guaranteed.The result is guaranteed.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
     }
   },
   {

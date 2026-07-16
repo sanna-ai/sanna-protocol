@@ -1,11 +1,14 @@
-"""Unit tests for reference/primitives.py (SAN-879): tokenizer (PCT100,
-contractions, apostrophes), stem_v1 rules, parse_dec (canonical form,
-2^53 boundary distinctness, trailing zeros, malformed grouping),
-parse_values (each comparator), sentences/segments.
+"""Unit tests for reference/primitives.py (SAN-879, SAN-893): tokenizer
+(PCT100, contractions, apostrophes), stem_v1 rules, parse_dec (canonical
+form, 2^53 boundary distinctness, trailing zeros, malformed grouping),
+parse_values (each comparator), sentences/segments, ascii_lower.
 """
+
+import pytest
 
 from reference.primitives import (
     Abstain,
+    ascii_lower,
     Dec,
     dec_cmp,
     list_marker_indices,
@@ -394,3 +397,83 @@ def test_indented_numbered_marker_after_newline_with_indent():
     sents = sentences(toks, text)
     assert len(sents) == 2
     assert sents[1][0].kind == "NUMBER"
+
+
+# ---------------------------------------------------------------------
+# ascii_lower (SAN-893): maps ONLY ASCII A-Z (0x41-0x5A) to a-z; every
+# non-ASCII code point passes through UNCHANGED. Deliberately narrower
+# than Python's str.lower(), which folds per the full Unicode casing
+# tables and would manufacture token-fold collisions the spec does not
+# intend. Escaped \u literals below (never the raw glyph) so this file
+# stays ASCII and the discriminating code point is unambiguous.
+# ---------------------------------------------------------------------
+
+def test_ascii_lower_lowers_only_ascii_letters():
+    assert ascii_lower("ABCz") == "abcz"
+
+
+def test_ascii_lower_leaves_kelvin_sign_unchanged():
+    # KELVIN SIGN (U+212A) visually resembles ASCII 'K' but is a
+    # distinct code point outside A-Z; str.lower() folds it to ASCII
+    # 'k' (U+006B), which ascii_lower must NOT do.
+    kelvin_sign = "\u212a"
+    assert ascii_lower(kelvin_sign) == kelvin_sign
+
+
+def test_ascii_lower_leaves_capital_i_with_dot_above_unchanged():
+    # LATIN CAPITAL LETTER I WITH DOT ABOVE (U+0130): str.lower() folds
+    # it to a TWO-code-point sequence ('i' + COMBINING DOT ABOVE,
+    # U+0069 U+0307); ascii_lower must leave the single code point
+    # unchanged since it is not ASCII A-Z.
+    capital_i_dot = "\u0130"
+    assert ascii_lower(capital_i_dot) == capital_i_dot
+
+
+def test_ascii_lower_leaves_a_with_ring_above_unchanged():
+    # LATIN CAPITAL LETTER A WITH RING ABOVE (U+00C5): str.lower() folds
+    # it to U+00E5 (a-ring, lowercase); ascii_lower must leave it
+    # unchanged since it is not ASCII A-Z.
+    a_ring = "\u00c5"
+    assert ascii_lower(a_ring) == a_ring
+
+
+# ---------------------------------------------------------------------
+# SPLIT_v1 terminator condition (SAN-893, spec 2.6): '.', '!', '?' PUNCT
+# terminates ONLY when the next raw character is WS_v1 or EOF -- e.g.
+# "refundable.Items" (no whitespace between) is NOT a sentence split.
+# Parameterized over all three sentence-terminator marks.
+# ---------------------------------------------------------------------
+
+@pytest.mark.parametrize("mark", [".", "!", "?"])
+def test_sentences_adjacent_punctuation_does_not_terminate(mark):
+    text = f"Items are refundable{mark}Items are refundable{mark}"
+    toks = tokenize(text)
+    assert len(sentences(toks, text)) == 1
+
+
+@pytest.mark.parametrize("mark", [".", "!", "?"])
+def test_sentences_punctuation_followed_by_space_terminates(mark):
+    text = f"Items are refundable{mark} Items are refundable{mark}"
+    toks = tokenize(text)
+    assert len(sentences(toks, text)) == 2
+
+
+@pytest.mark.parametrize("mark", [".", "!", "?"])
+def test_sentences_punctuation_followed_by_tab_terminates(mark):
+    text = f"Items are refundable{mark}\tItems are refundable{mark}"
+    toks = tokenize(text)
+    assert len(sentences(toks, text)) == 2
+
+
+@pytest.mark.parametrize("mark", [".", "!", "?"])
+def test_sentences_punctuation_followed_by_newline_terminates(mark):
+    text = f"Items are refundable{mark}\nItems are refundable{mark}"
+    toks = tokenize(text)
+    assert len(sentences(toks, text)) == 2
+
+
+@pytest.mark.parametrize("mark", [".", "!", "?"])
+def test_sentences_punctuation_followed_by_eof_terminates(mark):
+    text = f"Items are refundable{mark}"
+    toks = tokenize(text)
+    assert len(sentences(toks, text)) == 1

@@ -360,5 +360,36 @@
     "output": "Is the result guaranteed?",
     "check_id": "C2",
     "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "ascii-lower-discriminator",
+    "context": "\u00c5ccounts are refundable.",
+    "output": "\u00e5ccounts are nonrefundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null},
+    "notes": "SAN-893 erratum/defect pin. U+00C5 (LATIN CAPITAL LETTER A WITH RING ABOVE) and U+00E5 (LATIN SMALL LETTER A WITH RING ABOVE) are distinct code points outside ASCII A-Z; ascii_lower must leave them unchanged, so the ctx subject '\u00c5ccounts' and out subject '\u00e5ccounts' fold to DIFFERENT terms -> no comparable frame -> PASS. Pre-fix baseline (str.lower()-based ascii_lower folds both to '\u00e5ccounts', manufacturing a comparable conflicting pair): VIOLATION / detection_complete / critical. Kelvin is not a valid discriminator for this oracle's purpose in the COMPLETED pipeline: normative spec sec 2.1 requires NFC normalization, and NFC maps U+212A KELVIN SIGN to ASCII 'K' -- so once normalize() runs ahead of ascii_lower, a KELVIN SIGN input and an ASCII 'K' input become indistinguishable before ascii_lower ever sees them, and the ASCII-only-scope discriminator this oracle pins would stop being observable via Kelvin at the oracle/pipeline level. This is a statement about the completed pipeline, not the current one: the current slice's evaluate()/tokenize() path does not yet invoke normalize() at all (reference/evaluate.py never imports or calls it) -- do not read this fixture as evidence that the current pipeline relies on NFC; it does not, yet. SAN-883 owns both wiring normalize() into the evaluate()/tokenize() path and the exact Unicode-15.0.0 vendor-or-refuse NormalizationTest.txt conformance gate (see the module-level comment above UNICODE_VERSION in reference/primitives.py). Until SAN-883 lands, the KELVIN SIGN vs ASCII-K collision a buggy full-Unicode-casefold ascii_lower would produce is exercised only at the ascii_lower unit-test level (see tests/reference/test_primitives.py), never via an oracle fixture -- unlike Kelvin, the A-WITH-RING-ABOVE pair used here remains a valid discriminator indefinitely since NFC never touches it."
+  },
+  {
+    "id": "adjacent-punct-partial",
+    "context": "Items are nonrefundable.",
+    "output": "Items are refundable.Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null},
+    "notes": "SAN-893 erratum e13 pin (spec 2.6). Post-fix SPLIT_v1 does not terminate on the adjacent '.' (next raw char is 'I', not WS_v1/EOF), so the output is ONE sentence; e13 then flags that nonterminating '.' (not a marker, not a genuine terminator) and the field is PARTIAL before role extraction ever runs -- NOT_EVALUATED / extraction_partial / null. Pre-fix baseline (SPLIT_v1 splits on every terminator PUNCT unconditionally, so this parses as two clean sentences and evaluates normally): VIOLATION / detection_complete / critical."
+  },
+  {
+    "id": "c2-locality-e13",
+    "context": "",
+    "output": "The result is guaranteed.The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"},
+    "notes": "SAN-893 positive control: proves e13 proposition-frame partiality does not gate C2's ratified e11 local scanner. checks.C2 scans out_tokens (tokenize(out_text)) directly and never calls extract_frames/sentences() for its own detection, so the e13 adjacent-punctuation extraction-partial signal used by C1/C3/C4 frame extraction (see adjacent-punct-partial) does not propagate to C2 -- it still finds 'guaranteed' with no hedge in window and returns VIOLATION / detection_complete / warning. No broader claim is made here about C2 and punctuation-adjacency generally: C2's own out_partial signal (the interrogative-output rule in evaluate._has_governed_question) IS sensitive to SPLIT_v1 -- see c2-adjacent-question-split."
+  },
+  {
+    "id": "c2-adjacent-question-split",
+    "context": "",
+    "output": "Is the result guaranteed?The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
   }
 ]
