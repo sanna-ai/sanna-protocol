@@ -316,20 +316,17 @@ def evaluate(fixture: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
         if all(cid in results for cid in CHECK_IDS):
             return results
 
-    # -- basis_empty: PRE-DETECTION wrapper gate (locked A1). The basis
-    # tier composition comes from the DECLARED context_sources, not from
-    # extraction: a context declaring no tier_1/tier_2 source has an
-    # empty authoritative basis regardless of either field's extraction
-    # partiality (extraction_partial is a detection-stage reason and
-    # cannot pre-empt a wrapper gate). When an authoritative source IS
-    # declared, partiality keeps precedence via the checks' row-0 gate. --
+    # The declared basis tier composition is computed here (it comes
+    # from the DECLARED context_sources, not from extraction), but the
+    # basis_empty gate is EMITTED only after Stage X: locked A1's
+    # wrapper order is ... -> envelope_exceeded -> scan_incomplete ->
+    # basis_incomplete -> basis_unclassified -> basis_empty, so every
+    # envelope gate must commit its result first.
     declared_authoritative = any(
         tier in (checks.TIER_1, checks.TIER_2)
         for text, tier in sources
         if not _is_empty(text)
     )
-    if not declared_authoritative:
-        gate(CTX_CONSUMERS, "basis_empty")
 
     # -- Stage X: frame extraction (C1/C3/C4 products only, per e11/e12) --
     ctx_frames: List[Frame] = []
@@ -356,6 +353,16 @@ def evaluate(fixture: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
         except engine.EnvelopeExceeded:
             # frame products are consumed by C1/C3/C4; C2 is unaffected
             gate(CTX_CONSUMERS, "envelope_exceeded")
+
+    # -- basis_empty: PRE-DETECTION wrapper gate (locked A1), emitted
+    # for the C1/C3/C4 checks that SURVIVED the envelope gates. A
+    # context declaring no tier_1/tier_2 source has an empty
+    # authoritative basis regardless of either field's extraction
+    # partiality (extraction_partial is a detection-stage reason and
+    # cannot pre-empt a wrapper gate). When an authoritative source IS
+    # declared, partiality keeps precedence via the checks' row-0 gate. --
+    if not declared_authoritative:
+        gate(CTX_CONSUMERS, "basis_empty")
 
     # -- Stage W2: post-extraction basis arm + per-check budgets --
     if (
