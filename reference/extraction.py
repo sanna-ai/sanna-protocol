@@ -679,6 +679,35 @@ def extract_frames(field_id: str, text: str, governed: bool = False):
             # spec 2.6: governed-output sentence-terminal '?' -> FIELD PARTIAL
             partial = True
             continue
+
+        # NONTERMINATING SENTENCE PUNCTUATION (e13, spec 2.6): a
+        # sentence-punctuation token ('.', '!', '?') that is neither a
+        # genuine SPLIT_v1 terminator (next raw char WS_v1 or EOF) nor a
+        # recognized e10 list-marker token must not be absorbed into any
+        # role, extent, condition, value, or filler span -- detected
+        # BEFORE role extraction, it makes this field's proposition-frame
+        # extraction PARTIAL. Skipping role extraction for the sentence
+        # entirely (rather than filtering it out of spans downstream)
+        # is what guarantees the token is never absorbed: extract_roles'
+        # ACTIVE-pattern object span (3.2 rule 4) runs to segment end,
+        # which a nonterminating '.'/'!'/'?' does not bound (only
+        # T.structural_punctuation does), so without this pre-check the
+        # token could be swallowed into a role span before total span
+        # accounting ever sees it. (C2's e11 check-local partiality is
+        # unaffected -- checks.C2 scans out_tokens directly and never
+        # calls extract_frames.)
+        markers = list_marker_indices(sent, text)
+        e13_nonterminating = False
+        for i, tok in enumerate(sent):
+            if tok.kind == "PUNCT" and tok.raw in T.sentence_terminators:
+                terminates = tok.end == len(text) or text[tok.end] in T.ws_v1
+                if i not in markers and not terminates:
+                    e13_nonterminating = True
+                    break
+        if e13_nonterminating:
+            partial = True
+            continue
+
         try:
             hits = trigger_scan(sent)
         except Abstain:
@@ -791,8 +820,8 @@ def extract_frames(field_id: str, text: str, governed: bool = False):
             # unconsumed, e.g. a triggerless retraction sentence).
             # e10: line-initial LIST MARKER tokens are structural markers
             # of the item's sentence, accounted like structural
-            # punctuation. --
-            markers = list_marker_indices(sent, text)
+            # punctuation (markers computed above, before role
+            # extraction, alongside the e13 check). --
             for i, tok in enumerate(sent):
                 if i in consumed or i in markers:
                     continue

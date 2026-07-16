@@ -360,5 +360,29 @@
     "output": "Is the result guaranteed?",
     "check_id": "C2",
     "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "ascii-lower-discriminator",
+    "context": "\u00c5ccounts are refundable.",
+    "output": "\u00e5ccounts are nonrefundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null},
+    "notes": "SAN-893 erratum/defect pin. U+00C5 (LATIN CAPITAL LETTER A WITH RING ABOVE) and U+00E5 (LATIN SMALL LETTER A WITH RING ABOVE) are distinct code points outside ASCII A-Z; ascii_lower must leave them unchanged, so the ctx subject '\u00c5ccounts' and out subject '\u00e5ccounts' fold to DIFFERENT terms -> no comparable frame -> PASS. Pre-fix baseline (str.lower()-based ascii_lower folds both to '\u00e5ccounts', manufacturing a comparable conflicting pair): VIOLATION / detection_complete / critical. A KELVIN SIGN fixture cannot discriminate this layer: NFC normalizes KELVIN SIGN to ASCII 'K' before ascii_lower ever runs, so that collision is observable only at the ascii_lower unit-test level (see tests/reference/test_primitives.py), never at the oracle/pipeline level."
+  },
+  {
+    "id": "adjacent-punct-partial",
+    "context": "Items are nonrefundable.",
+    "output": "Items are refundable.Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null},
+    "notes": "SAN-893 erratum e13 pin (spec 2.6). Post-fix SPLIT_v1 does not terminate on the adjacent '.' (next raw char is 'I', not WS_v1/EOF), so the output is ONE sentence; e13 then flags that nonterminating '.' (not a marker, not a genuine terminator) and the field is PARTIAL before role extraction ever runs -- NOT_EVALUATED / extraction_partial / null. Pre-fix baseline (SPLIT_v1 splits on every terminator PUNCT unconditionally, so this parses as two clean sentences and evaluates normally): VIOLATION / detection_complete / critical."
+  },
+  {
+    "id": "c2-locality-e13",
+    "context": "",
+    "output": "The result is guaranteed.The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"},
+    "notes": "SAN-893 positive control: proves e13 proposition-frame partiality is NOT pushed into C2's ratified e11 local scanner. checks.C2 scans out_tokens (tokenize(out_text)) directly and never calls extract_frames/sentences() for its own detection, so it is unaffected by both the SPLIT_v1 fix and the e13 partial signal -- it still finds 'guaranteed' with no hedge in window and returns VIOLATION / detection_complete / warning both pre-fix and post-fix."
   }
 ]

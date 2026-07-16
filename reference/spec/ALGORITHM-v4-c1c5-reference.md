@@ -1,6 +1,17 @@
-# ALGORITHM v4 (DRAFT 5.3): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
+# ALGORITHM v4 (DRAFT 5.4): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
 
-> STATUS: DRAFT 5.3 -- three NARROW errata from Sol's fa2a50a delta
+> STATUS: DRAFT 5.4 -- ONE narrow erratum from Sol's SAN-893 prompt
+> review: (e13) NONTERMINATING SENTENCE PUNCTUATION -- a sentence-
+> punctuation token ('.', '!', '?') that is neither a SPLIT_v1 terminator
+> nor consumed by another explicitly recognized grammar form must not be
+> absorbed into any role, extent, condition, value, or filler span; its
+> presence makes proposition-frame extraction for that field PARTIAL.
+> (Prevents the role extractor from swallowing text across an interior
+> period once the whitespace/EOF terminator rule is enforced -- adjacent
+> punctuation is ordinary model output and absorption can manufacture
+> false comparisons/violations. C2's ratified check-local partiality is
+> unaffected.)
+> DRAFT 5.3 was: three NARROW errata from Sol's fa2a50a delta
 > review (adjudications adopted; no design reopening): (e10) LIST MARKERS
 > -- a line-initial bullet/number marker ('-', '*', NUMBER+'.') begins the
 > item's sentence and BELONGS to it as a structural list marker; the
@@ -215,7 +226,14 @@ product (trigger, role, condition, modifier, quantifier, requirement
 atom, scope) or by FILLER -- STOP_v1 words in grammar positions,
 structural punctuation in structural positions, sentence-terminal
 '.'/'!', the sentence-initial capitalized article followed by a content
-token -- else the FIELD is PARTIAL. SEMANTIC-FORCE tokens (negators,
+token -- else the FIELD is PARTIAL. NONTERMINATING SENTENCE PUNCTUATION
+(e13): a sentence-punctuation token ('.', '!', '?') that is neither a
+SPLIT_v1 terminator (next raw char WS_v1 or EOF) nor consumed by another
+explicitly recognized grammar form (numbered-list marker per e10; NUMBER
+grammar) must NOT be absorbed into any role, extent, condition, value,
+or filler span -- it is detected BEFORE role extraction, and its
+presence makes proposition-frame extraction for that field PARTIAL.
+(C2's e11 check-local partiality is unaffected.) SEMANTIC-FORCE tokens (negators,
 condition operators, 'and'/'or', modals, quantifiers) are never blanket
 filler; an unconsumed occurrence -> FIELD PARTIAL. Sentence-terminal
 '?': context sentence -> non-assertive, excluded from every basis,

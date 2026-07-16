@@ -17,11 +17,11 @@ from typing import Any
 
 # Spec section 1 / draft-5.3 header: sha256 of ALGORITHM-v4-tables-v1.json.
 TABLES_SHA256 = "0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc"
-# sha256 of the vendored ALGORITHM-v4-c1c5-reference.md (draft 5.3,
-# FREEZE v18.6 references) -- the normative source this package
+# sha256 of the vendored ALGORITHM-v4-c1c5-reference.md (draft 5.4, adds
+# erratum e13 (spec sec 2.6)) -- the normative source this package
 # implements; verified at import so a silently swapped spec cannot
 # masquerade as the reviewed one.
-ALGORITHM_SHA256 = "3d5d60a9dc6d5ea76dce9d260eecfde43e9ff534d5a6381ee8ffe72008d81df8"
+ALGORITHM_SHA256 = "2eaa5260dbe198d6f135efd961c40726b4e353f6bb9a892679af7479c4a60a37"
 
 _SPEC_DIR = Path(__file__).parent / "spec"
 _TABLES_PATH = _SPEC_DIR / "ALGORITHM-v4-tables-v1.json"
