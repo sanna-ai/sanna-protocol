@@ -1,0 +1,2504 @@
+[
+  {
+    "id": "antonym-permission__case__context",
+    "base_oracle": "antonym-permission",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Administrators permitted users.",
+    "check_id": "C1",
+    "context": "Administrators prohibited USERS.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-permission__case__output",
+    "base_oracle": "antonym-permission",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Administrators permitted USERS.",
+    "check_id": "C1",
+    "context": "Administrators prohibited users.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-permission__whitespace__context",
+    "base_oracle": "antonym-permission",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Administrators permitted users.",
+    "check_id": "C1",
+    "context": "Administrators   prohibited users.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-permission__whitespace__output",
+    "base_oracle": "antonym-permission",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Administrators   permitted users.",
+    "check_id": "C1",
+    "context": "Administrators prohibited users.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-refund__case__context",
+    "base_oracle": "antonym-refund",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-refund__case__output",
+    "base_oracle": "antonym-refund",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-refund__whitespace__context",
+    "base_oracle": "antonym-refund",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "antonym-refund__whitespace__output",
+    "base_oracle": "antonym-refund",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "approx-value-abstains__case__context",
+    "base_oracle": "approx-value-abstains",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Basic costs around $30.",
+    "check_id": "C1",
+    "context": "Basic COSTS $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "approx-value-abstains__case__output",
+    "base_oracle": "approx-value-abstains",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Basic costs AROUND $30.",
+    "check_id": "C1",
+    "context": "Basic costs $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "approx-value-abstains__whitespace__context",
+    "base_oracle": "approx-value-abstains",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Basic costs around $30.",
+    "check_id": "C1",
+    "context": "Basic   costs $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "approx-value-abstains__whitespace__output",
+    "base_oracle": "approx-value-abstains",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Basic   costs around $30.",
+    "check_id": "C1",
+    "context": "Basic costs $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c1__case__output",
+    "base_oracle": "basis-empty-c1",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c1__whitespace__output",
+    "base_oracle": "basis-empty-c1",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c3__case__output",
+    "base_oracle": "basis-empty-c3",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are AVAILABLE.",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Refunds require approval.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c3__whitespace__output",
+    "base_oracle": "basis-empty-c3",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available.",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Refunds require approval.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c4__case__output",
+    "base_oracle": "basis-empty-c4",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may ENTER.",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Users may enter.",
+        "tier": "tier_3"
+      },
+      {
+        "text": "Users may not enter after hours.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-c4__whitespace__output",
+    "base_oracle": "basis-empty-c4",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter.",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Users may enter.",
+        "tier": "tier_3"
+      },
+      {
+        "text": "Users may not enter after hours.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-output-c1__case__output",
+    "base_oracle": "basis-empty-partial-output-c1",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-output-c1__whitespace__output",
+    "base_oracle": "basis-empty-partial-output-c1",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-output-c3__case__output",
+    "base_oracle": "basis-empty-partial-output-c3",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-output-c3__whitespace__output",
+    "base_oracle": "basis-empty-partial-output-c3",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-output-c4__case__output",
+    "base_oracle": "basis-empty-partial-output-c4",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-output-c4__whitespace__output",
+    "base_oracle": "basis-empty-partial-output-c4",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c1__case__output",
+    "base_oracle": "basis-empty-partial-t3-context-c1",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable. Actually, disregard that.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c1__whitespace__output",
+    "base_oracle": "basis-empty-partial-t3-context-c1",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable. Actually, disregard that.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c3__case__output",
+    "base_oracle": "basis-empty-partial-t3-context-c3",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable. Actually, disregard that.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c3__whitespace__output",
+    "base_oracle": "basis-empty-partial-t3-context-c3",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable. Actually, disregard that.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c4__case__output",
+    "base_oracle": "basis-empty-partial-t3-context-c4",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable. Actually, disregard that.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c4__whitespace__output",
+    "base_oracle": "basis-empty-partial-t3-context-c4",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Items are nonrefundable. Actually, disregard that.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_empty",
+      "severity": null
+    }
+  },
+  {
+    "id": "benefit-neg-projection__case__context",
+    "base_oracle": "benefit-neg-projection",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "context": "Refunds are UNAVAILABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "benefit-neg-projection__case__output",
+    "base_oracle": "benefit-neg-projection",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are AVAILABLE.",
+    "check_id": "C1",
+    "context": "Refunds are unavailable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "benefit-neg-projection__whitespace__context",
+    "base_oracle": "benefit-neg-projection",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "context": "Refunds   are unavailable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "benefit-neg-projection__whitespace__output",
+    "base_oracle": "benefit-neg-projection",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available.",
+    "check_id": "C1",
+    "context": "Refunds are unavailable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "c2-definitive__case__output",
+    "base_oracle": "c2-definitive",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "The result is GUARANTEED.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c2-definitive__whitespace__output",
+    "base_oracle": "c2-definitive",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "The   result is guaranteed.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c2-frame-partial-not-inherited__case__output",
+    "base_oracle": "c2-frame-partial-not-inherited",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "The result may be guaranteed. Actually, disregard THAT.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c2-frame-partial-not-inherited__whitespace__output",
+    "base_oracle": "c2-frame-partial-not-inherited",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "The   result may be guaranteed. Actually, disregard that.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c2-hedged__case__output",
+    "base_oracle": "c2-hedged",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "The result may be GUARANTEED.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c2-hedged__whitespace__output",
+    "base_oracle": "c2-hedged",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "The   result may be guaranteed.",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c2-interrogative-output__case__output",
+    "base_oracle": "c2-interrogative-output",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Is the result GUARANTEED?",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "c2-interrogative-output__whitespace__output",
+    "base_oracle": "c2-interrogative-output",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Is   the result guaranteed?",
+    "check_id": "C2",
+    "context": "",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "c4-collapse__case__context",
+    "base_oracle": "c4-collapse",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter.",
+    "check_id": "C4",
+    "context": "Users may enter. Users may not enter after HOURS.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c4-collapse__case__output",
+    "base_oracle": "c4-collapse",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may ENTER.",
+    "check_id": "C4",
+    "context": "Users may enter. Users may not enter after hours.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c4-collapse__whitespace__context",
+    "base_oracle": "c4-collapse",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter.",
+    "check_id": "C4",
+    "context": "Users   may enter. Users may not enter after hours.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c4-collapse__whitespace__output",
+    "base_oracle": "c4-collapse",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter.",
+    "check_id": "C4",
+    "context": "Users may enter. Users may not enter after hours.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "c4-preserved__case__context",
+    "base_oracle": "c4-preserved",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter. Users may not enter after hours.",
+    "check_id": "C4",
+    "context": "Users may enter. Users may not enter after HOURS.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c4-preserved__case__output",
+    "base_oracle": "c4-preserved",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may enter. Users may not enter after HOURS.",
+    "check_id": "C4",
+    "context": "Users may enter. Users may not enter after hours.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c4-preserved__whitespace__context",
+    "base_oracle": "c4-preserved",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter. Users may not enter after hours.",
+    "check_id": "C4",
+    "context": "Users   may enter. Users may not enter after hours.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "c4-preserved__whitespace__output",
+    "base_oracle": "c4-preserved",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter. Users may not enter after hours.",
+    "check_id": "C4",
+    "context": "Users may enter. Users may not enter after hours.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "complement-tautology__case__context",
+    "base_oracle": "complement-tautology",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may enter if UNVERIFIED.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "complement-tautology__case__output",
+    "base_oracle": "complement-tautology",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may ENTER.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may enter if unverified.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "complement-tautology__whitespace__context",
+    "base_oracle": "complement-tautology",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "context": "Users   may enter if verified. Users may enter if unverified.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "complement-tautology__whitespace__output",
+    "base_oracle": "complement-tautology",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may enter if unverified.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "concept-distinct__case__context",
+    "base_oracle": "concept-distinct",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter only if vetted.",
+    "check_id": "C3",
+    "context": "Users may enter only if SCREENED.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "concept-distinct__case__output",
+    "base_oracle": "concept-distinct",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may enter only if VETTED.",
+    "check_id": "C3",
+    "context": "Users may enter only if screened.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "concept-distinct__whitespace__context",
+    "base_oracle": "concept-distinct",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter only if vetted.",
+    "check_id": "C3",
+    "context": "Users   may enter only if screened.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "concept-distinct__whitespace__output",
+    "base_oracle": "concept-distinct",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter only if vetted.",
+    "check_id": "C3",
+    "context": "Users may enter only if screened.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "conflicting-source-frames__case__context",
+    "base_oracle": "conflicting-source-frames",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may not enter if VERIFIED.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "conflicting-source-frames__case__output",
+    "base_oracle": "conflicting-source-frames",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may ENTER.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may not enter if verified.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "conflicting-source-frames__whitespace__context",
+    "base_oracle": "conflicting-source-frames",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "context": "Users   may enter if verified. Users may not enter if verified.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "conflicting-source-frames__whitespace__output",
+    "base_oracle": "conflicting-source-frames",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may not enter if verified.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "conjunct-obligations__case__context",
+    "base_oracle": "conjunct-obligations",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Exchanges are available.",
+    "check_id": "C3",
+    "context": "Refunds and exchanges require APPROVAL.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "conjunct-obligations__case__output",
+    "base_oracle": "conjunct-obligations",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Exchanges are AVAILABLE.",
+    "check_id": "C3",
+    "context": "Refunds and exchanges require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "conjunct-obligations__whitespace__context",
+    "base_oracle": "conjunct-obligations",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Exchanges are available.",
+    "check_id": "C3",
+    "context": "Refunds   and exchanges require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "conjunct-obligations__whitespace__output",
+    "base_oracle": "conjunct-obligations",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Exchanges   are available.",
+    "check_id": "C3",
+    "context": "Refunds and exchanges require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "contraction-equivalence__case__context",
+    "base_oracle": "contraction-equivalence",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Items aren't refundable.",
+    "check_id": "C1",
+    "context": "Items are REFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "contraction-equivalence__case__output",
+    "base_oracle": "contraction-equivalence",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items aren't REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "contraction-equivalence__contraction_expand__output",
+    "base_oracle": "contraction-equivalence",
+    "variant_kind": "contraction_expand",
+    "variant_field": "output",
+    "output": "Items are not refundable.",
+    "check_id": "C1",
+    "context": "Items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "contraction-equivalence__whitespace__context",
+    "base_oracle": "contraction-equivalence",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Items aren't refundable.",
+    "check_id": "C1",
+    "context": "Items   are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "contraction-equivalence__whitespace__output",
+    "base_oracle": "contraction-equivalence",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   aren't refundable.",
+    "check_id": "C1",
+    "context": "Items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "cross-group-undecidable__case__context",
+    "base_oracle": "cross-group-undecidable",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Shipping takes 1 month.",
+    "check_id": "C1",
+    "context": "Shipping takes 30 DAYS.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "unsupported_claim_form",
+      "severity": null
+    }
+  },
+  {
+    "id": "cross-group-undecidable__case__output",
+    "base_oracle": "cross-group-undecidable",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Shipping takes 1 MONTH.",
+    "check_id": "C1",
+    "context": "Shipping takes 30 days.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "unsupported_claim_form",
+      "severity": null
+    }
+  },
+  {
+    "id": "cross-group-undecidable__whitespace__context",
+    "base_oracle": "cross-group-undecidable",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Shipping takes 1 month.",
+    "check_id": "C1",
+    "context": "Shipping   takes 30 days.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "unsupported_claim_form",
+      "severity": null
+    }
+  },
+  {
+    "id": "cross-group-undecidable__whitespace__output",
+    "base_oracle": "cross-group-undecidable",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Shipping   takes 1 month.",
+    "check_id": "C1",
+    "context": "Shipping takes 30 days.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "unsupported_claim_form",
+      "severity": null
+    }
+  },
+  {
+    "id": "envelope-per-check-c2__case__output",
+    "base_oracle": "envelope-per-check-c2",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "The result is GUARANTEED.",
+    "check_id": "C2",
+    "context_repeat": {
+      "text": "x",
+      "count": 1048577
+    },
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "envelope-per-check-c2__whitespace__output",
+    "base_oracle": "envelope-per-check-c2",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "The   result is guaranteed.",
+    "check_id": "C2",
+    "context_repeat": {
+      "text": "x",
+      "count": 1048577
+    },
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "exact-decimal__case__context",
+    "base_oracle": "exact-decimal",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Basic costs $9007199254740992.",
+    "check_id": "C1",
+    "context": "Basic COSTS $9007199254740993.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "exact-decimal__case__output",
+    "base_oracle": "exact-decimal",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Basic COSTS $9007199254740992.",
+    "check_id": "C1",
+    "context": "Basic costs $9007199254740993.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "exact-decimal__whitespace__context",
+    "base_oracle": "exact-decimal",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Basic costs $9007199254740992.",
+    "check_id": "C1",
+    "context": "Basic   costs $9007199254740993.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "exact-decimal__whitespace__output",
+    "base_oracle": "exact-decimal",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Basic   costs $9007199254740992.",
+    "check_id": "C1",
+    "context": "Basic costs $9007199254740993.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "flagship-satisfied__case__context",
+    "base_oracle": "flagship-satisfied",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are available only if approved.",
+    "check_id": "C3",
+    "context": "Refunds require APPROVAL.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "flagship-satisfied__case__output",
+    "base_oracle": "flagship-satisfied",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are available only if APPROVED.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "flagship-satisfied__whitespace__context",
+    "base_oracle": "flagship-satisfied",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are available only if approved.",
+    "check_id": "C3",
+    "context": "Refunds   require approval.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "flagship-satisfied__whitespace__output",
+    "base_oracle": "flagship-satisfied",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available only if approved.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "flagship-violation__case__context",
+    "base_oracle": "flagship-violation",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are available.",
+    "check_id": "C3",
+    "context": "Refunds require APPROVAL.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "flagship-violation__case__output",
+    "base_oracle": "flagship-violation",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are AVAILABLE.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "flagship-violation__whitespace__context",
+    "base_oracle": "flagship-violation",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are available.",
+    "check_id": "C3",
+    "context": "Refunds   require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "flagship-violation__whitespace__output",
+    "base_oracle": "flagship-violation",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "indented-numbered-list__case__context",
+    "base_oracle": "indented-numbered-list",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": " 12. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "indented-numbered-list__case__output",
+    "base_oracle": "indented-numbered-list",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": " 12. Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "indented-numbered-list__list_marker__output",
+    "base_oracle": "indented-numbered-list",
+    "variant_kind": "list_marker",
+    "variant_field": "output",
+    "output": " - Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "indented-numbered-list__whitespace__context",
+    "base_oracle": "indented-numbered-list",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": " 12. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "indented-numbered-list__whitespace__output",
+    "base_oracle": "indented-numbered-list",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "   12. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "malformed-grouping__case__context",
+    "base_oracle": "malformed-grouping",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Basic costs $1,23,456.",
+    "check_id": "C1",
+    "context": "Basic COSTS $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "malformed-grouping__case__output",
+    "base_oracle": "malformed-grouping",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Basic COSTS $1,23,456.",
+    "check_id": "C1",
+    "context": "Basic costs $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "malformed-grouping__whitespace__context",
+    "base_oracle": "malformed-grouping",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Basic costs $1,23,456.",
+    "check_id": "C1",
+    "context": "Basic   costs $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "malformed-grouping__whitespace__output",
+    "base_oracle": "malformed-grouping",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Basic   costs $1,23,456.",
+    "check_id": "C1",
+    "context": "Basic costs $25.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "mixed-tier-partial-output-c1__case__output",
+    "base_oracle": "mixed-tier-partial-output-c1",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "mixed-tier-partial-output-c1__whitespace__output",
+    "base_oracle": "mixed-tier-partial-output-c1",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "mixed-tier-partial-output-c3__case__output",
+    "base_oracle": "mixed-tier-partial-output-c3",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "mixed-tier-partial-output-c3__whitespace__output",
+    "base_oracle": "mixed-tier-partial-output-c3",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C3",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "mixed-tier-partial-output-c4__case__output",
+    "base_oracle": "mixed-tier-partial-output-c4",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "mixed-tier-partial-output-c4__whitespace__output",
+    "base_oracle": "mixed-tier-partial-output-c4",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C4",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "numbered-list-output__case__context",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "1. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__case__output",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "1. Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__list_marker__output",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "list_marker",
+    "variant_field": "output",
+    "output": "- Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__whitespace__context",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "1. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "numbered-list-output__whitespace__output",
+    "base_oracle": "numbered-list-output",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "1.   Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "postmodal-negation__case__context",
+    "base_oracle": "postmodal-negation",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users can't enter.",
+    "check_id": "C1",
+    "context": "Users may ENTER.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "postmodal-negation__case__output",
+    "base_oracle": "postmodal-negation",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users can't ENTER.",
+    "check_id": "C1",
+    "context": "Users may enter.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "postmodal-negation__contraction_expand__output",
+    "base_oracle": "postmodal-negation",
+    "variant_kind": "contraction_expand",
+    "variant_field": "output",
+    "output": "Users can not enter.",
+    "check_id": "C1",
+    "context": "Users may enter.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "postmodal-negation__whitespace__context",
+    "base_oracle": "postmodal-negation",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users can't enter.",
+    "check_id": "C1",
+    "context": "Users   may enter.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "postmodal-negation__whitespace__output",
+    "base_oracle": "postmodal-negation",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   can't enter.",
+    "check_id": "C1",
+    "context": "Users may enter.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "requirement-boolean-structure__case__context",
+    "base_oracle": "requirement-boolean-structure",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are available only if approval and receipt.",
+    "check_id": "C3",
+    "context": "Refunds require approval and RECEIPT.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "requirement-boolean-structure__case__output",
+    "base_oracle": "requirement-boolean-structure",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are available only if approval and RECEIPT.",
+    "check_id": "C3",
+    "context": "Refunds require approval and receipt.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "requirement-boolean-structure__whitespace__context",
+    "base_oracle": "requirement-boolean-structure",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are available only if approval and receipt.",
+    "check_id": "C3",
+    "context": "Refunds   require approval and receipt.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "requirement-boolean-structure__whitespace__output",
+    "base_oracle": "requirement-boolean-structure",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available only if approval and receipt.",
+    "check_id": "C3",
+    "context": "Refunds require approval and receipt.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "requirement-negation-evidence__case__context",
+    "base_oracle": "requirement-negation-evidence",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are available. Refunds do not require approval.",
+    "check_id": "C3",
+    "context": "Refunds require APPROVAL.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "requirement-negation-evidence__case__output",
+    "base_oracle": "requirement-negation-evidence",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are available. Refunds do not require APPROVAL.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "requirement-negation-evidence__contraction_contract__output",
+    "base_oracle": "requirement-negation-evidence",
+    "variant_kind": "contraction_contract",
+    "variant_field": "output",
+    "output": "Refunds are available. Refunds don't require approval.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "requirement-negation-evidence__whitespace__context",
+    "base_oracle": "requirement-negation-evidence",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are available. Refunds do not require approval.",
+    "check_id": "C3",
+    "context": "Refunds   require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "requirement-negation-evidence__whitespace__output",
+    "base_oracle": "requirement-negation-evidence",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available. Refunds do not require approval.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restriction-preserved__case__context",
+    "base_oracle": "restriction-preserved",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "context": "Users may enter only if VERIFIED.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "restriction-preserved__case__output",
+    "base_oracle": "restriction-preserved",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may enter only if VERIFIED.",
+    "check_id": "C3",
+    "context": "Users may enter only if verified.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "restriction-preserved__whitespace__context",
+    "base_oracle": "restriction-preserved",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "context": "Users   may enter only if verified.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "restriction-preserved__whitespace__output",
+    "base_oracle": "restriction-preserved",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter only if verified.",
+    "check_id": "C3",
+    "context": "Users may enter only if verified.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "restriction-weakened__case__context",
+    "base_oracle": "restriction-weakened",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter if verified.",
+    "check_id": "C3",
+    "context": "Users may enter only if VERIFIED.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restriction-weakened__case__output",
+    "base_oracle": "restriction-weakened",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may enter if VERIFIED.",
+    "check_id": "C3",
+    "context": "Users may enter only if verified.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restriction-weakened__whitespace__context",
+    "base_oracle": "restriction-weakened",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter if verified.",
+    "check_id": "C3",
+    "context": "Users   may enter only if verified.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restriction-weakened__whitespace__output",
+    "base_oracle": "restriction-weakened",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter if verified.",
+    "check_id": "C3",
+    "context": "Users may enter only if verified.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restrictive-not-entails-mixed__case__context",
+    "base_oracle": "restrictive-not-entails-mixed",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may enter only if VERIFIED.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restrictive-not-entails-mixed__case__output",
+    "base_oracle": "restrictive-not-entails-mixed",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Users may enter only if VERIFIED.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may enter only if verified.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restrictive-not-entails-mixed__whitespace__context",
+    "base_oracle": "restrictive-not-entails-mixed",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "context": "Users   may enter if verified. Users may enter only if verified.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "restrictive-not-entails-mixed__whitespace__output",
+    "base_oracle": "restrictive-not-entails-mixed",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Users   may enter only if verified.",
+    "check_id": "C3",
+    "context": "Users may enter if verified. Users may enter only if verified.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "warning"
+    }
+  },
+  {
+    "id": "self-conflicted-basis__case__context",
+    "base_oracle": "self-conflicted-basis",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Basic costs over $5.",
+    "check_id": "C1",
+    "context": "Basic costs $10. Basic COSTS $20.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "self-conflicted-basis__case__output",
+    "base_oracle": "self-conflicted-basis",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Basic costs OVER $5.",
+    "check_id": "C1",
+    "context": "Basic costs $10. Basic costs $20.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "self-conflicted-basis__whitespace__context",
+    "base_oracle": "self-conflicted-basis",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Basic costs over $5.",
+    "check_id": "C1",
+    "context": "Basic   costs $10. Basic costs $20.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "self-conflicted-basis__whitespace__output",
+    "base_oracle": "self-conflicted-basis",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Basic   costs over $5.",
+    "check_id": "C1",
+    "context": "Basic costs $10. Basic costs $20.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-question-output__case__context",
+    "base_oracle": "span-question-output",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-question-output__case__output",
+    "base_oracle": "span-question-output",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE?",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-question-output__whitespace__context",
+    "base_oracle": "span-question-output",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-question-output__whitespace__output",
+    "base_oracle": "span-question-output",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable?",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-retraction-unconsumed__case__context",
+    "base_oracle": "span-retraction-unconsumed",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Items are nonrefundable. Actually, disregard that.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-retraction-unconsumed__case__output",
+    "base_oracle": "span-retraction-unconsumed",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are nonrefundable. Actually, disregard THAT.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-retraction-unconsumed__whitespace__context",
+    "base_oracle": "span-retraction-unconsumed",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Items are nonrefundable. Actually, disregard that.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "span-retraction-unconsumed__whitespace__output",
+    "base_oracle": "span-retraction-unconsumed",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are nonrefundable. Actually, disregard that.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "tab-indented-bullet__case__context",
+    "base_oracle": "tab-indented-bullet",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "\t- Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are NONREFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "tab-indented-bullet__case__output",
+    "base_oracle": "tab-indented-bullet",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "\t- Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "tab-indented-bullet__list_marker__output",
+    "base_oracle": "tab-indented-bullet",
+    "variant_kind": "list_marker",
+    "variant_field": "output",
+    "output": "\t1. Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "tab-indented-bullet__whitespace__context",
+    "base_oracle": "tab-indented-bullet",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "\t- Items are refundable.",
+    "check_id": "C1",
+    "context": "Items   are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "tab-indented-bullet__whitespace__output",
+    "base_oracle": "tab-indented-bullet",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "\t-   Items are refundable.",
+    "check_id": "C1",
+    "context": "Items are nonrefundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "tier3-advisory__case__output",
+    "base_oracle": "tier3-advisory",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Items are REFUNDABLE.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null,
+      "advisory": true
+    }
+  },
+  {
+    "id": "tier3-advisory__whitespace__output",
+    "base_oracle": "tier3-advisory",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Items   are refundable.",
+    "check_id": "C1",
+    "context_sources": [
+      {
+        "text": "Items are refundable.",
+        "tier": "tier_1"
+      },
+      {
+        "text": "Items are nonrefundable.",
+        "tier": "tier_3"
+      }
+    ],
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null,
+      "advisory": true
+    }
+  },
+  {
+    "id": "trailing-zero-equal__case__context",
+    "base_oracle": "trailing-zero-equal",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Basic costs $25.",
+    "check_id": "C1",
+    "context": "Basic COSTS $25.00.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "trailing-zero-equal__case__output",
+    "base_oracle": "trailing-zero-equal",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Basic COSTS $25.",
+    "check_id": "C1",
+    "context": "Basic costs $25.00.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "trailing-zero-equal__whitespace__context",
+    "base_oracle": "trailing-zero-equal",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Basic costs $25.",
+    "check_id": "C1",
+    "context": "Basic   costs $25.00.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "trailing-zero-equal__whitespace__output",
+    "base_oracle": "trailing-zero-equal",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Basic   costs $25.",
+    "check_id": "C1",
+    "context": "Basic costs $25.00.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "tri-state-abstention__case__context",
+    "base_oracle": "tri-state-abstention",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds for contractors are nonrefundable.",
+    "check_id": "C1",
+    "context": "Refunds for employees are REFUNDABLE.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "condition_undecidable",
+      "severity": null
+    }
+  },
+  {
+    "id": "tri-state-abstention__case__output",
+    "base_oracle": "tri-state-abstention",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds for contractors are NONREFUNDABLE.",
+    "check_id": "C1",
+    "context": "Refunds for employees are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "condition_undecidable",
+      "severity": null
+    }
+  },
+  {
+    "id": "tri-state-abstention__whitespace__context",
+    "base_oracle": "tri-state-abstention",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds for contractors are nonrefundable.",
+    "check_id": "C1",
+    "context": "Refunds   for employees are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "condition_undecidable",
+      "severity": null
+    }
+  },
+  {
+    "id": "tri-state-abstention__whitespace__output",
+    "base_oracle": "tri-state-abstention",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   for contractors are nonrefundable.",
+    "check_id": "C1",
+    "context": "Refunds for employees are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "condition_undecidable",
+      "severity": null
+    }
+  },
+  {
+    "id": "within-dual-role__case__context",
+    "base_oracle": "within-dual-role",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Shipping within 5 days.",
+    "check_id": "C1",
+    "context": "Shipping takes 3 DAYS.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "within-dual-role__case__output",
+    "base_oracle": "within-dual-role",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Shipping within 5 DAYS.",
+    "check_id": "C1",
+    "context": "Shipping takes 3 days.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "within-dual-role__whitespace__context",
+    "base_oracle": "within-dual-role",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Shipping within 5 days.",
+    "check_id": "C1",
+    "context": "Shipping   takes 3 days.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "within-dual-role__whitespace__output",
+    "base_oracle": "within-dual-role",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Shipping   within 5 days.",
+    "check_id": "C1",
+    "context": "Shipping takes 3 days.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  }
+]

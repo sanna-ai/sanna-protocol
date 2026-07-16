@@ -1,0 +1,364 @@
+[
+  {
+    "id": "flagship-violation",
+    "context": "Refunds require approval.",
+    "output": "Refunds are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "flagship-satisfied",
+    "context": "Refunds require approval.",
+    "output": "Refunds are available only if approved.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "restriction-weakened",
+    "context": "Users may enter only if verified.",
+    "output": "Users may enter if verified.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "restriction-preserved",
+    "context": "Users may enter only if verified.",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "postmodal-negation",
+    "context": "Users may enter.",
+    "output": "Users can't enter.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "antonym-refund",
+    "context": "Items are nonrefundable.",
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "antonym-permission",
+    "context": "Administrators prohibited users.",
+    "output": "Administrators permitted users.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "benefit-neg-projection",
+    "context": "Refunds are unavailable.",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "tri-state-abstention",
+    "context": "Refunds for employees are refundable.",
+    "output": "Refunds for contractors are nonrefundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "condition_undecidable", "severity": null}
+  },
+  {
+    "id": "exact-decimal",
+    "context": "Basic costs $9007199254740993.",
+    "output": "Basic costs $9007199254740992.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "trailing-zero-equal",
+    "context": "Basic costs $25.00.",
+    "output": "Basic costs $25.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "malformed-grouping",
+    "context": "Basic costs $25.",
+    "output": "Basic costs $1,23,456.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "contraction-equivalence",
+    "context": "Items are refundable.",
+    "output": "Items aren't refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "concept-distinct",
+    "context": "Users may enter only if screened.",
+    "output": "Users may enter only if vetted.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "c2-definitive",
+    "context": "",
+    "output": "The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "c2-hedged",
+    "context": "",
+    "output": "The result may be guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "c4-collapse",
+    "context": "Users may enter. Users may not enter after hours.",
+    "output": "Users may enter.",
+    "check_id": "C4",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "c4-preserved",
+    "context": "Users may enter. Users may not enter after hours.",
+    "output": "Users may enter. Users may not enter after hours.",
+    "check_id": "C4",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "span-question-output",
+    "context": "Items are nonrefundable.",
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "span-retraction-unconsumed",
+    "context": "Items are nonrefundable.",
+    "output": "Items are nonrefundable. Actually, disregard that.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "self-conflicted-basis",
+    "context": "Basic costs $10. Basic costs $20.",
+    "output": "Basic costs over $5.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_conflict", "severity": null}
+  },
+  {
+    "id": "conjunct-obligations",
+    "context": "Refunds and exchanges require approval.",
+    "output": "Exchanges are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "requirement-boolean-structure",
+    "context": "Refunds require approval and receipt.",
+    "output": "Refunds are available only if approval and receipt.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "requirement-negation-evidence",
+    "context": "Refunds require approval.",
+    "output": "Refunds are available. Refunds do not require approval.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "conflicting-source-frames",
+    "context": "Users may enter if verified. Users may not enter if verified.",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_conflict", "severity": null}
+  },
+  {
+    "id": "restrictive-not-entails-mixed",
+    "context": "Users may enter if verified. Users may enter only if verified.",
+    "output": "Users may enter only if verified.",
+    "check_id": "C3",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "complement-tautology",
+    "context": "Users may enter if verified. Users may enter if unverified.",
+    "output": "Users may enter.",
+    "check_id": "C3",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "approx-value-abstains",
+    "context": "Basic costs $25.",
+    "output": "Basic costs around $30.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "cross-group-undecidable",
+    "context": "Shipping takes 30 days.",
+    "output": "Shipping takes 1 month.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "unsupported_claim_form", "severity": null}
+  },
+  {
+    "id": "within-dual-role",
+    "context": "Shipping takes 3 days.",
+    "output": "Shipping within 5 days.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "tier3-advisory",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null, "advisory": true}
+  },
+  {
+    "id": "basis-empty-c1",
+    "context_sources": [
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-c3",
+    "context_sources": [
+      {"text": "Refunds require approval.", "tier": "tier_3"}
+    ],
+    "output": "Refunds are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-c4",
+    "context_sources": [
+      {"text": "Users may enter.", "tier": "tier_3"},
+      {"text": "Users may not enter after hours.", "tier": "tier_3"}
+    ],
+    "output": "Users may enter.",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "envelope-per-check-c2",
+    "context_repeat": {"text": "x", "count": 1048577},
+    "output": "The result is guaranteed.",
+    "check_id": "C2",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "numbered-list-output",
+    "context": "Items are nonrefundable.",
+    "output": "1. Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "indented-numbered-list",
+    "context": "Items are nonrefundable.",
+    "output": " 12. Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "tab-indented-bullet",
+    "context": "Items are nonrefundable.",
+    "output": "\t- Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "basis-empty-partial-output-c1",
+    "context_sources": [{"text": "Items are nonrefundable.", "tier": "tier_3"}],
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-output-c3",
+    "context_sources": [{"text": "Items are nonrefundable.", "tier": "tier_3"}],
+    "output": "Items are refundable?",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-output-c4",
+    "context_sources": [{"text": "Items are nonrefundable.", "tier": "tier_3"}],
+    "output": "Items are refundable?",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c1",
+    "context_sources": [{"text": "Items are nonrefundable. Actually, disregard that.", "tier": "tier_3"}],
+    "output": "Items are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c3",
+    "context_sources": [{"text": "Items are nonrefundable. Actually, disregard that.", "tier": "tier_3"}],
+    "output": "Items are refundable.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "basis-empty-partial-t3-context-c4",
+    "context_sources": [{"text": "Items are nonrefundable. Actually, disregard that.", "tier": "tier_3"}],
+    "output": "Items are refundable.",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "basis_empty", "severity": null}
+  },
+  {
+    "id": "mixed-tier-partial-output-c1",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable?",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "mixed-tier-partial-output-c3",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable?",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "mixed-tier-partial-output-c4",
+    "context_sources": [
+      {"text": "Items are refundable.", "tier": "tier_1"},
+      {"text": "Items are nonrefundable.", "tier": "tier_3"}
+    ],
+    "output": "Items are refundable?",
+    "check_id": "C4",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "c2-frame-partial-not-inherited",
+    "context": "",
+    "output": "The result may be guaranteed. Actually, disregard that.",
+    "check_id": "C2",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "c2-interrogative-output",
+    "context": "",
+    "output": "Is the result guaranteed?",
+    "check_id": "C2",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  }
+]
