@@ -1,5 +1,5 @@
 /**
- * Section 3 of ALGORITHM v4 draft 5.4: extraction (triggers, negation,
+ * Section 3 of ALGORITHM v4 draft 5.5: extraction (triggers, negation,
  * polarity, roles, conditions, frames, obligations, evidence), including
  * total span accounting (spec 2.6). Mirrors reference/extraction.py
  * one-for-one.

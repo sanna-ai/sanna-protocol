@@ -1756,6 +1756,76 @@
     }
   },
   {
+    "id": "letter-classification-astral-pin__case__context",
+    "base_oracle": "letter-classification-astral-pin",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1 items are not refundable.",
+    "check_id": "C1",
+    "context": "\ud87a\udff0\ud87a\udff0\ud87a\udff0 items are REFUNDABLE.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "letter-classification-astral-pin__case__output",
+    "base_oracle": "letter-classification-astral-pin",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1 items are not REFUNDABLE.",
+    "check_id": "C1",
+    "context": "\ud87a\udff0\ud87a\udff0\ud87a\udff0 items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "letter-classification-astral-pin__contraction_contract__output",
+    "base_oracle": "letter-classification-astral-pin",
+    "variant_kind": "contraction_contract",
+    "variant_field": "output",
+    "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1 items aren't refundable.",
+    "check_id": "C1",
+    "context": "\ud87a\udff0\ud87a\udff0\ud87a\udff0 items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "letter-classification-astral-pin__whitespace__context",
+    "base_oracle": "letter-classification-astral-pin",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1 items are not refundable.",
+    "check_id": "C1",
+    "context": "\ud87a\udff0\ud87a\udff0\ud87a\udff0   items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
+    "id": "letter-classification-astral-pin__whitespace__output",
+    "base_oracle": "letter-classification-astral-pin",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1   items are not refundable.",
+    "check_id": "C1",
+    "context": "\ud87a\udff0\ud87a\udff0\ud87a\udff0 items are refundable.",
+    "expected": {
+      "outcome": "VIOLATION",
+      "outcome_reason": "detection_complete",
+      "severity": "critical"
+    }
+  },
+  {
     "id": "malformed-grouping__case__context",
     "base_oracle": "malformed-grouping",
     "variant_kind": "case",

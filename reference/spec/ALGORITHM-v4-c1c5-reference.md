@@ -1,6 +1,17 @@
-# ALGORITHM v4 (DRAFT 5.4): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
+# ALGORITHM v4 (DRAFT 5.5): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
 
-> STATUS: DRAFT 5.4 -- ONE narrow erratum from Sol's SAN-893 prompt
+> STATUS: DRAFT 5.5 -- ONE narrow erratum, operator-ratified under
+> SAN-896 (no design reopening): (e14) LETTER_v1 CLASSIFICATION --
+> section 2.2 rule 4's `letters` is pinned to Unicode General Category
+> {Lu, Ll, Lt, Lm, Lo} under UCD 15.0.0; classification MUST NOT float
+> with host-runtime Unicode tables; implementations load a UCD-15.0.0-
+> derived classifier or use a Unicode-data API that reports exactly UCD
+> 15.0.0 and supplies the category query used, else REFUSE
+> initialization. Normative text inline at section 2.2 rule 4.
+> (Prevents host-Unicode drift: UCD 15.1 added CJK Extension I
+> ideographs, U+2EBF0.., whose Lo classification flips tokenization and
+> check outcomes for affected inputs.)
+> DRAFT 5.4 was: ONE narrow erratum from Sol's SAN-893 prompt
 > review: (e13) NONTERMINATING SENTENCE PUNCTUATION -- a sentence-
 > punctuation token ('.', '!', '?') that is neither a SPLIT_v1 terminator
 > nor consumed by another explicitly recognized grammar form must not be
@@ -167,6 +178,17 @@ First matching rule at each position:
    optional comma groups and one optional "." fraction (2.4); optional
    adjacent "%".
 4. WORD: letters with internal apostrophes joined (U+2019 -> ').
+   LETTER_v1 (e14, operator-ratified text): In section 2.2 rule 4,
+   `letters` means Unicode scalar values whose Unicode General Category
+   is one of {Lu, Ll, Lt, Lm, Lo} in UCD 15.0.0. Surrogate code points
+   are not letters. Letter classification MUST NOT float with
+   host-runtime Unicode tables. Before evaluator readiness, an
+   implementation MUST either load a classifier derived from UCD 15.0.0
+   data or use a Unicode-data API that both reports exactly UCD 15.0.0
+   and supplies the category query used by the classifier; otherwise it
+   MUST refuse initialization. A normalizer's version is not
+   independently sufficient evidence unless that same versioned data
+   source supplies letter classification.
 5. else PUNCT (one code point).
 POST-PASS contraction expansion: a WORD whose ascii_lower form is a
 T.contractions_v1 key is replaced by that entry's token sequence (first

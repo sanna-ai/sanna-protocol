@@ -18,27 +18,57 @@ from typing import FrozenSet, Optional, Tuple, Union
 
 from reference.tables import T
 
-# Spec section 2.1 step 2 requires "a PROVEN Unicode-15.0.0 normalizer".
 # CPython's unicodedata module is generated from the Unicode Character
-# Database and its version is introspectable; we record it here and
-# assert it is at least 15.0.0 so a future interpreter upgrade cannot
-# silently normalize against different NFC tables without notice. The
-# spec also calls for a "vendor-or-refuse NormalizationTest.txt CI
+# Database (UCD) and its version is introspectable via
+# unicodedata.unidata_version; this same versioned data source backs TWO
+# distinct normative roles in this module, and this guard governs both:
+#
+#   (a) Spec section 2.1 step 2 requires "a PROVEN Unicode-15.0.0
+#       normalizer" -- unicodedata.normalize('NFC', ...) must run against
+#       exactly the UCD 15.0.0 normalization tables.
+#   (b) Spec section 2.2 rule 4 / erratum e14 (SAN-896) requires letter
+#       classification ("letters" means Unicode General Category in
+#       {Lu, Ll, Lt, Lm, Lo}) to be evaluated against exactly UCD 15.0.0
+#       -- see _is_letter() below, which queries unicodedata.category()
+#       against this SAME pinned data source.
+#
+# The pin below is EXACT equality, not a floor (">= 15.0.0"), because a
+# floor is insufficient for (b): UCD 15.1 added the CJK Extension I
+# ideographs at U+2EBF0.. and classified them General Category Lo
+# (letter). Under a ">= 15.0.0" floor, an interpreter shipping UCD 15.1+
+# would satisfy the guard while silently reclassifying those code points
+# from non-letter to letter, flipping WORD-token boundaries in
+# tokenize() and changing check outcomes for affected inputs with no
+# visible signal. Refusal at module initialization -- before any
+# evaluation occurs -- is the only way to guarantee classification does
+# not float with host-runtime Unicode tables. A normalizer's version is
+# not independently sufficient evidence unless that same versioned data
+# source also supplies letter classification, which is the case here
+# (both (a) and (b) read unicodedata.unidata_version / unicodedata
+# APIs on the same interpreter).
+#
+# The spec also calls for a "vendor-or-refuse NormalizationTest.txt CI
 # gate" that would replay the official Unicode NormalizationTest.txt
 # conformance vectors against unicodedata.normalize('NFC', ...); that
 # gate is a documented slice-1 follow-up (SAN-883), NOT silently
 # skipped -- this module only records the runtime Unicode version.
 UNICODE_VERSION = unicodedata.unidata_version
 
+_REQUIRED_UNICODE_VERSION = "15.0.0"
+
 
 class UnicodeVersionError(RuntimeError):
     pass
 
 
-if tuple(int(p) for p in UNICODE_VERSION.split(".")) < (15, 0, 0):
+if UNICODE_VERSION != _REQUIRED_UNICODE_VERSION:
     raise UnicodeVersionError(
-        f"reference/primitives.py requires unicodedata >= 15.0.0 "
-        f"(spec section 2.1 step 2); got {UNICODE_VERSION} on {sys.version}"
+        f"reference/primitives.py requires unicodedata == "
+        f"{_REQUIRED_UNICODE_VERSION} EXACTLY (spec section 2.1 step 2 "
+        f"normalizer + spec section 2.2 rule 4 / erratum e14 LETTER_v1 "
+        f"classification, SAN-896); got {UNICODE_VERSION} on "
+        f"{sys.version}. Refusing initialization before any evaluation "
+        f"occurs."
     )
 
 
@@ -434,17 +464,30 @@ def _match_pct100(text: str, i: int) -> Optional[int]:
     return i + 4
 
 
+_LETTER_CATEGORIES = frozenset({"Lu", "Ll", "Lt", "Lm", "Lo"})
+
+
+def _is_letter(ch: str) -> bool:
+    """Spec 2.2 rule 4 / erratum e14 (LETTER_v1, SAN-896): "letters" means
+    Unicode General Category in {Lu, Ll, Lt, Lm, Lo}, queried against the
+    SAME pinned unicodedata module the module-init guard above governs
+    (exact UCD 15.0.0). Surrogate code points are General Category Cs,
+    which is not in _LETTER_CATEGORIES, so they are correctly excluded
+    with no special-case handling needed."""
+    return unicodedata.category(ch) in _LETTER_CATEGORIES
+
+
 def _match_word(text: str, i: int) -> Optional[int]:
     n = len(text)
-    if not text[i].isalpha():
+    if not _is_letter(text[i]):
         return None
     end = i + 1
-    while end < n and text[end].isalpha():
+    while end < n and _is_letter(text[end]):
         end += 1
     # internal apostrophes joined
-    while end < n and text[end] in _APOSTROPHES and end + 1 < n and text[end + 1].isalpha():
+    while end < n and text[end] in _APOSTROPHES and end + 1 < n and _is_letter(text[end + 1]):
         end += 1
-        while end < n and text[end].isalpha():
+        while end < n and _is_letter(text[end]):
             end += 1
     return end
 

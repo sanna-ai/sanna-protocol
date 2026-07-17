@@ -1,5 +1,5 @@
 /**
- * Section 4.3 of ALGORITHM v4 draft 5.4: identity_relation and friends.
+ * Section 4.3 of ALGORITHM v4 draft 5.5: identity_relation and friends.
  * Depends on primitives.ts (types) and engine.ts (DOMAIN, SAT,
  * decompose/build_gamma for measure-facet disposition), NOT on
  * extraction.ts (no cycle). Mirrors reference/relations.py one-for-one.

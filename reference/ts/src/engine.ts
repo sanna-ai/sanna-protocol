@@ -1,5 +1,5 @@
 /**
- * Section 4.1/4.2 of ALGORITHM v4 draft 5.4: bitsets, varmap, elementary
+ * Section 4.1/4.2 of ALGORITHM v4 draft 5.5: bitsets, varmap, elementary
  * interval decomposition, GAMMA, and the boolean queries (SAT/UNSAT/EQUIV/
  * NEGATE/ENTAILS/DOMAIN/IMPLIES). Depends only on primitives.ts (Bool AST +
  * Dec/Interval) and tables.ts (MAX_BOOL_ATOMS); does not depend on
