@@ -412,5 +412,26 @@
     "output": "Refunds are refundable.",
     "check_id": "C4",
     "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "number-non-ascii-digits-abstain",
+    "context": "Refunds require approval.",
+    "output": "Refunds arrive within 1,\u0662\u0663\u0664 days.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "number-superscript-digits-no-crash",
+    "context": "Refunds require approval.",
+    "output": "Refunds arrive within 1,\u00b2\u00b3\u2074 days.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "number-ascii-comma-group-control",
+    "context": "Refunds arrive within 2,000 days.",
+    "output": "Refunds arrive within 1,234 days.",
+    "check_id": "C1",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
   }
 ]

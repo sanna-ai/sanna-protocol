@@ -221,12 +221,12 @@ PYEOF
 ORACLES_SOURCE_COUNT=$(python3 -c "import json; print(len(json.load(open('$ORACLES_PATH'))))")
 GENERATED_SOURCE_COUNT=$(python3 -c "import json; print(len(json.load(open('$GENERATED_PATH'))))")
 
-if [ "$ORACLES_SOURCE_COUNT" != "56" ]; then
-  echo "oracles.json count changed: expected 56, got $ORACLES_SOURCE_COUNT (Phase-3 matrix cardinality assertions must be updated)" >&2
+if [ "$ORACLES_SOURCE_COUNT" != "59" ]; then
+  echo "oracles.json count changed: expected 59, got $ORACLES_SOURCE_COUNT (Phase-3 matrix cardinality assertions must be updated)" >&2
   exit 1
 fi
-if [ "$GENERATED_SOURCE_COUNT" != "190" ]; then
-  echo "generated.json count changed: expected 190, got $GENERATED_SOURCE_COUNT (Phase-3 matrix cardinality assertions must be updated)" >&2
+if [ "$GENERATED_SOURCE_COUNT" != "202" ]; then
+  echo "generated.json count changed: expected 202, got $GENERATED_SOURCE_COUNT (Phase-3 matrix cardinality assertions must be updated)" >&2
   exit 1
 fi
 
@@ -236,15 +236,15 @@ MATRIX_GENERATED="$WORKDIR/matrix_generated.json"
 build_matrix oracles "$ORACLES_PATH" "$MATRIX_ORACLES"
 build_matrix generated "$GENERATED_PATH" "$MATRIX_GENERATED"
 
-assert_matrix_cardinality "$MATRIX_ORACLES" 56 224
-assert_matrix_cardinality "$MATRIX_GENERATED" 190 760
+assert_matrix_cardinality "$MATRIX_ORACLES" 59 236
+assert_matrix_cardinality "$MATRIX_GENERATED" 202 808
 
-TOTAL_MATRIX=$((224 + 760))
-if [ "$TOTAL_MATRIX" != "984" ]; then
-  echo "internal error: total matrix record count arithmetic is wrong ($TOTAL_MATRIX != 984)" >&2
+TOTAL_MATRIX=$((236 + 808))
+if [ "$TOTAL_MATRIX" != "1044" ]; then
+  echo "internal error: total matrix record count arithmetic is wrong ($TOTAL_MATRIX != 1044)" >&2
   exit 1
 fi
-echo "MATRIX CARDINALITY OK: total $TOTAL_MATRIX records (984 expected: 246 source fixtures x 4 checks)" >&2
+echo "MATRIX CARDINALITY OK: total $TOTAL_MATRIX records (1044 expected: 261 source fixtures x 4 checks)" >&2
 
 run_matrix() {
   local name="$1" path="$2"

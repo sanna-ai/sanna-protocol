@@ -9,6 +9,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { evaluate } from "../src/evaluate.js";
 import {
   Abstain,
   Dec,
@@ -521,3 +522,78 @@ for (const mark of [".", "!", "?"]) {
     assert.equal(sentences(toks, text).length, 1);
   });
 }
+
+// ---------------------------------------------------------------------
+// ASCII digit grammar (SAN-895, spec 2.2: `digit` is ASCII 0-9 only).
+// These mirror tests/reference/test_primitives.py's SAN-895 additions and
+// pin the ALREADY-CONFORMANT TypeScript behavior so it cannot regress:
+// TS's isDigitCp / isAsciiDigits are ASCII-only already (see
+// matchNumberCore and parseDec in src/primitives.ts), unlike the Python
+// reference's pre-fix broad str.isdigit() call sites. Escaped \u literals
+// below (never the raw glyph) so this file stays ASCII.
+// ---------------------------------------------------------------------
+
+test("test_comma_group_requires_ascii_digits", () => {
+  // Arabic-Indic U+0662/0663/0664 ("234" in Unicode decimal digits) must
+  // NOT be absorbed into the comma-grouped NUMBER core: the grammar's
+  // `digit` production is ASCII 0-9 only (spec 2.2), so the NUMBER token
+  // stops at the lone ASCII lead digit "1" and the comma + non-ASCII run
+  // falls out as separate token(s).
+  const toks = tokenize("Refunds arrive within 1,\u0662\u0663\u0664 days.");
+  const numberToks = toks.filter((t) => t.kind === "NUMBER");
+  assert.equal(numberToks.length, 1);
+  assert.equal(numberToks[0]!.raw, "1");
+
+  // Control: the equivalent ASCII comma group IS absorbed as one NUMBER
+  // token.
+  const controlToks = tokenize("within 1,234 days");
+  const controlNumbers = controlToks.filter((t) => t.kind === "NUMBER");
+  assert.equal(controlNumbers.length, 1);
+  assert.equal(controlNumbers[0]!.raw, "1,234");
+});
+
+test("test_parse_dec_rejects_non_ascii_digits", () => {
+  // A lone Arabic-Indic digit is not `digit+` under spec 2.2 -> Abstain,
+  // not a parsed Dec.
+  assert.throws(
+    () => parseDec("\u0662"),
+    (e: unknown) => e instanceof Abstain && e.cause === "malformed_mention",
+  );
+
+  // Superscript digits are rejected by the same ASCII-only guard. This
+  // pins that parseDec raises Abstain, never lets any other error escape.
+  assert.throws(
+    () => parseDec("1,\u00b2\u00b3\u2074"),
+    (e: unknown) => e instanceof Abstain && e.cause === "malformed_mention",
+  );
+});
+
+test("test_non_ascii_number_inputs_evaluate_structured_not_crash", () => {
+  // Structured abstention, never an exception, for both non-ASCII digit
+  // subclasses. Pins the full four-check projection matrix: C1/C3/C4
+  // (frame-extraction consumers) see the non-ASCII digits as unconsumed
+  // PUNCT inside the post-trigger value region -> spec 2.6 span
+  // accounting drives the field to PARTIAL -> NOT_EVALUATED /
+  // extraction_partial. C2 (e11, C2-local out_tokens scan) is unaffected
+  // by frame-extraction partiality and still PASSes.
+  const outputs = [
+    "Refunds arrive within 1,\u0662\u0663\u0664 days.",
+    "Refunds arrive within 1,\u00b2\u00b3\u2074 days.",
+  ];
+  const expected: Record<string, [string, string, string | null]> = {
+    C1: ["NOT_EVALUATED", "extraction_partial", null],
+    C2: ["PASS", "detection_complete", null],
+    C3: ["NOT_EVALUATED", "extraction_partial", null],
+    C4: ["NOT_EVALUATED", "extraction_partial", null],
+  };
+  for (const output of outputs) {
+    const result = evaluate({ output, context: "Refunds require approval." });
+    for (const [checkId, [outcome, outcomeReason, severity]] of Object.entries(expected)) {
+      const got = result[checkId]!;
+      assert.equal(got.outcome, outcome, checkId);
+      assert.equal(got.outcome_reason, outcomeReason, checkId);
+      assert.equal(got.severity, severity, checkId);
+      assert.equal(Boolean(got.advisory), false, checkId);
+    }
+  }
+});

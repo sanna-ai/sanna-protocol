@@ -1950,6 +1950,174 @@
     }
   },
   {
+    "id": "number-ascii-comma-group-control__case__context",
+    "base_oracle": "number-ascii-comma-group-control",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds arrive within 1,234 days.",
+    "check_id": "C1",
+    "context": "Refunds arrive within 2,000 DAYS.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-ascii-comma-group-control__case__output",
+    "base_oracle": "number-ascii-comma-group-control",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds arrive within 1,234 DAYS.",
+    "check_id": "C1",
+    "context": "Refunds arrive within 2,000 days.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-ascii-comma-group-control__whitespace__context",
+    "base_oracle": "number-ascii-comma-group-control",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds arrive within 1,234 days.",
+    "check_id": "C1",
+    "context": "Refunds   arrive within 2,000 days.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-ascii-comma-group-control__whitespace__output",
+    "base_oracle": "number-ascii-comma-group-control",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   arrive within 1,234 days.",
+    "check_id": "C1",
+    "context": "Refunds arrive within 2,000 days.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-non-ascii-digits-abstain__case__context",
+    "base_oracle": "number-non-ascii-digits-abstain",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds arrive within 1,\u0662\u0663\u0664 days.",
+    "check_id": "C1",
+    "context": "Refunds require APPROVAL.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-non-ascii-digits-abstain__case__output",
+    "base_oracle": "number-non-ascii-digits-abstain",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds arrive within 1,\u0662\u0663\u0664 DAYS.",
+    "check_id": "C1",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-non-ascii-digits-abstain__whitespace__context",
+    "base_oracle": "number-non-ascii-digits-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds arrive within 1,\u0662\u0663\u0664 days.",
+    "check_id": "C1",
+    "context": "Refunds   require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-non-ascii-digits-abstain__whitespace__output",
+    "base_oracle": "number-non-ascii-digits-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   arrive within 1,\u0662\u0663\u0664 days.",
+    "check_id": "C1",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-superscript-digits-no-crash__case__context",
+    "base_oracle": "number-superscript-digits-no-crash",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds arrive within 1,\u00b2\u00b3\u2074 days.",
+    "check_id": "C3",
+    "context": "Refunds require APPROVAL.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-superscript-digits-no-crash__case__output",
+    "base_oracle": "number-superscript-digits-no-crash",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds arrive within 1,\u00b2\u00b3\u2074 DAYS.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-superscript-digits-no-crash__whitespace__context",
+    "base_oracle": "number-superscript-digits-no-crash",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds arrive within 1,\u00b2\u00b3\u2074 days.",
+    "check_id": "C3",
+    "context": "Refunds   require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "number-superscript-digits-no-crash__whitespace__output",
+    "base_oracle": "number-superscript-digits-no-crash",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   arrive within 1,\u00b2\u00b3\u2074 days.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
     "id": "numbered-list-output__case__context",
     "base_oracle": "numbered-list-output",
     "variant_kind": "case",
