@@ -569,6 +569,7 @@ def test_non_ascii_number_inputs_evaluate_structured_not_crash(output):
         assert got["outcome"] == outcome, check_id
         assert got["outcome_reason"] == outcome_reason, check_id
         assert got["severity"] == severity, check_id
+        assert got.get("advisory", False) is False, check_id
 
 
 # ---------------------------------------------------------------------
