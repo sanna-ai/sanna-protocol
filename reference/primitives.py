@@ -395,8 +395,12 @@ def _match_number_core(text: str, i: int) -> Optional[int]:
     grouped_end = None
     k = j
     groups = 0
-    while k < n and text[k] == "," and k + 3 < n + 1 and text[k + 1 : k + 4].isdigit() \
-            and len(text[k + 1 : k + 4]) == 3 and (k + 4 == n or not _is_digit(text[k + 4])):
+    # spec 2.2's `digit` is ASCII 0-9; broad str.isdigit() admitted
+    # non-ASCII decimals (silent misparse) and isdigit-True/int()-invalid
+    # characters (unhandled ValueError through evaluate()) -- SAN-895.
+    while k < n and text[k] == "," and k + 3 < n + 1 \
+            and len(text[k + 1 : k + 4]) == 3 and all(_is_digit(c) for c in text[k + 1 : k + 4]) \
+            and (k + 4 == n or not _is_digit(text[k + 4])):
         k += 4
         groups += 1
     if groups >= 1:
@@ -549,7 +553,14 @@ def parse_dec(lexeme: str) -> Dec:
     else:
         int_part, frac_part = s, ""
     int_digits = int_part.replace(",", "")
-    if not int_digits.isdigit() or (frac_part and not frac_part.isdigit()):
+    # spec 2.2's `digit` is ASCII 0-9; broad str.isdigit() admitted
+    # non-ASCII decimals (silent misparse) and isdigit-True/int()-invalid
+    # characters (unhandled ValueError through evaluate()) -- SAN-895.
+    if (
+        not int_digits
+        or not all(_is_digit(ch) for ch in int_digits)
+        or (frac_part and not all(_is_digit(ch) for ch in frac_part))
+    ):
         raise Abstain(MALFORMED_MENTION)
     digits = int_digits + frac_part
     coeff = sign * int(digits) if digits else 0

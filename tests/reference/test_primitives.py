@@ -1,11 +1,13 @@
-"""Unit tests for reference/primitives.py (SAN-879, SAN-893): tokenizer
+"""Unit tests for reference/primitives.py (SAN-879, SAN-893, SAN-895): tokenizer
 (PCT100, contractions, apostrophes), stem_v1 rules, parse_dec (canonical
 form, 2^53 boundary distinctness, trailing zeros, malformed grouping),
-parse_values (each comparator), sentences/segments, ascii_lower.
+parse_values (each comparator), sentences/segments, ascii_lower, ASCII
+digit grammar (spec 2.2 `digit`).
 """
 
 import pytest
 
+from reference.evaluate import evaluate
 from reference.primitives import (
     Abstain,
     ascii_lower,
@@ -477,3 +479,90 @@ def test_sentences_punctuation_followed_by_eof_terminates(mark):
     text = f"Items are refundable{mark}"
     toks = tokenize(text)
     assert len(sentences(toks, text)) == 1
+
+
+# ---------------------------------------------------------------------
+# ASCII digit grammar (SAN-895, spec 2.2: `digit` is ASCII 0-9 only).
+# Two str.isdigit() call sites in primitives.py previously admitted
+# non-ASCII decimal digits (broad Unicode `isdigit()` semantics), which
+# is broader than the spec's `digit` production in two distinct ways:
+#   (a) Arabic-Indic digits (U+0662/0663/0664) are Unicode-decimal and
+#       int()-valid, so they silently misparsed into a NUMBER token's
+#       value -- a live divergence from the spec-conformant TypeScript
+#       reference, which restricts to ASCII 0-9.
+#   (b) Superscript digits (U+00B2/00B3/U+2074) are isdigit()-True but
+#       int()-invalid, crashing parse_dec (and therefore evaluate())
+#       with an unhandled ValueError on ordinary text.
+# Escaped \u literals below (never the raw glyph) so this file stays
+# ASCII and the discriminating code points are unambiguous.
+# ---------------------------------------------------------------------
+
+def test_comma_group_requires_ascii_digits():
+    # Arabic-Indic U+0662/0663/0664 ("234" in Unicode decimal digits)
+    # must NOT be absorbed into the comma-grouped NUMBER core: the
+    # grammar's `digit` production is ASCII 0-9 only (spec 2.2), so the
+    # NUMBER token stops at the lone ASCII lead digit "1" and the comma
+    # + non-ASCII run falls out as separate token(s).
+    toks = tokenize("Refunds arrive within 1,\u0662\u0663\u0664 days.")
+    number_toks = [t for t in toks if t.kind == "NUMBER"]
+    assert len(number_toks) == 1
+    assert number_toks[0].raw == "1"
+
+    # Control: the equivalent ASCII comma group IS absorbed as one
+    # NUMBER token.
+    control_toks = tokenize("within 1,234 days")
+    control_numbers = [t for t in control_toks if t.kind == "NUMBER"]
+    assert len(control_numbers) == 1
+    assert control_numbers[0].raw == "1,234"
+
+
+def test_parse_dec_rejects_non_ascii_digits():
+    # A lone Arabic-Indic digit is not `digit+` under spec 2.2 -> Abstain,
+    # not a parsed Dec.
+    try:
+        parse_dec("\u0662")
+        assert False, "expected Abstain"
+    except Abstain as e:
+        assert e.cause == "malformed_mention"
+
+    # Superscript digits are isdigit()-True but int()-invalid. This is
+    # the crash-regression pin: parse_dec must raise Abstain here, never
+    # let a ValueError escape.
+    try:
+        parse_dec("1,\u00b2\u00b3\u2074")
+        assert False, "expected Abstain"
+    except Abstain as e:
+        assert e.cause == "malformed_mention"
+    except ValueError:
+        assert False, "parse_dec must raise Abstain, not ValueError"
+
+
+@pytest.mark.parametrize(
+    "output",
+    [
+        "Refunds arrive within 1,\u0662\u0663\u0664 days.",
+        "Refunds arrive within 1,\u00b2\u00b3\u2074 days.",
+    ],
+)
+def test_non_ascii_number_inputs_evaluate_structured_not_crash(output):
+    # Structured abstention, never an exception, for both non-ASCII
+    # digit subclasses. Pins the full four-check projection matrix:
+    # C1/C3/C4 (frame-extraction consumers) see the non-ASCII digits as
+    # unconsumed PUNCT inside the post-trigger value region -> spec 2.6
+    # span accounting drives the field to PARTIAL -> NOT_EVALUATED /
+    # extraction_partial. C2 (e11, C2-local out_tokens scan) is
+    # unaffected by frame-extraction partiality and still PASSes.
+    result = evaluate({"output": output, "context": "Refunds require approval."})
+
+    expected = {
+        "C1": ("NOT_EVALUATED", "extraction_partial", None),
+        "C2": ("PASS", "detection_complete", None),
+        "C3": ("NOT_EVALUATED", "extraction_partial", None),
+        "C4": ("NOT_EVALUATED", "extraction_partial", None),
+    }
+    for check_id, (outcome, outcome_reason, severity) in expected.items():
+        got = result[check_id]
+        assert got["outcome"] == outcome, check_id
+        assert got["outcome_reason"] == outcome_reason, check_id
+        assert got["severity"] == severity, check_id
+        assert got.get("advisory", False) is False, check_id
