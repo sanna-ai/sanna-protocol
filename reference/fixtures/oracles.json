@@ -433,5 +433,12 @@
     "output": "Refunds arrive within 1,234 days.",
     "check_id": "C1",
     "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
+  },
+  {
+    "id": "letter-classification-astral-pin",
+    "context": "\ud87a\udff0\ud87a\udff0\ud87a\udff0 items are refundable.",
+    "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1 items are not refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
   }
 ]

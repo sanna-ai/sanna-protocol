@@ -1,9 +1,12 @@
-"""Unit tests for reference/primitives.py (SAN-879, SAN-893, SAN-895): tokenizer
-(PCT100, contractions, apostrophes), stem_v1 rules, parse_dec (canonical
-form, 2^53 boundary distinctness, trailing zeros, malformed grouping),
-parse_values (each comparator), sentences/segments, ascii_lower, ASCII
-digit grammar (spec 2.2 `digit`).
+"""Unit tests for reference/primitives.py (SAN-879, SAN-893, SAN-895, SAN-896):
+tokenizer (PCT100, contractions, apostrophes), stem_v1 rules, parse_dec
+(canonical form, 2^53 boundary distinctness, trailing zeros, malformed
+grouping), parse_values (each comparator), sentences/segments, ascii_lower,
+ASCII digit grammar (spec 2.2 `digit`), letter classification (spec 2.2
+rule 4 / erratum e14, LETTER_v1 pinned to UCD 15.0.0).
 """
+
+import unicodedata
 
 import pytest
 
@@ -20,6 +23,7 @@ from reference.primitives import (
     sentences,
     stem_v1,
     tokenize,
+    _is_letter,
 )
 
 
@@ -565,4 +569,66 @@ def test_non_ascii_number_inputs_evaluate_structured_not_crash(output):
         assert got["outcome"] == outcome, check_id
         assert got["outcome_reason"] == outcome_reason, check_id
         assert got["severity"] == severity, check_id
-        assert got.get("advisory", False) is False, check_id
+
+
+# ---------------------------------------------------------------------
+# Letter classification (SAN-896, spec 2.2 rule 4 / erratum e14): LETTER_v1
+# pins "letters" to Unicode General Category {Lu, Ll, Lt, Lm, Lo} under
+# EXACTLY UCD 15.0.0, queried via _is_letter() against the same
+# unicodedata module the module-init guard in primitives.py governs.
+# Escaped \u / \U literals below (never the raw glyph) so this file stays
+# ASCII and the discriminating code points are unambiguous.
+# ---------------------------------------------------------------------
+
+def test_unicode_letter_classifier_pinned_to_ucd_15_0_0():
+    # The module-init guard in primitives.py requires this to hold before
+    # any of this module's code can even be imported; re-asserted here as
+    # the direct witness that _is_letter() is evaluated against the
+    # pinned baseline.
+    assert unicodedata.unidata_version == "15.0.0"
+
+    # Assigned letters (General Category Lu/Ll): ASCII 'A' and LATIN
+    # SMALL LETTER A WITH RING ABOVE (U+00E5).
+    assert _is_letter("A") is True
+    assert _is_letter("\u00e5") is True
+
+    # CJK Extension I ideograph U+2EBF0: unassigned (General Category Cn)
+    # under the pinned UCD 15.0.0 baseline; UCD 15.1 assigns it General
+    # Category Lo. This MUST stay False until the spec pin itself moves
+    # (SAN-896) -- a floating classifier would silently flip this to
+    # True on a later host Unicode Character Database.
+    assert _is_letter("\U0002EBF0") is False
+
+    # ARABIC-INDIC DIGIT TWO (U+0662): General Category Nd (decimal
+    # number), not a letter.
+    assert _is_letter("\u0662") is False
+
+    # Lone high surrogate (U+D800): General Category Cs, not a letter,
+    # with no special-case handling in _is_letter().
+    assert _is_letter("\ud800") is False
+
+
+def test_astral_c1_letter_pin_closes_the_2ebf0_differential():
+    # Three adjacent U+2EBF0 code points in the context and U+2EBF1 code
+    # points in the output. Under the pinned UCD 15.0.0 baseline both are
+    # unassigned (Cn), so _is_letter() excludes them from WORD tokens;
+    # they tokenize as PUNCT and are excluded from the subject sets. Both
+    # sides' frames are then comparable on {item} with opposite polarity
+    # ("are refundable" vs. "are not refundable") -> C1 VIOLATION/critical.
+    # Same-named regression in reference/ts/test/unicode_letters.test.ts
+    # pins the TypeScript side of this differential.
+    context = "\U0002EBF0\U0002EBF0\U0002EBF0 items are refundable."
+    output = "\U0002EBF1\U0002EBF1\U0002EBF1 items are not refundable."
+    result = evaluate({"output": output, "context": context})
+
+    assert result["C1"]["outcome"] == "VIOLATION"
+    assert result["C1"]["outcome_reason"] == "detection_complete"
+    assert result["C1"]["severity"] == "critical"
+    assert result["C1"]["advisory"] is False
+
+    for check_id in ("C2", "C3", "C4"):
+        got = result[check_id]
+        assert got["outcome"] == "PASS", check_id
+        assert got["outcome_reason"] == "detection_complete", check_id
+        assert got["severity"] is None, check_id
+        assert got["advisory"] is False, check_id

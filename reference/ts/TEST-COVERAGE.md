@@ -1,6 +1,6 @@
 # TEST-COVERAGE.md (SAN-880)
 
-Maps every one of the 125 Python `test_*` functions across the six named
+Maps every one of the 127 Python `test_*` functions across the six named
 source files (`tests/reference/test_primitives.py`, `test_engine.py`,
 `test_relations.py`, `test_oracles.py`, `test_evaluate.py`,
 `test_extraction.py`) to its TypeScript coverage. No function is silently
@@ -20,18 +20,18 @@ Mapping categories:
   harness's output against the Python harness's output over the full
   fixture corpus in both corpus mode (`oracles.json`, `generated.json` as
   distributed) and matrix mode (every fixture projected through all four
-  checks C1-C4, 1044 records total, IDs discarded and reassigned
+  checks C1-C4, 1068 records total, IDs discarded and reassigned
   synthetically so the harness cannot key behavior off them).
 - **(c) Python-only, justified** -- the function exercises a generator or
   harness mechanism that is intentionally Python-only per the SAN-880
   module-mirroring boundary (this package consumes fixtures; it does not
   regenerate them).
 
-Counts: 124 of 125 functions have a direct (a) TypeScript test; 2 of those
-124 additionally carry (b) corpus/matrix parity coverage; 1 function is
+Counts: 125 of 127 functions have a direct (a) TypeScript test; 2 of those
+125 additionally carry (b) corpus/matrix parity coverage; 2 functions are
 (c) Python-only-justified with no TypeScript counterpart.
 
-## tests/reference/test_primitives.py -> reference/ts/test/primitives.test.ts (65/65 direct)
+## tests/reference/test_primitives.py -> reference/ts/test/primitives.test.ts (66/67 direct, 1/67 Python-only-justified)
 
 | # | Python function | Mapping |
 |---|---|---|
@@ -100,6 +100,8 @@ Counts: 124 of 125 functions have a direct (a) TypeScript test; 2 of those
 | 63 | `test_comma_group_requires_ascii_digits` | (a) same name |
 | 64 | `test_parse_dec_rejects_non_ascii_digits` | (a) same name |
 | 65 | `test_non_ascii_number_inputs_evaluate_structured_not_crash` (parametrized over 2 non-ASCII digit inputs) | (a) same name |
+| 66 | `test_unicode_letter_classifier_pinned_to_ucd_15_0_0` | **(c) Python-only, justified.** Directly pins `_is_letter()` (the module-internal category predicate) and the host `unicodedata.unidata_version` guard it depends on -- a host-UCD version-introspection witness with no TypeScript equivalent (`tables.ts`'s module-load guard checks the vendored spec/tables hashes, not a host Unicode Character Database version). The TypeScript-side equivalent evidence is the vendored `unicode_letters_v15.ts` table, `scripts/generate_letter_table_u15.py --check` (drift gate), and `test_letter_ranges_v15_invariants` in `unicode_letters.test.ts`. |
+| 67 | `test_astral_c1_letter_pin_closes_the_2ebf0_differential` | (a) same name -- lives in `reference/ts/test/unicode_letters.test.ts`, not `primitives.test.ts` (TypeScript-side placement predates this Python counterpart; see that file's `isAlphaCp()`-focused test suite) |
 
 ## tests/reference/test_engine.py -> reference/ts/test/engine.test.ts (31/31 direct)
 
@@ -165,12 +167,12 @@ Counts: 124 of 125 functions have a direct (a) TypeScript test; 2 of those
 
 | # | Python function | Mapping |
 |---|---|---|
-| 1 | `test_oracle_expected_tuple_exact` (parametrized over all 59 oracles) | (a) same name, one `node:test` subtest per oracle id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode re-proves every oracle's exact tuple against Python's live output (a strictly stronger check than comparing against the JSON-baked `expected` block, since it compares TypeScript's live output directly to Python's live output) |
+| 1 | `test_oracle_expected_tuple_exact` (parametrized over all 60 oracles) | (a) same name, one `node:test` subtest per oracle id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode re-proves every oracle's exact tuple against Python's live output (a strictly stronger check than comparing against the JSON-baked `expected` block, since it compares TypeScript's live output directly to Python's live output) |
 | 2 | `test_every_oracle_binds_the_complete_tuple` | (a) same name |
 | 3 | `test_generated_fixtures_file_exists_and_is_nonempty` | (a) same name |
 | 4 | `test_generated_fixtures_regeneration_is_byte_identical` | **(c) Python-only, justified.** Calls `reference.generate_fixtures.generate()`/`render()` -- the surface-variant generator that PRODUCES `generated.json` from `oracles.json` (casing/whitespace/contraction/list-marker swaps via Python-side text mutation helpers). Per the SAN-880 scope boundary this package consumes the two fixture files as an already-built corpus; it does not reimplement the generator (there is exactly one fixture corpus, authored once from the Python reference, not a parallel TypeScript-side copy). `generated.json`'s internal consistency is independently exercised by `test_generated_fixture_variants_match_their_base_oracle` (below) and by `scripts/check_reference_parity.sh`'s NFC and corpus-mode assertions over the same file. |
 | 5 | `test_generated_fixture_variants_match_their_base_oracle` | (a) same name |
-| 6 | `test_generated_fixture_reproduces_live` (parametrized over all 202 generated fixtures) | (a) same name, one `node:test` subtest per generated fixture id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode (`generated.json` as distributed) and matrix mode (all 202 x 4 = 808 records) re-prove this against Python's live output |
+| 6 | `test_generated_fixture_reproduces_live` (parametrized over all 207 generated fixtures) | (a) same name, one `node:test` subtest per generated fixture id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode (`generated.json` as distributed) and matrix mode (all 207 x 4 = 828 records) re-prove this against Python's live output |
 
 ## tests/reference/test_evaluate.py -> reference/ts/test/evaluate.test.ts (1/1 direct)
 
@@ -231,10 +233,13 @@ above:
   instead of the host Node runtime's built-in `\p{L}` tables, which float
   with the runtime's Unicode version; covers classification pins,
   totality (empty string, multi-code-point input, lone surrogates),
-  the generated table's own invariants, and the astral C1 differential
-  (U+2EBF0/U+2EBF1, CJK Extension I additions in Unicode 15.1) this pin
-  closes. No direct Python test counterpart is needed for this
-  TypeScript-specific differential because CI pins Python 3.12 / UCD
-  15.0.0 as the comparison baseline. Python's `str.isalpha()` also
-  follows the UCD bundled with its host CPython runtime; future runtime
-  movement remains part of SAN-896's cross-runtime/spec-pinning work.
+  and the generated table's own invariants -- these remain TypeScript-only
+  (no Python counterpart: `tables.ts`'s letter table is a vendored,
+  generator-produced TypeScript artifact with no equivalent Python-side
+  data structure to pin). Its astral C1 differential test
+  (`test_astral_c1_letter_pin_closes_the_2ebf0_differential`,
+  U+2EBF0/U+2EBF1, CJK Extension I additions in Unicode 15.1) now HAS a
+  Python (a)-counterpart of the same name in `test_primitives.py` (row 67
+  above), added once SAN-896 ratified UCD 15.0.0 letter classification as
+  a spec-level pin (erratum e14) rather than a reference/CI-only
+  baseline choice.
