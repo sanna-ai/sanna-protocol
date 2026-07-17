@@ -77,6 +77,14 @@ if [ ! -f "$TS_CLI" ]; then
 fi
 
 # ---------------------------------------------------------------------
+# Letter-table drift gate (SAN-880 amendment, review round 2): fails loud
+# on either drift between the committed
+# reference/ts/src/unicode_letters_v15.ts and its generator, or on a
+# non-15.0.0 Python (see scripts/generate_letter_table_u15.py).
+# ---------------------------------------------------------------------
+python3 "$REPO_ROOT/scripts/generate_letter_table_u15.py" --check
+
+# ---------------------------------------------------------------------
 # 1-2. CORPUS MODE: byte-diff Python vs TypeScript harness output over
 # the two fixture files as-is.
 # ---------------------------------------------------------------------

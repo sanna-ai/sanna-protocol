@@ -1,3 +1,5 @@
+import { LETTER_RANGES_V15 } from "./unicode_letters_v15.js";
+
 /**
  * Codepoint-safe string helpers. Spec section 0: "str = NFC code points."
  * Plain JavaScript string indexing (`s[i]`, `s.length`) counts UTF-16 code
@@ -30,14 +32,60 @@ export function cpLength(text: string): number {
   return n;
 }
 
-const ALPHA_RE = /^\p{L}$/u;
+/** Binary search over LETTER_RANGES_V15 (sorted ascending, strictly
+ * non-overlapping -- see reference/ts/src/unicode_letters_v15.ts) for a
+ * single code point. Returns true iff `cp` falls within some range. */
+function isLetterCodepoint(cp: number): boolean {
+  let lo = 0;
+  let hi = LETTER_RANGES_V15.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >>> 1;
+    const [rangeLo, rangeHi] = LETTER_RANGES_V15[mid]!;
+    if (cp < rangeLo) {
+      hi = mid - 1;
+    } else if (cp > rangeHi) {
+      lo = mid + 1;
+    } else {
+      return true;
+    }
+  }
+  return false;
+}
 
 /** Python `ch.isalpha()` for a single code point: true for any Unicode
- * "Letter" general-category code point (Lu/Ll/Lt/Lm/Lo), which is exactly
- * what the `\p{L}` Unicode property escape matches. `ch` must be exactly
- * one code point (i.e. one element of a `toCodePoints()` array). */
+ * "Letter" general-category code point (Lu/Ll/Lt/Lm/Lo). `ch` must be
+ * exactly one code point (i.e. one element of a `toCodePoints()` array).
+ *
+ * This used to be implemented as `/^\p{L}$/u.test(ch)`, which matches
+ * against the HOST Node runtime's built-in Unicode tables -- and those
+ * float with the runtime's Unicode version (Node 22 ships Unicode 15.1;
+ * later Node releases ship later versions still, e.g. a Node 25 install
+ * reports Unicode 17.0). The Python reference behavior this package
+ * mirrors is CPython 3.12, i.e. `unicodedata` UCD version 15.0.0, which
+ * is the current reference/CI baseline. This function instead does a
+ * total binary-search lookup against LETTER_RANGES_V15, a table vendored
+ * by scripts/generate_letter_table_u15.py that pins classification to
+ * that exact CPython 3.12 / UCD 15.0.0 baseline, independent of whatever
+ * Unicode version the host Node runtime happens to ship.
+ *
+ * NORMATIVE STATUS: spec section 2.1 pins Unicode 15.0.0 for the
+ * NORMALIZER only; spec section 2.2 rule 4 says just "letters" with no
+ * version pin for classification. Pinning here is a reference/CI
+ * baseline choice, not a claim that the spec already pins letter
+ * classification -- the spec-level pin is tracked separately as
+ * SAN-896.
+ *
+ * Preserves the old anchored-regex semantics exactly as a TOTAL
+ * function: empty string and any string spanning more than one code
+ * point both return false (a naive `codePointAt`-only version would
+ * misclassify "" via an `undefined` comparison and would classify "AB"
+ * by "A" alone); a lone surrogate falls through to `false` because
+ * LETTER_RANGES_V15 contains no range intersecting the surrogate block. */
 export function isAlphaCp(ch: string): boolean {
-  return ALPHA_RE.test(ch);
+  const cp = ch.codePointAt(0);
+  if (cp === undefined) return false;
+  if (ch !== String.fromCodePoint(cp)) return false;
+  return isLetterCodepoint(cp);
 }
 
 /** Spec section 2.3 (SAN-893): ascii_lower maps ONLY ASCII A-Z (0x41-0x5A)

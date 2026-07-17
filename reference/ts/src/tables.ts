@@ -241,22 +241,27 @@ export class Tables {
     this.relativeMarkersV1 = new Set(data.relative_markers_v1);
     this.exclV1 = new Set(data.excl_v1.map(([a, b]) => (a < b ? `${a} ${b}` : `${b} ${a}`)));
     this.complementV1 = data.complement_v1.map(([a, b]) => [a, b] as const);
-    this.unitsV1 = data.units_v1;
-    this.currencySymbolsV1 = data.currency_symbols_v1;
-    this.facetsV1 = data.facets_v1;
+    // Null-prototype copies: JSON-parsed objects inherit Object.prototype,
+    // so an input-derived bracket-lookup key like "constructor" would
+    // otherwise resolve the inherited Object constructor instead of
+    // missing as intended. Stripping the prototype makes every lookup on
+    // these six tables miss cleanly (undefined) for such keys.
+    this.unitsV1 = Object.assign(Object.create(null), data.units_v1);
+    this.currencySymbolsV1 = Object.assign(Object.create(null), data.currency_symbols_v1);
+    this.facetsV1 = Object.assign(Object.create(null), data.facets_v1);
     this.genericBenefitTriggersV1 = new Set(data.generic_benefit_triggers_v1);
-    this.facetprojV1 = data.facetproj_v1;
+    this.facetprojV1 = Object.assign(Object.create(null), data.facetproj_v1);
     this.stemV1Rules = data.stem_v1_rules;
     this.structuralPunctuation = new Set(data.structural_punctuation);
     this.sentenceTerminators = new Set(data.sentence_terminators);
     this.approxV1 = new Set(data.approx_v1);
-    this.contractionsV1 = data.contractions_v1;
+    this.contractionsV1 = Object.assign(Object.create(null), data.contractions_v1);
     this.compoundHeadV1Rule = data.compound_head_v1.rule;
     this.comparatorsV1 = data.comparators_v1.map((entry) => ({
       tokens: entry.tokens,
       interval: entry.interval,
     }));
-    this.conceptV1 = data.concept_v1;
+    this.conceptV1 = Object.assign(Object.create(null), data.concept_v1);
     this.participleTriggersV1 = new Set(data.participle_triggers_v1);
   }
 }

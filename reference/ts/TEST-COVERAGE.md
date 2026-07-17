@@ -201,3 +201,26 @@ above:
   the declared context shape), and that a fixture `id` shaped like a real
   synthetic matrix id is never treated as an evaluation shortcut
   (PROHIBITED: fixture-ID lookup tables or id-conditional behavior).
+- `reference/ts/test/prototype_safety.test.ts` (SAN-880 amendment,
+  review round 2) -- pins that all six Record-typed reference tables in
+  `tables.ts` (`unitsV1`, `currencySymbolsV1`, `facetsV1`, `facetprojV1`,
+  `contractionsV1`, `conceptV1`) are null-prototype at construction, and
+  proves the concrete regression this fixes: an input-derived bracket
+  lookup keyed by the word "constructor" used to resolve the inherited
+  `Object.prototype.constructor` instead of missing, crashing
+  `tokenize()`'s contraction-expansion loop and defeating
+  `unitOf()`'s `?? null` fallback. No Python counterpart: `dict.get()`
+  has no equivalent prototype-inheritance hazard, so this is a
+  JavaScript/JSON-specific regression test.
+- `reference/ts/test/unicode_letters.test.ts` (SAN-880 amendment,
+  review round 2) -- pins `unicode.ts`'s `isAlphaCp()` letter
+  classification to the vendored, generator-produced
+  `unicode_letters_v15.ts` table (CPython 3.12 / UCD 15.0.0 baseline)
+  instead of the host Node runtime's built-in `\p{L}` tables, which float
+  with the runtime's Unicode version; covers classification pins,
+  totality (empty string, multi-code-point input, lone surrogates),
+  the generated table's own invariants, and the astral C1 differential
+  (U+2EBF0/U+2EBF1, CJK Extension I additions in Unicode 15.1) this pin
+  closes. No Python counterpart: Python's `str.isalpha()` is inherently
+  pinned to whatever CPython/unicodedata version runs the test, so this
+  host-runtime-Unicode-version hazard does not exist on the Python side.
