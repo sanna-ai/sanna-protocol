@@ -17,9 +17,11 @@
 // letter classification -- the spec-level pin is tracked separately as
 // SAN-896.
 //
-// No Python counterpart: Python's `str.isalpha()` is inherently pinned
-// to whatever CPython/unicodedata version runs the test, so this
-// host-runtime-Unicode-version hazard does not exist on the Python side.
+// No direct Python test counterpart is needed for this TypeScript-specific
+// differential because CI pins Python 3.12 / UCD 15.0.0 as the comparison
+// baseline. Python's str.isalpha() also follows the UCD bundled with its
+// host CPython runtime; future runtime movement remains part of SAN-896's
+// cross-runtime/spec-pinning work.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -98,14 +100,16 @@ test("test_letter_ranges_v15_invariants", () => {
 });
 
 // ---------------------------------------------------------------------
-// Astral C1 differential regression: three adjacent U+2EBF0 (context) /
-// U+2EBF1 (output) code points used to form one 3-code-point WORD token
-// under the host `\p{L}` tables (Unicode >= 15.1), polluting C1's
-// subject set and producing a spurious VIOLATION/critical result under
-// TypeScript while Python (CPython 3.12 / UCD 15.0.0, where these code
-// points are unassigned/PUNCT-excluded) reported PASS. Pinning
-// classification to the same UCD 15.0.0 baseline closes the
-// differential.
+// Astral C1 differential regression: three adjacent U+2EBF0 code points
+// in the context and U+2EBF1 code points in the output each formed a
+// 3-code-point WORD token under host `\p{L}` tables (Unicode >= 15.1).
+// Those distinct WORDs polluted the two subject sets, making the context
+// and output frames INERT to each other. TypeScript therefore reported
+// PASS and missed the contradiction. Python (CPython 3.12 / UCD 15.0.0,
+// where these code points are unassigned and tokenize as PUNCT) excluded
+// them from the subject sets and reported VIOLATION/critical. Pinning
+// classification to UCD 15.0.0 makes TypeScript report the same
+// VIOLATION/critical result.
 // ---------------------------------------------------------------------
 
 test("test_astral_c1_letter_pin_closes_the_2ebf0_differential", () => {

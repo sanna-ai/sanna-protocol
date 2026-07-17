@@ -221,6 +221,8 @@ above:
   totality (empty string, multi-code-point input, lone surrogates),
   the generated table's own invariants, and the astral C1 differential
   (U+2EBF0/U+2EBF1, CJK Extension I additions in Unicode 15.1) this pin
-  closes. No Python counterpart: Python's `str.isalpha()` is inherently
-  pinned to whatever CPython/unicodedata version runs the test, so this
-  host-runtime-Unicode-version hazard does not exist on the Python side.
+  closes. No direct Python test counterpart is needed for this
+  TypeScript-specific differential because CI pins Python 3.12 / UCD
+  15.0.0 as the comparison baseline. Python's `str.isalpha()` also
+  follows the UCD bundled with its host CPython runtime; future runtime
+  movement remains part of SAN-896's cross-runtime/spec-pinning work.
