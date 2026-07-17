@@ -391,5 +391,26 @@
     "output": "Is the result guaranteed?The result is guaranteed.",
     "check_id": "C2",
     "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "warning"}
+  },
+  {
+    "id": "adjunct-trigger-context-abstain",
+    "context": "Refunds for available items are refundable.",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "adjunct-deny-trigger-output-abstain",
+    "context": "Refunds require approval.",
+    "output": "Refunds for banned items are available.",
+    "check_id": "C3",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "adjunct-benign-control",
+    "context": "Refunds for physical items are refundable.",
+    "output": "Refunds are refundable.",
+    "check_id": "C4",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
   }
 ]

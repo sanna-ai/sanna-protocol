@@ -282,6 +282,17 @@ def adjunct_modifiers(tokens: List[Token], span: Span) -> Tuple[FrozenSet[Tuple[
             j = i + 1
             group_tokens: List[Token] = []
             saw_content = False
+            # spec 3.2 facet-trigger arm (SAN-894): the adjunct group's
+            # upper bound is the first "and" or adjunct-preposition token
+            # at or after the group start, capped at the enclosing span
+            # end. Computed once per group since it is invariant across
+            # the walk below (the while loop's own break condition below
+            # is the same test, so j never advances past it).
+            group_end = end
+            for k in range(j, end):
+                if tokens[k].fold == "and" or tokens[k].fold in ADJUNCT_PREPOSITIONS_V1:
+                    group_end = k
+                    break
             while j < end:
                 t2 = tokens[j]
                 if t2.fold == "and" or t2.fold in ADJUNCT_PREPOSITIONS_V1:
@@ -290,8 +301,21 @@ def adjunct_modifiers(tokens: List[Token], span: Span) -> Tuple[FrozenSet[Tuple[
                     raise Abstain(UNEXTRACTABLE)
                 if t2.kind == "NUMBER" or t2.kind == "PCT100":
                     raise Abstain(UNEXTRACTABLE)
-                if t2.fold in TRIGGER_INDEX:
-                    raise Abstain(UNEXTRACTABLE)
+                # Longest-match folded-sequence scan for a facet trigger
+                # (spec 3.2: "a facet trigger ... inside -> abstain"). A
+                # bare single-fold membership check (`t2.fold in
+                # TRIGGER_INDEX`) is insufficient because TRIGGER_INDEX
+                # keys are fold-sequence tuples, not bare strings -- a
+                # future multi-token trigger table must not silently
+                # under-abstain. Descending window lengths, capped at
+                # group_end, so a boundary-crossing window is never
+                # tested and a valid shorter trigger prefix is never
+                # skipped. (The nested-adjunct arm of this same spec
+                # clause remains a separate, tracked divergence: SAN-897.)
+                for length in range(min(MAX_TRIGGER_LEN, group_end - j), 0, -1):
+                    key = tuple(t.fold for t in tokens[j : j + length])
+                    if key in TRIGGER_INDEX:
+                        raise Abstain(UNEXTRACTABLE)
                 group_tokens.append(t2)
                 if is_content_token(t2):
                     saw_content = True

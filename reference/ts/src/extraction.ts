@@ -304,29 +304,38 @@ function adjunctModifiers(tokens: readonly Token[], span: Span): [ModSet, number
       let j = i + 1;
       const groupTokens: Token[] = [];
       let sawContent = false;
+      // spec 3.2 facet-trigger arm (SAN-894): the adjunct group's upper
+      // bound is the first "and" or adjunct-preposition token at or
+      // after the group start, capped at the enclosing span end.
+      // Computed once per group since it is invariant across the walk
+      // below (the while loop's own break condition below is the same
+      // test, so j never advances past it).
+      let groupEnd = end;
+      for (let k = j; k < end; k++) {
+        if (tokens[k]!.fold === "and" || ADJUNCT_PREPOSITIONS_V1.has(tokens[k]!.fold)) {
+          groupEnd = k;
+          break;
+        }
+      }
       while (j < end) {
         const t2 = tokens[j]!;
         if (t2.fold === "and" || ADJUNCT_PREPOSITIONS_V1.has(t2.fold)) break;
         if (RELATIVE_MARKERS_V1.has(t2.fold)) throw new Abstain(UNEXTRACTABLE);
         if (t2.kind === "NUMBER" || t2.kind === "PCT100") throw new Abstain(UNEXTRACTABLE);
-        // CONFIRMED SPEC-VS-PYTHON DIVERGENCE (HALT finding; see delivery
-        // report). Spec 3.2 adjunct_modifiers: "a facet trigger ...
-        // inside -> abstain". reference/extraction.py:293 implements this
-        // as `if t2.fold in TRIGGER_INDEX`, but TRIGGER_INDEX's Python
-        // keys are TUPLES (e.g. `("available",)`), never bare strings, so
-        // a bare `t2.fold` string can NEVER equal a key -- this check is
-        // unreachable in the Python reference (verified directly: e.g.
-        // `'available' in TRIGGER_INDEX` is False while
-        // `('available',) in TRIGGER_INDEX` is True; extracting "Refunds
-        // for available items are refundable." does not abstain and
-        // yields a modifier ('for', {'available','item'}) containing a
-        // live facet trigger). TRIGGER_INDEX here is likewise keyed by
-        // JOINED fold sequences (`joinFold([...])`, e.g. `["available"]`),
-        // never a bare fold string, so this line is equally unreachable --
-        // faithfully reproducing Python's actual (non-spec-conformant)
-        // behavior for Phase-3 byte parity. Never silently "fixed" to
-        // diverge from Python.
-        if (TRIGGER_INDEX.has(t2.fold)) throw new Abstain(UNEXTRACTABLE);
+        // Longest-match folded-sequence scan for a facet trigger (spec
+        // 3.2: "a facet trigger ... inside -> abstain"). A bare
+        // single-fold membership check (`TRIGGER_INDEX.has(t2.fold)`) is
+        // insufficient because TRIGGER_INDEX keys are joined fold
+        // sequences, not bare folds -- a future multi-token trigger
+        // table must not silently under-abstain. Descending window
+        // lengths, capped at groupEnd, so a boundary-crossing window is
+        // never tested and a valid shorter trigger prefix is never
+        // skipped. (The nested-adjunct arm of this same spec clause
+        // remains a separate, tracked divergence: SAN-897.)
+        for (let length = Math.min(MAX_TRIGGER_LEN, groupEnd - j); length > 0; length--) {
+          const key = joinFold(tokens.slice(j, j + length).map((t) => t.fold));
+          if (TRIGGER_INDEX.has(key)) throw new Abstain(UNEXTRACTABLE);
+        }
         groupTokens.push(t2);
         if (isContentToken(t2)) sawContent = true;
         j += 1;

@@ -56,6 +56,174 @@
     }
   },
   {
+    "id": "adjunct-benign-control__case__context",
+    "base_oracle": "adjunct-benign-control",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are refundable.",
+    "check_id": "C4",
+    "context": "Refunds for physical items are REFUNDABLE.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-benign-control__case__output",
+    "base_oracle": "adjunct-benign-control",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are REFUNDABLE.",
+    "check_id": "C4",
+    "context": "Refunds for physical items are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-benign-control__whitespace__context",
+    "base_oracle": "adjunct-benign-control",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are refundable.",
+    "check_id": "C4",
+    "context": "Refunds   for physical items are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-benign-control__whitespace__output",
+    "base_oracle": "adjunct-benign-control",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are refundable.",
+    "check_id": "C4",
+    "context": "Refunds for physical items are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-deny-trigger-output-abstain__case__context",
+    "base_oracle": "adjunct-deny-trigger-output-abstain",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds for banned items are available.",
+    "check_id": "C3",
+    "context": "Refunds require APPROVAL.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-deny-trigger-output-abstain__case__output",
+    "base_oracle": "adjunct-deny-trigger-output-abstain",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds for banned items are AVAILABLE.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-deny-trigger-output-abstain__whitespace__context",
+    "base_oracle": "adjunct-deny-trigger-output-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds for banned items are available.",
+    "check_id": "C3",
+    "context": "Refunds   require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-deny-trigger-output-abstain__whitespace__output",
+    "base_oracle": "adjunct-deny-trigger-output-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   for banned items are available.",
+    "check_id": "C3",
+    "context": "Refunds require approval.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-trigger-context-abstain__case__context",
+    "base_oracle": "adjunct-trigger-context-abstain",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "context": "Refunds for available items are REFUNDABLE.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-trigger-context-abstain__case__output",
+    "base_oracle": "adjunct-trigger-context-abstain",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are AVAILABLE.",
+    "check_id": "C1",
+    "context": "Refunds for available items are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-trigger-context-abstain__whitespace__context",
+    "base_oracle": "adjunct-trigger-context-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are available.",
+    "check_id": "C1",
+    "context": "Refunds   for available items are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "adjunct-trigger-context-abstain__whitespace__output",
+    "base_oracle": "adjunct-trigger-context-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are available.",
+    "check_id": "C1",
+    "context": "Refunds for available items are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
     "id": "antonym-permission__case__context",
     "base_oracle": "antonym-permission",
     "variant_kind": "case",
