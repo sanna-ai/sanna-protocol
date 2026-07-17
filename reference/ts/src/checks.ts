@@ -1,5 +1,5 @@
 /**
- * Section 6 of ALGORITHM v4 draft 5.5: C1, C2, C3, C4 (rows = FREEZE v18.6
+ * Section 6 of ALGORITHM v4 draft 5.6: C1, C2, C3, C4 (rows = FREEZE v18.6
  * sec 3). C5 is EXCLUDED from this slice (C_COV uncalibrated, SAN-882) --
  * evaluate() simply produces C1-C4; no C5 API surface (not even a
  * NotImplemented stub) is exposed. Mirrors reference/checks.py one-for-one.

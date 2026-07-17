@@ -2020,6 +2020,62 @@
     }
   },
   {
+    "id": "nested-adjunct-chain-abstain__case__context",
+    "base_oracle": "nested-adjunct-chain-abstain",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are refundable.",
+    "check_id": "C1",
+    "context": "Refunds for physical items with receipts are REFUNDABLE.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "nested-adjunct-chain-abstain__case__output",
+    "base_oracle": "nested-adjunct-chain-abstain",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are REFUNDABLE.",
+    "check_id": "C1",
+    "context": "Refunds for physical items with receipts are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "nested-adjunct-chain-abstain__whitespace__context",
+    "base_oracle": "nested-adjunct-chain-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are refundable.",
+    "check_id": "C1",
+    "context": "Refunds   for physical items with receipts are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
+    "id": "nested-adjunct-chain-abstain__whitespace__output",
+    "base_oracle": "nested-adjunct-chain-abstain",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are refundable.",
+    "check_id": "C1",
+    "context": "Refunds for physical items with receipts are refundable.",
+    "expected": {
+      "outcome": "NOT_EVALUATED",
+      "outcome_reason": "extraction_partial",
+      "severity": null
+    }
+  },
+  {
     "id": "number-ascii-comma-group-control__case__context",
     "base_oracle": "number-ascii-comma-group-control",
     "variant_kind": "case",
@@ -2674,6 +2730,62 @@
     "expected": {
       "outcome": "NOT_EVALUATED",
       "outcome_reason": "basis_conflict",
+      "severity": null
+    }
+  },
+  {
+    "id": "sibling-adjunct-coordination-control__case__context",
+    "base_oracle": "sibling-adjunct-coordination-control",
+    "variant_kind": "case",
+    "variant_field": "context",
+    "output": "Refunds are refundable.",
+    "check_id": "C4",
+    "context": "Refunds for physical items and with receipts are REFUNDABLE.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "sibling-adjunct-coordination-control__case__output",
+    "base_oracle": "sibling-adjunct-coordination-control",
+    "variant_kind": "case",
+    "variant_field": "output",
+    "output": "Refunds are REFUNDABLE.",
+    "check_id": "C4",
+    "context": "Refunds for physical items and with receipts are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "sibling-adjunct-coordination-control__whitespace__context",
+    "base_oracle": "sibling-adjunct-coordination-control",
+    "variant_kind": "whitespace",
+    "variant_field": "context",
+    "output": "Refunds are refundable.",
+    "check_id": "C4",
+    "context": "Refunds   for physical items and with receipts are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
+      "severity": null
+    }
+  },
+  {
+    "id": "sibling-adjunct-coordination-control__whitespace__output",
+    "base_oracle": "sibling-adjunct-coordination-control",
+    "variant_kind": "whitespace",
+    "variant_field": "output",
+    "output": "Refunds   are refundable.",
+    "check_id": "C4",
+    "context": "Refunds for physical items and with receipts are refundable.",
+    "expected": {
+      "outcome": "PASS",
+      "outcome_reason": "detection_complete",
       "severity": null
     }
   },

@@ -440,5 +440,19 @@
     "output": "\ud87a\udff1\ud87a\udff1\ud87a\udff1 items are not refundable.",
     "check_id": "C1",
     "expected": {"outcome": "VIOLATION", "outcome_reason": "detection_complete", "severity": "critical"}
+  },
+  {
+    "id": "nested-adjunct-chain-abstain",
+    "context": "Refunds for physical items with receipts are refundable.",
+    "output": "Refunds are refundable.",
+    "check_id": "C1",
+    "expected": {"outcome": "NOT_EVALUATED", "outcome_reason": "extraction_partial", "severity": null}
+  },
+  {
+    "id": "sibling-adjunct-coordination-control",
+    "context": "Refunds for physical items and with receipts are refundable.",
+    "output": "Refunds are refundable.",
+    "check_id": "C4",
+    "expected": {"outcome": "PASS", "outcome_reason": "detection_complete", "severity": null}
   }
 ]

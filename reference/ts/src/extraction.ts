@@ -1,5 +1,5 @@
 /**
- * Section 3 of ALGORITHM v4 draft 5.5: extraction (triggers, negation,
+ * Section 3 of ALGORITHM v4 draft 5.6: extraction (triggers, negation,
  * polarity, roles, conditions, frames, obligations, evidence), including
  * total span accounting (spec 2.6). Mirrors reference/extraction.py
  * one-for-one.
@@ -296,6 +296,39 @@ function adjunctModifiers(tokens: readonly Token[], span: Span): [ModSet, number
   const [start, end] = span;
   const mods: { rel: string; objset: FSet }[] = [];
   const consumed: number[] = [];
+
+  // e15 NESTED_ADJUNCT_v1 (SAN-897), spec sec 3.2: evaluated per role
+  // span, pairwise over adjunct-preposition indices (NOT a
+  // group-termination test -- a termination test misses coordinated-NP
+  // chains like "for physical and digital items with receipts", where
+  // the first "and" seen would wrongly close the group before the
+  // second preposition). For each consecutive pair of adjunct
+  // prepositions in this span: if any content token lies strictly
+  // between them, and the second preposition is not immediately
+  // preceded by folded "and" (the only v1 sibling separator), the
+  // sibling-vs-nested attachment is surface-ambiguous -> abstain. This
+  // runs before the walk below; the facet-trigger/NUMBER/REL_MARKER
+  // abstentions in that walk remain independent of this check. Uses the
+  // existing isContentToken predicate unmodified.
+  const prepIdx: number[] = [];
+  for (let k = start; k < end; k++) {
+    if (ADJUNCT_PREPOSITIONS_V1.has(tokens[k]!.fold)) prepIdx.push(k);
+  }
+  for (let x = 0; x < prepIdx.length - 1; x++) {
+    const p = prepIdx[x]!;
+    const q = prepIdx[x + 1]!;
+    let sawContentBetween = false;
+    for (let m = p + 1; m < q; m++) {
+      if (isContentToken(tokens[m]!)) {
+        sawContentBetween = true;
+        break;
+      }
+    }
+    if (sawContentBetween && tokens[q - 1]!.fold !== "and") {
+      throw new Abstain(UNEXTRACTABLE);
+    }
+  }
+
   let i = start;
   while (i < end) {
     const tok = tokens[i]!;
@@ -330,8 +363,10 @@ function adjunctModifiers(tokens: readonly Token[], span: Span): [ModSet, number
         // table must not silently under-abstain. Descending window
         // lengths, capped at groupEnd, so a boundary-crossing window is
         // never tested and a valid shorter trigger prefix is never
-        // skipped. (The nested-adjunct arm of this same spec clause
-        // remains a separate, tracked divergence: SAN-897.)
+        // skipped. (The nested-adjunct arm of this same spec clause is
+        // NOW ENFORCED per erratum e15: SAN-897 -- see the pairwise
+        // chained-preposition abstain check above, run before this walk
+        // begins.)
         for (let length = Math.min(MAX_TRIGGER_LEN, groupEnd - j); length > 0; length--) {
           const key = joinFold(tokens.slice(j, j + length).map((t) => t.fold));
           if (TRIGGER_INDEX.has(key)) throw new Abstain(UNEXTRACTABLE);

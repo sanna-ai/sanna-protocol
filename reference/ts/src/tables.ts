@@ -22,13 +22,13 @@ import path from "node:path";
 // Spec section 1 / draft-5.3 header: sha256 of ALGORITHM-v4-tables-v1.json.
 export const TABLES_SHA256 =
   "0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc";
-// sha256 of the vendored ALGORITHM-v4-c1c5-reference.md (draft 5.5, adds
-// erratum e14 (spec sec 2.2 rule 4): LETTER_v1 classification pinned to
-// UCD 15.0.0) -- the normative source this package implements; verified
+// sha256 of the vendored ALGORITHM-v4-c1c5-reference.md (draft 5.6, adds
+// erratum e15 (spec sec 3.2): NESTED_ADJUNCT_v1 chained-preposition
+// abstention) -- the normative source this package implements; verified
 // at import so a silently swapped spec cannot masquerade as the
 // reviewed one.
 export const ALGORITHM_SHA256 =
-  "772a816b438527c1fadf1a4198ae5839a85f3b2ad82cbfefbaa86ff93e5034b6";
+  "979cf1368fb3cdc6e51b78eaa200a8bcef81e03bfcdc6e89a6c1667b30c16c58";
 
 // Resolved cwd-independently from import.meta.url per SAN-880's package
 // mechanics: from compiled dist/src/tables.js the spec artifacts live at
