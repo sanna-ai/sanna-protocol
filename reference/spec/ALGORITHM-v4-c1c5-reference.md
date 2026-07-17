@@ -1,6 +1,21 @@
-# ALGORITHM v4 (DRAFT 5.5): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
+# ALGORITHM v4 (DRAFT 5.6): executable reference semantics for C1-C5 at cv=11 / CHECKS_VERSION 11 -- STANDALONE
 
-> STATUS: DRAFT 5.5 -- ONE narrow erratum, operator-ratified under
+> STATUS: DRAFT 5.6 -- ONE narrow erratum, operator-ratified under
+> SAN-897 (no design reopening): (e15) NESTED_ADJUNCT_v1 -- section 3.2
+> adjunct_modifiers' previously underspecified "nested adjunct inside ->
+> abstain" arm is operationally defined: per role span, for each
+> consecutive pair of adjunct-preposition indices p < q, if a content
+> token occurs between them and q is not immediately preceded by folded
+> "and", abstain(unextractable) BEFORE modifier construction. Literal
+> "and <preposition>" is the ONLY v1 sibling-modifier separator;
+> cross-role modifiers are evaluated independently; empty chains retain
+> existing behavior (not declared valid); facet-trigger, numeric, and
+> relative-marker abstentions remain independent. Normative text inline
+> at section 3.2. (Descopes the surface-ambiguous sibling-vs-nested
+> attachment class, including coordinated-NP chains like "for physical
+> and digital items with receipts", instead of silently flattening it
+> into mis-attachable modifiers.)
+> DRAFT 5.5 was: ONE narrow erratum, operator-ratified under
 > SAN-896 (no design reopening): (e14) LETTER_v1 CLASSIFICATION --
 > section 2.2 rule 4's `letters` is pinned to Unicode General Category
 > {Lu, Ll, Lt, Lm, Lo} under UCD 15.0.0; classification MUST NOT float
@@ -349,6 +364,19 @@ def adjunct_modifiers(span):
     # each adjunct preposition + following noun group ->
     # (prep, frozenset(content folds)); a facet trigger, NUMBER,
     # REL_MARKER + content, or nested adjunct inside -> abstain
+    # NESTED_ADJUNCT_v1 (e15, operator-ratified text): evaluated
+    # independently per subject/object role span.
+    #   For each consecutive pair of adjunct-preposition indices p < q:
+    #     if an is_content_token occurs between p and q
+    #     and q is not immediately preceded by folded "and":
+    #         abstain(unextractable) before modifier construction.
+    # Literal "and <preposition>" is the ONLY v1 sibling-modifier
+    # separator (arbitrary coordination is NOT claimed safe). Cross-role
+    # modifiers are evaluated independently. Empty chains (no content
+    # token between the pair) retain existing behavior and are not
+    # declared valid. The facet-trigger, NUMBER, and REL_MARKER + content
+    # abstentions above remain independent of this rule. is_content_token
+    # is the existing 2.6 predicate, unmodified.
 def quant(subject_group) = T.quant_v1 class of the head-position token:
     # universal -> 1; existential -> 2; abstain-class -> frame PARTIAL;
     # absent -> 0
@@ -392,9 +420,12 @@ def extract_frames(field) -> list[Frame] | PARTIAL:
     for s in sentences(field), hit in trigger_scan(s):
         r  = extract_roles(hit, s)
         fx = normalize_benefit_facet(hit, head(first_conjunct(r.subject)))
+        mods_subject = adjunct_modifiers(r.subject)
+        mods_object  = adjunct_modifiers(r.object) if r.object else {}
+        mods = mods_subject | mods_object    # set union
         frames.add(Frame(field.id, next_id(),
             Extent(fx, terms(r.subject), terms(r.object),
-                   adjunct_modifiers(r), quant(r.subject),
+                   mods, quant(r.subject),
                    polarity(hit), parse_values(r.value)),
             parse_conditions(s, hit),
             assertive = not interrogative(s)))

@@ -1,6 +1,6 @@
 # TEST-COVERAGE.md (SAN-880)
 
-Maps every one of the 127 Python `test_*` functions across the six named
+Maps every one of the 129 Python `test_*` functions across the six named
 source files (`tests/reference/test_primitives.py`, `test_engine.py`,
 `test_relations.py`, `test_oracles.py`, `test_evaluate.py`,
 `test_extraction.py`) to its TypeScript coverage. No function is silently
@@ -20,15 +20,15 @@ Mapping categories:
   harness's output against the Python harness's output over the full
   fixture corpus in both corpus mode (`oracles.json`, `generated.json` as
   distributed) and matrix mode (every fixture projected through all four
-  checks C1-C4, 1068 records total, IDs discarded and reassigned
+  checks C1-C4, 1108 records total, IDs discarded and reassigned
   synthetically so the harness cannot key behavior off them).
 - **(c) Python-only, justified** -- the function exercises a generator or
   harness mechanism that is intentionally Python-only per the SAN-880
   module-mirroring boundary (this package consumes fixtures; it does not
   regenerate them).
 
-Counts: 125 of 127 functions have a direct (a) TypeScript test; 2 of those
-125 additionally carry (b) corpus/matrix parity coverage; 2 functions are
+Counts: 127 of 129 functions have a direct (a) TypeScript test; 2 of those
+127 additionally carry (b) corpus/matrix parity coverage; 2 functions are
 (c) Python-only-justified with no TypeScript counterpart.
 
 ## tests/reference/test_primitives.py -> reference/ts/test/primitives.test.ts (66/67 direct, 1/67 Python-only-justified)
@@ -167,12 +167,12 @@ Counts: 125 of 127 functions have a direct (a) TypeScript test; 2 of those
 
 | # | Python function | Mapping |
 |---|---|---|
-| 1 | `test_oracle_expected_tuple_exact` (parametrized over all 60 oracles) | (a) same name, one `node:test` subtest per oracle id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode re-proves every oracle's exact tuple against Python's live output (a strictly stronger check than comparing against the JSON-baked `expected` block, since it compares TypeScript's live output directly to Python's live output) |
+| 1 | `test_oracle_expected_tuple_exact` (parametrized over all 62 oracles) | (a) same name, one `node:test` subtest per oracle id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode re-proves every oracle's exact tuple against Python's live output (a strictly stronger check than comparing against the JSON-baked `expected` block, since it compares TypeScript's live output directly to Python's live output) |
 | 2 | `test_every_oracle_binds_the_complete_tuple` | (a) same name |
 | 3 | `test_generated_fixtures_file_exists_and_is_nonempty` | (a) same name |
 | 4 | `test_generated_fixtures_regeneration_is_byte_identical` | **(c) Python-only, justified.** Calls `reference.generate_fixtures.generate()`/`render()` -- the surface-variant generator that PRODUCES `generated.json` from `oracles.json` (casing/whitespace/contraction/list-marker swaps via Python-side text mutation helpers). Per the SAN-880 scope boundary this package consumes the two fixture files as an already-built corpus; it does not reimplement the generator (there is exactly one fixture corpus, authored once from the Python reference, not a parallel TypeScript-side copy). `generated.json`'s internal consistency is independently exercised by `test_generated_fixture_variants_match_their_base_oracle` (below) and by `scripts/check_reference_parity.sh`'s NFC and corpus-mode assertions over the same file. |
 | 5 | `test_generated_fixture_variants_match_their_base_oracle` | (a) same name |
-| 6 | `test_generated_fixture_reproduces_live` (parametrized over all 207 generated fixtures) | (a) same name, one `node:test` subtest per generated fixture id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode (`generated.json` as distributed) and matrix mode (all 207 x 4 = 828 records) re-prove this against Python's live output |
+| 6 | `test_generated_fixture_reproduces_live` (parametrized over all 215 generated fixtures) | (a) same name, one `node:test` subtest per generated fixture id, **+ (b)** `scripts/check_reference_parity.sh` corpus mode (`generated.json` as distributed) and matrix mode (all 215 x 4 = 860 records) re-prove this against Python's live output |
 
 ## tests/reference/test_evaluate.py -> reference/ts/test/evaluate.test.ts (1/1 direct)
 
@@ -180,13 +180,15 @@ Counts: 125 of 127 functions have a direct (a) TypeScript test; 2 of those
 |---|---|---|
 | 1 | `test_envelope_exceeded_wins_over_basis_empty_on_tier3_only_context` | (a) same name. Python monkeypatches the mutable `T.ENV_MAX_SENTENCES` singleton down to 3 to keep the regression fixture small; `tables.ts`'s `T` is a deliberately immutable (`readonly`-field) module-level singleton, so this port instead constructs a context that breaches the REAL `ENV_MAX_SENTENCES` cap directly (`"Items are refundable. ".repeat(T.ENV_MAX_SENTENCES + 1)`) -- same code path (`envelope_exceeded` must win over `basis_empty` for a tier_3-only context in Locked A1's wrapper order), no shared mutable state. |
 
-## tests/reference/test_extraction.py -> reference/ts/test/extraction.test.ts (3/3 direct)
+## tests/reference/test_extraction.py -> reference/ts/test/extraction.test.ts (5/5 direct)
 
 | # | Python function | Mapping |
 |---|---|---|
 | 1 | `test_adjunct_group_facet_trigger_abstains_to_partial` | (a) same name |
 | 2 | `test_adjunct_group_deny_trigger_abstains_to_partial` | (a) same name |
 | 3 | `test_adjunct_group_without_trigger_extracts_fully` | (a) same name |
+| 4 | `test_nested_adjunct_chain_abstains_to_partial` | (a) same name |
+| 5 | `test_sibling_adjunct_forms_extract_fully` | (a) same name |
 
 ## Additional TypeScript-only coverage (no Python counterpart required by SAN-880, but required by this ticket's Phase 2)
 

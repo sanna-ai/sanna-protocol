@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "TypeScript reference implementation of ALGORITHM v4 (draft 5.5) checks C1-C4, byte-parity-tested against the Python reference (SAN-880).",
+  "description": "TypeScript reference implementation of ALGORITHM v4 (draft 5.6) checks C1-C4, byte-parity-tested against the Python reference (SAN-880).",
   "scripts": {
     "build": "tsc",
     "test": "node --test dist/test/*.test.js"

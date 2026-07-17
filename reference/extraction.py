@@ -274,6 +274,25 @@ def adjunct_modifiers(tokens: List[Token], span: Span) -> Tuple[FrozenSet[Tuple[
     start, end = span
     mods = []
     consumed: List[int] = []
+
+    # e15 NESTED_ADJUNCT_v1 (SAN-897), spec sec 3.2: evaluated per role
+    # span, pairwise over adjunct-preposition indices (NOT a
+    # group-termination test -- a termination test misses coordinated-NP
+    # chains like "for physical and digital items with receipts", where
+    # the first "and" seen would wrongly close the group before the
+    # second preposition). For each consecutive pair of adjunct
+    # prepositions in this span: if any content token lies strictly
+    # between them, and the second preposition is not immediately
+    # preceded by folded "and" (the only v1 sibling separator), the
+    # sibling-vs-nested attachment is surface-ambiguous -> abstain. This
+    # runs before the walk below; the facet-trigger/NUMBER/REL_MARKER
+    # abstentions in that walk remain independent of this check. Uses
+    # the existing is_content_token predicate unmodified.
+    prep_idx = [k for k in range(start, end) if tokens[k].fold in ADJUNCT_PREPOSITIONS_V1]
+    for p, q in zip(prep_idx, prep_idx[1:]):
+        if any(is_content_token(tokens[m]) for m in range(p + 1, q)) and tokens[q - 1].fold != "and":
+            raise Abstain(UNEXTRACTABLE)
+
     i = start
     while i < end:
         tok = tokens[i]
@@ -311,7 +330,9 @@ def adjunct_modifiers(tokens: List[Token], span: Span) -> Tuple[FrozenSet[Tuple[
                 # group_end, so a boundary-crossing window is never
                 # tested and a valid shorter trigger prefix is never
                 # skipped. (The nested-adjunct arm of this same spec
-                # clause remains a separate, tracked divergence: SAN-897.)
+                # clause is NOW ENFORCED per erratum e15: SAN-897 -- see
+                # the pairwise chained-preposition abstain check above,
+                # run before this walk begins.)
                 for length in range(min(MAX_TRIGGER_LEN, group_end - j), 0, -1):
                     key = tuple(t.fold for t in tokens[j : j + length])
                     if key in TRIGGER_INDEX:
