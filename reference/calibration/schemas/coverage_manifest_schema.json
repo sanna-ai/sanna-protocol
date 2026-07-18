@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanna.dev/schemas/calibration/coverage_manifest/v1.json",
+  "title": "SAN-881 calibration corpus coverage manifest",
+  "description": "Sealed authoring artifact: surface name -> [evidence record, ...]. Surfaces are dynamically enumerated from the pinned tables JSON (one entry per facet family, measure-facet value role, concept family, comparator sequence, EXCL pair, COMPLEMENT pair, condition operator, quantifier class) plus a small explicit inventory for non-table behaviors. An empty evidence array is a documented v1 coverage gap, not a schema violation.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": { "$ref": "#/$defs/evidenceRecord" }
+  },
+  "$defs": {
+    "evidenceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "check_id", "field"],
+      "properties": {
+        "item_id": { "type": "string", "pattern": "^cal:[0-9]{3}$" },
+        "check_id": { "enum": ["C1", "C2", "C3", "C4"] },
+        "field": { "enum": ["context", "output"] }
+      }
+    }
+  }
+}

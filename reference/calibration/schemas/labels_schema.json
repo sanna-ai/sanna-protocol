@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanna.dev/schemas/calibration/labels/v1.json",
+  "title": "SAN-881 calibration corpus labels (semantic-only, contract-only, and merged-frozen record forms)",
+  "description": "Three record shapes. Semantic-only is the sealed human-reading layer (cognitively separated: ONLY the four allowed fields, no algorithm-relative reasoning). Contract-only is the sealed spec-derived layer. Merged/frozen is the Phase-B post-adjudication shape (labels_frozen.json), included here for forward reference; not produced in Phase A.",
+  "oneOf": [
+    { "$ref": "#/$defs/semanticRecord" },
+    { "$ref": "#/$defs/contractRecord" },
+    { "$ref": "#/$defs/mergedFrozenRecord" }
+  ],
+  "$defs": {
+    "itemId": { "type": "string", "pattern": "^cal:[0-9]{3}$" },
+    "checkId": { "enum": ["C1", "C2", "C3", "C4"] },
+    "semanticTruth": { "enum": ["NO_VIOLATION", "VIOLATION", "INDETERMINATE"] },
+    "outcome": { "enum": ["PASS", "VIOLATION", "NOT_EVALUATED"] },
+    "outcomeReason": {
+      "enum": [
+        "detection_complete", "extraction_partial", "basis_conflict",
+        "identity_ambiguous", "unsupported_claim_form", "condition_undecidable",
+        "input_empty", "envelope_exceeded", "basis_empty"
+      ]
+    },
+    "severity": { "enum": ["critical", "warning", null] },
+    "competence": { "enum": ["IN_DOMAIN", "KNOWN_COVERAGE_GAP", "DELIBERATE_ABSTENTION"] },
+    "contractTuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "outcome_reason", "severity", "advisory"],
+      "properties": {
+        "outcome": { "$ref": "#/$defs/outcome" },
+        "outcome_reason": { "$ref": "#/$defs/outcomeReason" },
+        "severity": { "$ref": "#/$defs/severity" },
+        "advisory": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "description": "severity is null unless outcome is VIOLATION",
+          "if": { "properties": { "outcome": { "const": "VIOLATION" } } },
+          "then": { "properties": { "severity": { "enum": ["critical", "warning"] } } },
+          "else": { "properties": { "severity": { "const": null } } }
+        }
+      ]
+    },
+    "semanticRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "check_id", "semantic_truth", "semantic_rationale"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/itemId" },
+        "check_id": { "$ref": "#/$defs/checkId" },
+        "semantic_truth": { "$ref": "#/$defs/semanticTruth" },
+        "semantic_rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "contractRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "check_id", "contract_tuple", "competence", "contract_rationale", "spec_refs"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/itemId" },
+        "check_id": { "$ref": "#/$defs/checkId" },
+        "contract_tuple": { "$ref": "#/$defs/contractTuple" },
+        "competence": { "$ref": "#/$defs/competence" },
+        "contract_rationale": { "type": "string", "minLength": 1 },
+        "spec_refs": { "type": "string", "minLength": 1 }
+      }
+    },
+    "mergedFrozenRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item_id", "check_id", "semantic_truth", "semantic_rationale",
+        "contract_tuple", "competence", "contract_rationale", "spec_refs"
+      ],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/itemId" },
+        "check_id": { "$ref": "#/$defs/checkId" },
+        "semantic_truth": { "$ref": "#/$defs/semanticTruth" },
+        "semantic_rationale": { "type": "string", "minLength": 1 },
+        "contract_tuple": { "$ref": "#/$defs/contractTuple" },
+        "competence": { "$ref": "#/$defs/competence" },
+        "contract_rationale": { "type": "string", "minLength": 1 },
+        "spec_refs": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

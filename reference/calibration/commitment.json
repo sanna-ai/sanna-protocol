@@ -1,0 +1,51 @@
+{
+  "corpus_version": 1,
+  "labeling_context_hash": "394f4455ec0cff4fe98bec4e0c4f435f48bba1e79c5dd92ba0c09d09b9af8114",
+  "labeling_context_components": [
+    "base_commit_sha (ascii)",
+    "corpus_inputs.json sha256 (raw)",
+    "evaluation_profile.json sha256 (raw)",
+    "schemas/commitment_schema.json sha256 (raw)",
+    "schemas/coverage_manifest_schema.json sha256 (raw)",
+    "schemas/design_metadata_schema.json sha256 (raw)",
+    "schemas/freeze_manifest_schema.json sha256 (raw)",
+    "schemas/labels_schema.json sha256 (raw)",
+    "algorithm sha256 (raw)",
+    "tables sha256 (raw)"
+  ],
+  "commitment_algorithm": {
+    "hash": "SHA256",
+    "domain_separator": "sanna-calibration-commitment/1",
+    "formula": "SHA256(domain_separator || NUL || artifact_name || NUL || raw_32_byte_nonce || raw_32_byte_labeling_context_hash || exact_artifact_bytes)"
+  },
+  "author_commitments": [
+    {
+      "artifact_name": "design_metadata.json",
+      "byte_length": 64616,
+      "commitment_hex": "c3cf87081ae00c418890725cfb91468162c59e20a3db1cb345de19b38d219764"
+    },
+    {
+      "artifact_name": "labels_author_semantic.json",
+      "byte_length": 157571,
+      "commitment_hex": "bd26add7bb7042646aaaaee2716cd11c873a6de648f4b9121ecb903d18a4b7f5"
+    },
+    {
+      "artifact_name": "labels_author_contract.json",
+      "byte_length": 315169,
+      "commitment_hex": "47bc78323830892f6d5e4db151044cb901b54431cb5b4495f2f0f284c8c1edf0"
+    },
+    {
+      "artifact_name": "coverage_manifest.json",
+      "byte_length": 48977,
+      "commitment_hex": "b4568ee5bf52b7f03b30e9dfac48cd1b3c2bf2d63eda025c4ad67924977a2855"
+    }
+  ],
+  "reveal_protocol": {
+    "reviewer_commitment_filenames": [
+      "labels_reviewer_semantic.commitment.json",
+      "labels_reviewer_contract.commitment.json"
+    ],
+    "reviewer_commitment_method": "identical to author_commitments: domain-separated SHA256(\"sanna-calibration-commitment/1\" || NUL || artifact_name || NUL || raw_32_byte_nonce || raw_32_byte_labeling_context_hash || exact_artifact_bytes)",
+    "abandonment_rule": "any byte change to the corpus or any sealed artifact after this commitment.json is finalized abandons v1; restart as v2. No in-place correction once blind labeling begins."
+  }
+}
