@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanna.dev/schemas/calibration/design_metadata/v1.json",
+  "title": "SAN-881 calibration corpus design metadata",
+  "description": "Sealed authoring artifact: per-item design rationale (target check/stratum, domain, facet families, scenario grouping, minimal-pair pointers, introduced_feature). NEVER derived by running the evaluator.",
+  "type": "object",
+  "required": ["items"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item_id", "target_check_id", "target_stratum", "domain",
+        "facet_families", "scenario_id", "minimal_pair_of", "introduced_feature"
+      ],
+      "properties": {
+        "item_id": { "type": "string", "pattern": "^cal:[0-9]{3}$" },
+        "target_check_id": { "enum": ["C1", "C2", "C3", "C4"] },
+        "target_stratum": {
+          "enum": [
+            "in_domain_nonviolation",
+            "in_domain_violation",
+            "determinate_out_of_domain",
+            "indeterminate_or_unsafe"
+          ]
+        },
+        "domain": { "type": "string", "minLength": 1 },
+        "facet_families": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^facet:[a-z_]+$" }
+        },
+        "scenario_id": { "type": "string", "minLength": 1 },
+        "minimal_pair_of": {
+          "description": "One-way pointer to a unique in-domain control item (cal:NNN). Non-null only for determinate_out_of_domain items; null everywhere else.",
+          "type": ["string", "null"],
+          "pattern": "^cal:[0-9]{3}$"
+        },
+        "introduced_feature": {
+          "description": "Non-null only for determinate_out_of_domain items; null everywhere else. Closed discriminated union: lexical-surface features or pair-relation features.",
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/lexicalSurfaceFeature" },
+            { "$ref": "#/$defs/pairRelationFeature" }
+          ]
+        }
+      }
+    },
+    "lexicalSurfaceFeature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "table_path", "surface_tokens", "intended_semantics"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "facet_trigger", "deny_trigger", "concept", "comparator",
+            "unit", "condition_operator", "quantifier", "definitive", "hedge"
+          ]
+        },
+        "table_path": { "type": "string", "minLength": 1 },
+        "surface_tokens": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "intended_semantics": { "type": "object" }
+      }
+    },
+    "pairRelationFeature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "table_path", "members"],
+      "properties": {
+        "kind": { "enum": ["excl_pair", "complement_pair"] },
+        "table_path": { "enum": ["excl_v1", "complement_v1"] },
+        "members": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

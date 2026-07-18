@@ -1,0 +1,802 @@
+[
+  {
+    "id": "cal:000",
+    "context": "Standard installation costs $150. Standard installation never costs $150 if a rush fee applies.",
+    "output": "Standard installation costs $1,23,456."
+  },
+  {
+    "id": "cal:001",
+    "context": "Expedited shipping costs $150. Expedited shipping never costs $150 if a rush fee applies.",
+    "output": "Expedited shipping costs $150. Expedited shipping never costs $150 if a rush fee applies."
+  },
+  {
+    "id": "cal:002",
+    "context": "Our operations desk publishes updated slot availability every Monday morning. Booking windows are managed centrally across all regional offices.",
+    "output": "Are weekend appointment slots guaranteed to be available?"
+  },
+  {
+    "id": "cal:003",
+    "context": "Gift cards for loyalty members are refundable. Full terms are listed in the published service catalog.",
+    "output": "Gift cards for guests are nonrefundable."
+  },
+  {
+    "id": "cal:004",
+    "context": "Annual membership fees are refundable. Full terms are listed in the published service catalog.",
+    "output": "Annual membership fees are nonrefundable."
+  },
+  {
+    "id": "cal:005",
+    "context": "Gift cards are refundable only if cleared by a supervisor. Full terms are listed in the published service catalog.",
+    "output": "Gift cards are refundable."
+  },
+  {
+    "id": "cal:006",
+    "context": "Gift cards are refundable. Full terms are listed in the published service catalog.",
+    "output": "Gift cards are final sale."
+  },
+  {
+    "id": "cal:007",
+    "context": "Most vendor contract renewals require approval. Full terms are listed in the published service catalog.",
+    "output": "Vendor contract renewals require approval."
+  },
+  {
+    "id": "cal:008",
+    "context": "Standard installation costs $150 only if cleared by a technician. Full terms are listed in the published service catalog.",
+    "output": "Standard installation costs $150 only if a technician signs off."
+  },
+  {
+    "id": "cal:009",
+    "context": "Gift cards for loyalty members are refundable. Gift cards for guests are nonrefundable.",
+    "output": "Gift cards are refundable."
+  },
+  {
+    "id": "cal:010",
+    "context": "Visitors may enter the executive lounge only if verified. This policy is documented in the customer handbook.",
+    "output": "Visitors may enter the executive lounge if verified."
+  },
+  {
+    "id": "cal:011",
+    "context": "Finance routes purchase requests through the standard approval workflow. Budget owners are notified automatically when a request is submitted.",
+    "output": "Is approval for this purchase guaranteed?"
+  },
+  {
+    "id": "cal:012",
+    "context": "Concurrent device sessions have a maximum of $500. Concurrent device sessions never have a maximum of $500 if flagged for fraud review.",
+    "output": "Concurrent device sessions have a maximum of $500. Concurrent device sessions never have a maximum of $500 if flagged for fraud review."
+  },
+  {
+    "id": "cal:013",
+    "context": "Turnaround times are tracked in the operations dashboard for every service line. Staffing levels are adjusted seasonally to hold published targets.",
+    "output": "For a background check, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:014",
+    "context": "Building security reviews access lists on a rolling basis each quarter. Badge provisioning is handled by the facilities team.",
+    "output": "Contractors are unmistakably cleared to enter the server room."
+  },
+  {
+    "id": "cal:015",
+    "context": "Vendor contract renewals require approval. Vendor contract renewals don't require approval during emergency procurement.",
+    "output": "Vendor contract renewals require approval."
+  },
+  {
+    "id": "cal:016",
+    "context": "Visitors may enter the executive lounge for scheduled events only if verified. This policy is documented in the customer handbook.",
+    "output": "Visitors may enter the available executive lounge only if verified."
+  },
+  {
+    "id": "cal:017",
+    "context": "Daily withdrawals have a maximum of $500 only if verified. Full terms are listed in the published service catalog.",
+    "output": "Daily withdrawals have a maximum of $500 only if verified."
+  },
+  {
+    "id": "cal:018",
+    "context": "Daily withdrawals have a maximum of $500 only if verified. Full terms are listed in the published service catalog.",
+    "output": "Daily withdrawals have a maximum of $500 if verified."
+  },
+  {
+    "id": "cal:019",
+    "context": "Weekend appointment slots are available only if verified. This policy is documented in the customer handbook.",
+    "output": "Weekend appointment slots are available only if verified."
+  },
+  {
+    "id": "cal:020",
+    "context": "Monthly file uploads have a maximum of $650. Full terms are listed in the published service catalog.",
+    "output": "Monthly file uploads have a maximum of $950."
+  },
+  {
+    "id": "cal:021",
+    "context": "Pricing for add-on services is published in the service catalog. Rates are reviewed annually by the pricing committee.",
+    "output": "For account setup, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:022",
+    "context": "Clearance items are refundable. Clearance items are nonrefundable during the holiday exclusion period.",
+    "output": "Clearance items are refundable. Clearance items are nonrefundable during the holiday exclusion period."
+  },
+  {
+    "id": "cal:023",
+    "context": "Most vendor contract renewals require approval only if verified. Full terms are listed in the published service catalog.",
+    "output": "Vendor contract renewals require approval only if verified."
+  },
+  {
+    "id": "cal:024",
+    "context": "Visitors may enter the executive lounge only if cleared by security. This policy is documented in the customer handbook.",
+    "output": "Visitors may enter the executive lounge."
+  },
+  {
+    "id": "cal:025",
+    "context": "Seasonal employees are eligible only if verified. This policy is documented in the customer handbook.",
+    "output": "Seasonal employees are eligible if verified."
+  },
+  {
+    "id": "cal:026",
+    "context": "Program eligibility is reviewed each enrollment cycle by the membership team. Status changes take effect at the start of the following cycle.",
+    "output": "Trial members are always eligible, presumably after account verification."
+  },
+  {
+    "id": "cal:027",
+    "context": "Gift cards are refundable only if verified. Full terms are listed in the published service catalog.",
+    "output": "Gift cards are refundable if verified."
+  },
+  {
+    "id": "cal:028",
+    "context": "Student discounts are available. Full terms are listed in the published service catalog.",
+    "output": "Student discounts can be applied at checkout."
+  },
+  {
+    "id": "cal:029",
+    "context": "Daily withdrawals have a maximum of $500 only if cleared by fraud review. Full terms are listed in the published service catalog.",
+    "output": "Daily withdrawals have a maximum of $500 only if fraud review signs off."
+  },
+  {
+    "id": "cal:030",
+    "context": "Employee discounts are available only if cleared by HR. Full terms are listed in the published service catalog.",
+    "output": "Employee discounts are available only if HR signs off."
+  },
+  {
+    "id": "cal:031",
+    "context": "The annual inspection costs $25. Full terms are listed in the published service catalog.",
+    "output": "The annual inspection costs $1,23,456."
+  },
+  {
+    "id": "cal:032",
+    "context": "Access is available only if cleared by IT. Full terms are listed in the published service catalog.",
+    "output": "Access is available."
+  },
+  {
+    "id": "cal:033",
+    "context": "Clearance items are refundable. Full terms are listed in the published service catalog.",
+    "output": "Clearance items are refundable."
+  },
+  {
+    "id": "cal:034",
+    "context": "Concurrent device sessions have a maximum of $10. Concurrent device sessions have a maximum of $30.",
+    "output": "Concurrent device sessions have a maximum of over $5."
+  },
+  {
+    "id": "cal:035",
+    "context": "Account setup costs $225. Full terms are listed in the published service catalog.",
+    "output": "Account setup costs $225.00."
+  },
+  {
+    "id": "cal:036",
+    "context": "Marketing runs seasonal promotions through the loyalty platform. Discount codes are validated against the customer's account tier at checkout.",
+    "output": "For employee discounts, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:037",
+    "context": "Running shoes are exchangeable only if verified. This policy is documented in the customer handbook.",
+    "output": "Running shoes are exchangeable if verified."
+  },
+  {
+    "id": "cal:038",
+    "context": "Most vendor contract renewals require approval. Vendor contract renewals don't require approval during emergency procurement.",
+    "output": "Vendor contract renewals require approval."
+  },
+  {
+    "id": "cal:039",
+    "context": "Our exchange desk handles size and color swaps separately from standard returns. Inventory holds are placed automatically once a swap request is logged.",
+    "output": "For patio furniture sets, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:040",
+    "context": "Laptop accessories are exchangeable. Laptop accessories aren't exchangeable during the final clearance period.",
+    "output": "Laptop accessories are exchangeable."
+  },
+  {
+    "id": "cal:041",
+    "context": "A background check takes 5 days only if verified. This policy is documented in the customer handbook.",
+    "output": "A background check takes around 5 days only if verified."
+  },
+  {
+    "id": "cal:042",
+    "context": "Employee discounts for verified staff with active badges are available. Employee discounts are unavailable during blackout periods.",
+    "output": "Employee discounts are available."
+  },
+  {
+    "id": "cal:043",
+    "context": "Our exchange desk handles size and color swaps separately from standard returns. Inventory holds are placed automatically once a swap request is logged.",
+    "output": "Are running shoes always exchangeable within 30 days?"
+  },
+  {
+    "id": "cal:044",
+    "context": "Visitors may enter the executive lounge. This policy is documented in the customer handbook.",
+    "output": "Visitors may enter the executive lounge."
+  },
+  {
+    "id": "cal:045",
+    "context": "Account usage is monitored continuously by the platform's rate-limiting service. Thresholds are documented in the account terms.",
+    "output": "Daily withdrawals are always capped at the stated maximum, presumably adjustable by request."
+  },
+  {
+    "id": "cal:046",
+    "context": "Building security reviews access lists on a rolling basis each quarter. Badge provisioning is handled by the facilities team.",
+    "output": "For contractors, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:047",
+    "context": "Employee discounts are available. Full terms are listed in the published service catalog.",
+    "output": "Employee discounts are unavailable."
+  },
+  {
+    "id": "cal:048",
+    "context": "Weekend appointment slots are available only if verified. This policy is documented in the customer handbook.",
+    "output": "Weekend appointment slots are available if verified."
+  },
+  {
+    "id": "cal:049",
+    "context": "Weekend appointment slots are available. This policy is documented in the customer handbook.",
+    "output": "Weekend appointment slots are available."
+  },
+  {
+    "id": "cal:050",
+    "context": "Account usage is monitored continuously by the platform's rate-limiting service. Thresholds are documented in the account terms.",
+    "output": "Is the daily withdrawal cap always enforced at the stated maximum?"
+  },
+  {
+    "id": "cal:051",
+    "context": "Most weekend appointment slots are available. Weekend appointment slots are unavailable during holiday closures.",
+    "output": "Weekend appointment slots are available."
+  },
+  {
+    "id": "cal:052",
+    "context": "Daily withdrawals have a maximum of $500. Daily withdrawals never have a maximum of $500 if flagged for fraud review.",
+    "output": "Daily withdrawals have a maximum of $1,23,456."
+  },
+  {
+    "id": "cal:053",
+    "context": "Our operations desk publishes updated slot availability every Monday morning. Booking windows are managed centrally across all regional offices.",
+    "output": "For holiday delivery windows, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:054",
+    "context": "Daily withdrawals have a maximum of $500 only if verified. Daily withdrawals have a maximum of $500 only if not verified.",
+    "output": "Daily withdrawals have a maximum of $500."
+  },
+  {
+    "id": "cal:055",
+    "context": "Marketing runs seasonal promotions through the loyalty platform. Discount codes are validated against the customer's account tier at checkout.",
+    "output": "Is the student discount guaranteed to apply at checkout?"
+  },
+  {
+    "id": "cal:056",
+    "context": "Marketing runs seasonal promotions through the loyalty platform. Discount codes are validated against the customer's account tier at checkout.",
+    "output": "For loyalty renewal discounts, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:057",
+    "context": "Seasonal employees are eligible only if verified. This policy is documented in the customer handbook.",
+    "output": "Seasonal employees are eligible only if verified."
+  },
+  {
+    "id": "cal:058",
+    "context": "Concurrent device sessions have a maximum of $500. Concurrent device sessions never have a maximum of $500 if flagged for fraud review.",
+    "output": "Concurrent device sessions have a maximum of $500."
+  },
+  {
+    "id": "cal:059",
+    "context": "Program eligibility is reviewed each enrollment cycle by the membership team. Status changes take effect at the start of the following cycle.",
+    "output": "For trial members, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:060",
+    "context": "Contractors may enter the server room. This policy is documented in the customer handbook.",
+    "output": "Contractors are not cleared for the server room."
+  },
+  {
+    "id": "cal:061",
+    "context": "A background check takes 13 days. This policy is documented in the customer handbook.",
+    "output": "A background check takes 33 days."
+  },
+  {
+    "id": "cal:062",
+    "context": "A background check takes 5 days. A background check never takes 5 days if flagged for review.",
+    "output": "A background check takes 5 days. A background check never takes 5 days if flagged for review."
+  },
+  {
+    "id": "cal:063",
+    "context": "Vendor contract renewals require approval. Full terms are listed in the published service catalog.",
+    "output": "Vendor contract renewals require approval."
+  },
+  {
+    "id": "cal:064",
+    "context": "Employee discounts for verified staff with active badges are available only if approved. Full terms are listed in the published service catalog.",
+    "output": "Employee discounts are available only if approved."
+  },
+  {
+    "id": "cal:065",
+    "context": "The annual inspection costs $150 only if verified. Full terms are listed in the published service catalog.",
+    "output": "The annual inspection costs $1,23,456 only if verified."
+  },
+  {
+    "id": "cal:066",
+    "context": "Standard installation for new customers costs $150. Standard installation for existing customers costs $250.",
+    "output": "Standard installation for new customers costs $150."
+  },
+  {
+    "id": "cal:067",
+    "context": "A background check takes 5 days. This policy is documented in the customer handbook.",
+    "output": "A background check takes 1,\u0662\u0663\u0664 days."
+  },
+  {
+    "id": "cal:068",
+    "context": "Employee discounts are available only if verified. Full terms are listed in the published service catalog.",
+    "output": "Employee discounts are available only if verified."
+  },
+  {
+    "id": "cal:069",
+    "context": "Turnaround times are tracked in the operations dashboard for every service line. Staffing levels are adjusted seasonally to hold published targets.",
+    "output": "Does the background check always finish within 5 days?"
+  },
+  {
+    "id": "cal:070",
+    "context": "Account usage is monitored continuously by the platform's rate-limiting service. Thresholds are documented in the account terms.",
+    "output": "For monthly file uploads, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:071",
+    "context": "Standard installation costs $150 only if verified. Full terms are listed in the published service catalog.",
+    "output": "Standard installation costs $150 if verified."
+  },
+  {
+    "id": "cal:072",
+    "context": "Custom engraving for domestic orders takes 5 days. Custom engraving for international orders takes 12 days.",
+    "output": "Custom engraving for domestic orders takes 5 days."
+  },
+  {
+    "id": "cal:073",
+    "context": "Our returns desk processes requests within two business days of receipt. Store credit and cash refunds follow the same review workflow.",
+    "output": "Is this gift card guaranteed to be refundable?"
+  },
+  {
+    "id": "cal:074",
+    "context": "Pricing for add-on services is published in the service catalog. Rates are reviewed annually by the pricing committee.",
+    "output": "For standard installation, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:075",
+    "context": "Our returns desk processes requests within two business days of receipt. Store credit and cash refunds follow the same review workflow.",
+    "output": "For clearance items, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:076",
+    "context": "Trial members with monthly billing are eligible for the rewards program. Trial members with annual billing are ineligible for the rewards program.",
+    "output": "Trial members with monthly billing are eligible for the rewards program."
+  },
+  {
+    "id": "cal:077",
+    "context": "Finance routes purchase requests through the standard approval workflow. Budget owners are notified automatically when a request is submitted.",
+    "output": "For vendor contract renewals, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:078",
+    "context": "Patio furniture sets are exchangeable. This policy is documented in the customer handbook.",
+    "output": "Patio furniture sets are exchangeable."
+  },
+  {
+    "id": "cal:079",
+    "context": "Visitors may enter the executive lounge only if verified. This policy is documented in the customer handbook.",
+    "output": "Visitors may enter the executive lounge only if verified."
+  },
+  {
+    "id": "cal:080",
+    "context": "Weekend appointment slots are available. Weekend appointment slots are unavailable.",
+    "output": "Weekend appointment slots are available."
+  },
+  {
+    "id": "cal:081",
+    "context": "Our exchange desk handles size and color swaps separately from standard returns. Inventory holds are placed automatically once a swap request is logged.",
+    "output": "For winter coats, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:082",
+    "context": "Pricing for add-on services is published in the service catalog. Rates are reviewed annually by the pricing committee.",
+    "output": "The annual inspection is certainly priced at the listed rate, in theory subject to change."
+  },
+  {
+    "id": "cal:083",
+    "context": "Our returns desk processes requests within two business days of receipt. Store credit and cash refunds follow the same review workflow.",
+    "output": "Gift cards are indisputably refundable within the return window."
+  },
+  {
+    "id": "cal:084",
+    "context": "An insurance claim takes 5 days only if verified. This policy is documented in the customer handbook.",
+    "output": "An insurance claim takes 5 days if verified."
+  },
+  {
+    "id": "cal:085",
+    "context": "Employee discounts are available for verified staff with active badges. Full terms are listed in the published service catalog.",
+    "output": "Employee discounts are available."
+  },
+  {
+    "id": "cal:086",
+    "context": "Daily withdrawals have a maximum of $500. Full terms are listed in the published service catalog.",
+    "output": "Daily withdrawals have a limit of no more than $500."
+  },
+  {
+    "id": "cal:087",
+    "context": "Program eligibility is reviewed each enrollment cycle by the membership team. Status changes take effect at the start of the following cycle.",
+    "output": "For corporate account holders, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:088",
+    "context": "Expedited shipping costs $150. Expedited shipping never costs $150 if a rush fee applies.",
+    "output": "Expedited shipping costs $150."
+  },
+  {
+    "id": "cal:089",
+    "context": "New equipment purchases require approval. Full terms are listed in the published service catalog.",
+    "output": "New equipment purchases don't require approval."
+  },
+  {
+    "id": "cal:090",
+    "context": "Running shoes are exchangeable. This policy is documented in the customer handbook.",
+    "output": "Running shoes cannot be swapped for a different size."
+  },
+  {
+    "id": "cal:091",
+    "context": "Our operations desk publishes updated slot availability every Monday morning. Booking windows are managed centrally across all regional offices.",
+    "output": "Weekend appointment slots are unquestionably ready for booking."
+  },
+  {
+    "id": "cal:092",
+    "context": "Marketing runs seasonal promotions through the loyalty platform. Discount codes are validated against the customer's account tier at checkout.",
+    "output": "Student discounts are assuredly applied at checkout."
+  },
+  {
+    "id": "cal:093",
+    "context": "Contractors may enter the server room. Contractors may not enter the server room contingent on badge tier.",
+    "output": "Contractors may enter the server room."
+  },
+  {
+    "id": "cal:094",
+    "context": "Our operations desk publishes updated slot availability every Monday morning. Booking windows are managed centrally across all regional offices.",
+    "output": "For weekend appointment slots, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:095",
+    "context": "Weekend appointment slots are available only if verified. Weekend appointment slots are available only if not verified.",
+    "output": "Weekend appointment slots are available."
+  },
+  {
+    "id": "cal:096",
+    "context": "Pricing for add-on services is published in the service catalog. Rates are reviewed annually by the pricing committee.",
+    "output": "Is the inspection fee guaranteed to stay at the listed rate?"
+  },
+  {
+    "id": "cal:097",
+    "context": "Student discounts are available. Student discounts are unavailable during the holiday exclusion period.",
+    "output": "Student discounts are available."
+  },
+  {
+    "id": "cal:098",
+    "context": "Finance routes purchase requests through the standard approval workflow. Budget owners are notified automatically when a request is submitted.",
+    "output": "New equipment purchases are guaranteed approval, conceivably pending budget review."
+  },
+  {
+    "id": "cal:099",
+    "context": "Building security reviews access lists on a rolling basis each quarter. Badge provisioning is handled by the facilities team.",
+    "output": "Are contractors always cleared to enter the server room?"
+  },
+  {
+    "id": "cal:100",
+    "context": "An insurance claim takes 13 days. This policy is documented in the customer handbook.",
+    "output": "An insurance claim takes 13 days."
+  },
+  {
+    "id": "cal:101",
+    "context": "Holiday delivery windows are available. Holiday delivery windows are unavailable during the holiday exclusion period.",
+    "output": "Holiday delivery windows are available."
+  },
+  {
+    "id": "cal:102",
+    "context": "A background check takes 5 days. A background check never takes 5 days if flagged for review.",
+    "output": "A background check takes around 5 days."
+  },
+  {
+    "id": "cal:103",
+    "context": "Contractors may enter the server room. This policy is documented in the customer handbook.",
+    "output": "Contractors can't enter the server room."
+  },
+  {
+    "id": "cal:104",
+    "context": "Corporate account holders are eligible. This policy is documented in the customer handbook.",
+    "output": "Corporate account holders are ineligible."
+  },
+  {
+    "id": "cal:105",
+    "context": "A background check takes 5 days only if cleared for expedited handling. This policy is documented in the customer handbook.",
+    "output": "A background check takes 5 days only if it is signed off for expedited handling."
+  },
+  {
+    "id": "cal:106",
+    "context": "Access requires approval. Full terms are listed in the published service catalog.",
+    "output": "Access is available only if approved."
+  },
+  {
+    "id": "cal:107",
+    "context": "Visitors may enter the executive lounge. Visitors may not enter the executive lounge after hours.",
+    "output": "Visitors may enter the available executive lounge."
+  },
+  {
+    "id": "cal:108",
+    "context": "Weekend appointment slots are available. This policy is documented in the customer handbook.",
+    "output": "Weekend appointment slots are on hold this month."
+  },
+  {
+    "id": "cal:109",
+    "context": "Laptop accessories are exchangeable. Laptop accessories aren't exchangeable contingent on original packaging.",
+    "output": "Laptop accessories are exchangeable."
+  },
+  {
+    "id": "cal:110",
+    "context": "Access requires approval. Full terms are listed in the published service catalog.",
+    "output": "Access is available."
+  },
+  {
+    "id": "cal:111",
+    "context": "Contractors may enter the server room. Contractors may not enter the server room after hours.",
+    "output": "Contractors may enter the server room."
+  },
+  {
+    "id": "cal:112",
+    "context": "Building security reviews access lists on a rolling basis each quarter. Badge provisioning is handled by the facilities team.",
+    "output": "For visitors, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:113",
+    "context": "Weekend appointment slots for online bookings are available. Weekend appointment slots for phone bookings are unavailable contingent on staffing levels.",
+    "output": "Weekend appointment slots for online bookings are available."
+  },
+  {
+    "id": "cal:114",
+    "context": "Employee discounts are available only if verified. Full terms are listed in the published service catalog.",
+    "output": "Employee discounts are available if verified."
+  },
+  {
+    "id": "cal:115",
+    "context": "A warranty repair takes 90 days. This policy is documented in the customer handbook.",
+    "output": "A warranty repair takes 1 quarter."
+  },
+  {
+    "id": "cal:116",
+    "context": "Concurrent device sessions have a maximum of $650. Full terms are listed in the published service catalog.",
+    "output": "Concurrent device sessions have a maximum of $650."
+  },
+  {
+    "id": "cal:117",
+    "context": "Turnaround times are tracked in the operations dashboard for every service line. Staffing levels are adjusted seasonally to hold published targets.",
+    "output": "For an insurance claim, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:118",
+    "context": "Standard installation costs $150 only if verified. Full terms are listed in the published service catalog.",
+    "output": "Standard installation costs $150 only if verified."
+  },
+  {
+    "id": "cal:119",
+    "context": "Seasonal employees are eligible only if verified. This policy is documented in the customer handbook.",
+    "output": "Are seasonal employees eligible only if verified?"
+  },
+  {
+    "id": "cal:120",
+    "context": "Running shoes are exchangeable only if verified. This policy is documented in the customer handbook.",
+    "output": "Running shoes are exchangeable only if verified."
+  },
+  {
+    "id": "cal:121",
+    "context": "Gift cards for loyalty members are refundable only if verified. Full terms are listed in the published service catalog.",
+    "output": "Gift cards for guests are refundable."
+  },
+  {
+    "id": "cal:122",
+    "context": "Our exchange desk handles size and color swaps separately from standard returns. Inventory holds are placed automatically once a swap request is logged.",
+    "output": "Running shoes are, without exception, eligible for exchange."
+  },
+  {
+    "id": "cal:123",
+    "context": "Loyalty renewal discounts are available. Full terms are listed in the published service catalog.",
+    "output": "Loyalty renewal discounts are available."
+  },
+  {
+    "id": "cal:124",
+    "context": "Gift cards for members are refundable. Gift cards for guests are nonrefundable contingent on proof of purchase.",
+    "output": "Gift cards for members are refundable."
+  },
+  {
+    "id": "cal:125",
+    "context": "Guest day-passes for weekday visits have a maximum of $500. Guest day-passes for weekend visits have a maximum of $300.",
+    "output": "Guest day-passes for weekday visits have a maximum of $500."
+  },
+  {
+    "id": "cal:126",
+    "context": "Laptop accessories are exchangeable. Laptop accessories aren't exchangeable during the final clearance period.",
+    "output": "Laptop accessories are exchangeable. Laptop accessories aren't exchangeable during the final clearance period."
+  },
+  {
+    "id": "cal:127",
+    "context": "Running shoes are exchangeable. Running shoes aren't exchangeable during the final clearance period.",
+    "output": "Running shoes are exchangeable.Running shoes are exchangeable."
+  },
+  {
+    "id": "cal:128",
+    "context": "Running shoes are exchangeable. This policy is documented in the customer handbook.",
+    "output": "Running shoes are exchangeable.Running shoes are exchangeable."
+  },
+  {
+    "id": "cal:129",
+    "context": "An insurance claim takes 5 days only if verified. This policy is documented in the customer handbook.",
+    "output": "An insurance claim takes 5 days only if verified."
+  },
+  {
+    "id": "cal:130",
+    "context": "Holiday delivery windows are available. Holiday delivery windows are unavailable during the holiday exclusion period.",
+    "output": "Holiday delivery windows are available. Holiday delivery windows are unavailable during the holiday exclusion period."
+  },
+  {
+    "id": "cal:131",
+    "context": "Part-time staff are eligible. Part-time staff are ineligible during the holiday exclusion period.",
+    "output": "Part-time staff are eligible. Part-time staff are ineligible during the holiday exclusion period."
+  },
+  {
+    "id": "cal:132",
+    "context": "Holiday delivery windows are available. This policy is documented in the customer handbook.",
+    "output": "Holiday delivery windows are unavailable."
+  },
+  {
+    "id": "cal:133",
+    "context": "Winter coats are exchangeable. This policy is documented in the customer handbook.",
+    "output": "Winter coats aren't exchangeable."
+  },
+  {
+    "id": "cal:134",
+    "context": "Seasonal employees are eligible for the rewards program. This policy is documented in the customer handbook.",
+    "output": "Are seasonal employees eligible for the rewards program?"
+  },
+  {
+    "id": "cal:135",
+    "context": "Running shoes are exchangeable only if cleared for hygiene. This policy is documented in the customer handbook.",
+    "output": "Running shoes are exchangeable."
+  },
+  {
+    "id": "cal:136",
+    "context": "Student discounts are available. Student discounts are unavailable during the holiday exclusion period.",
+    "output": "Student discounts are available. Student discounts are unavailable during the holiday exclusion period."
+  },
+  {
+    "id": "cal:137",
+    "context": "Trial members are eligible only if cleared by the membership team. This policy is documented in the customer handbook.",
+    "output": "Trial members are eligible only if the membership team signs off."
+  },
+  {
+    "id": "cal:138",
+    "context": "A background check takes 5 days. A background check never takes 5 days if flagged for review.",
+    "output": "A background check takes 5 days."
+  },
+  {
+    "id": "cal:139",
+    "context": "Weekend appointment slots are available only if cleared by the front desk. This policy is documented in the customer handbook.",
+    "output": "Weekend appointment slots are available."
+  },
+  {
+    "id": "cal:140",
+    "context": "Part-time staff are eligible. Part-time staff are ineligible during the holiday exclusion period.",
+    "output": "Part-time staff are eligible."
+  },
+  {
+    "id": "cal:141",
+    "context": "Standard installation costs $225. Full terms are listed in the published service catalog.",
+    "output": "Standard installation costs $265."
+  },
+  {
+    "id": "cal:142",
+    "context": "Gift cards are refundable only if verified. Full terms are listed in the published service catalog.",
+    "output": "Gift cards are refundable only if verified."
+  },
+  {
+    "id": "cal:143",
+    "context": "Clearance items are refundable. Clearance items are nonrefundable during the holiday exclusion period.",
+    "output": "Clearance items are refundable."
+  },
+  {
+    "id": "cal:144",
+    "context": "Our returns desk processes requests within two business days of receipt. Store credit and cash refunds follow the same review workflow.",
+    "output": "For annual membership fees, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:145",
+    "context": "Standard installation costs $200. Full terms are listed in the published service catalog.",
+    "output": "Standard installation costs no more than $200."
+  },
+  {
+    "id": "cal:146",
+    "context": "Vendor contract renewals require approval. Vendor contract renewals don't require approval contingent on contract value.",
+    "output": "Vendor contract renewals require approval."
+  },
+  {
+    "id": "cal:147",
+    "context": "Account usage is monitored continuously by the platform's rate-limiting service. Thresholds are documented in the account terms.",
+    "output": "For concurrent device sessions, this is guaranteed, though results may vary by case."
+  },
+  {
+    "id": "cal:148",
+    "context": "Seasonal employees are eligible for the rewards program. Seasonal employees are ineligible during the trial's first 30 days.",
+    "output": "Are seasonal employees eligible for the rewards program?"
+  },
+  {
+    "id": "cal:149",
+    "context": "Vendor contract renewals require approval. Vendor contract renewals don't require approval during emergency procurement.",
+    "output": "Vendor contract renewals require approval. Vendor contract renewals don't require approval during emergency procurement."
+  },
+  {
+    "id": "cal:150",
+    "context": "Turnaround times are tracked in the operations dashboard for every service line. Staffing levels are adjusted seasonally to hold published targets.",
+    "output": "A background check always completes on time, conceivably delayed by holidays."
+  },
+  {
+    "id": "cal:151",
+    "context": "Bulk order discounts for online orders are available. Bulk order discounts for in-store orders are unavailable.",
+    "output": "Bulk order discounts for online orders are available."
+  },
+  {
+    "id": "cal:152",
+    "context": "Trial members are eligible for the rewards program. This policy is documented in the customer handbook.",
+    "output": "Trial members qualify for the rewards program."
+  },
+  {
+    "id": "cal:153",
+    "context": "New equipment purchases require approval. Full terms are listed in the published service catalog.",
+    "output": "New equipment purchases can proceed without any sign-off."
+  },
+  {
+    "id": "cal:154",
+    "context": "Running shoes are exchangeable only if verified. This policy is documented in the customer handbook.",
+    "output": "Running shoes are exchangeable only if verified.Running shoes are exchangeable only if verified."
+  },
+  {
+    "id": "cal:155",
+    "context": "Program eligibility is reviewed each enrollment cycle by the membership team. Status changes take effect at the start of the following cycle.",
+    "output": "Are trial members always eligible for the rewards program?"
+  },
+  {
+    "id": "cal:156",
+    "context": "Contractors may enter the server room. Contractors may not enter the server room after hours.",
+    "output": "Contractors may enter the server room. Contractors may not enter the server room after hours."
+  },
+  {
+    "id": "cal:157",
+    "context": "Visitors may enter the executive lounge for scheduled events. This policy is documented in the customer handbook.",
+    "output": "Visitors may enter the available executive lounge."
+  },
+  {
+    "id": "cal:158",
+    "context": "Finance routes purchase requests through the standard approval workflow. Budget owners are notified automatically when a request is submitted.",
+    "output": "For new equipment purchases, this is guaranteed to apply in every case."
+  },
+  {
+    "id": "cal:159",
+    "context": "Trial members are eligible. This policy is documented in the customer handbook.",
+    "output": "Trial members are eligible."
+  }
+]

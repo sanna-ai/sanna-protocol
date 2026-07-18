@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanna.dev/schemas/calibration/commitment/v1.json",
+  "title": "SAN-881 calibration commit/reveal envelope",
+  "description": "Public commitment envelope binding the labeling_context_hash and per-artifact commitments for the four sealed author artifacts, plus pinned filenames/method for the two reviewer commitment files produced later in the staged-adjudication workflow.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "corpus_version",
+    "labeling_context_hash",
+    "labeling_context_components",
+    "commitment_algorithm",
+    "author_commitments",
+    "reveal_protocol"
+  ],
+  "properties": {
+    "corpus_version": { "const": 1 },
+    "labeling_context_hash": { "$ref": "#/$defs/hex64" },
+    "labeling_context_components": {
+      "description": "Ordered list of the exact byte sources concatenated (in this order) to produce labeling_context_hash.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "commitment_algorithm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "domain_separator", "formula"],
+      "properties": {
+        "hash": { "const": "SHA256" },
+        "domain_separator": { "const": "sanna-calibration-commitment/1" },
+        "formula": { "type": "string", "minLength": 1 }
+      }
+    },
+    "author_commitments": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/artifactCommitment" }
+    },
+    "reveal_protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer_commitment_filenames", "reviewer_commitment_method", "abandonment_rule"],
+      "properties": {
+        "reviewer_commitment_filenames": {
+          "type": "array",
+          "items": { "type": "string" },
+          "const": [
+            "labels_reviewer_semantic.commitment.json",
+            "labels_reviewer_contract.commitment.json"
+          ]
+        },
+        "reviewer_commitment_method": {
+          "type": "string",
+          "const": "identical to author_commitments: domain-separated SHA256(\"sanna-calibration-commitment/1\" || NUL || artifact_name || NUL || raw_32_byte_nonce || raw_32_byte_labeling_context_hash || exact_artifact_bytes)"
+        },
+        "abandonment_rule": {
+          "type": "string",
+          "const": "any byte change to the corpus or any sealed artifact after this commitment.json is finalized abandons v1; restart as v2. No in-place correction once blind labeling begins."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifactCommitment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_name", "byte_length", "commitment_hex"],
+      "properties": {
+        "artifact_name": {
+          "enum": [
+            "design_metadata.json",
+            "labels_author_semantic.json",
+            "labels_author_contract.json",
+            "coverage_manifest.json"
+          ]
+        },
+        "byte_length": { "type": "integer", "exclusiveMinimum": 0 },
+        "commitment_hex": { "$ref": "#/$defs/hex64" }
+      }
+    }
+  }
+}

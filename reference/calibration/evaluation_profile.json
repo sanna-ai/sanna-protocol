@@ -1,0 +1,55 @@
+{
+  "corpus_version": 1,
+  "scope": ["C1", "C2", "C3", "C4"],
+  "evaluator": {
+    "module": "reference.evaluate",
+    "function": "evaluate",
+    "fixture_construction": {
+      "allowlist": ["context", "context_sources", "output"],
+      "no_other_args": true,
+      "library_defaults": [
+        "context_repeat is NOT used by this corpus (tier_1-only, no envelope-cap fixtures)",
+        "no explicit tier is passed for plain \"context\" strings; evaluate() defaults every plain-context source to tier_1 (reference/evaluate.py _context_sources)",
+        "no configuration, no wrapper attestation, no runtime_binding args are passed -- this module is pre-classified, basis-attested input only (reference/evaluate.py module docstring, SLICE BOUNDARY)"
+      ]
+    }
+  },
+  "tier_interpretation": {
+    "note": "Tiers are DATA describing the declared authority of a context source, not measured behavior. This corpus is tier_1-only by construction (SAN-881 v1 scope): every corpus_inputs.json item is either a plain \"context\" string (one tier_1 source) or a context_sources array where every entry has tier \"tier_1\". No tier_2 or tier_3 source, and no basis-empty or advisory-path construction, appears anywhere in this corpus -- those belong to the conformance-fixture lane (reference/fixtures/), not this calibration corpus."
+  },
+  "spec_pins": {
+    "algorithm_sha256": "979cf1368fb3cdc6e51b78eaa200a8bcef81e03bfcdc6e89a6c1667b30c16c58",
+    "algorithm_file": "reference/spec/ALGORITHM-v4-c1c5-reference.md",
+    "algorithm_draft": "5.6",
+    "tables_sha256": "0a18dd94bc811bb3166a4f8812e78f2b053a9f8f083b781a21fb0f8371f54ecc",
+    "tables_file": "reference/spec/ALGORITHM-v4-tables-v1.json"
+  },
+  "expected_check_identities": {
+    "note": "Verbatim identity summary of ALGORITHM-v4-c1c5-reference.md section 6 (draft 5.6). This profile does not restate the algorithm; it pins the spec_ref location every author-contract label cites.",
+    "C1": {
+      "purpose": "context-vs-output factual consistency (row 0-10 pseudocode, ALGORITHM-v4-c1c5-reference.md sec 6)",
+      "severity_on_violation": "critical",
+      "spec_ref": "ALGORITHM-v4-c1c5-reference.md sec 6 C1"
+    },
+    "C2": {
+      "purpose": "definitive-claim / hedge calibration, output-only, C2-LOCAL partiality (e11)",
+      "severity_on_violation": "warning",
+      "spec_ref": "ALGORITHM-v4-c1c5-reference.md sec 6 C2"
+    },
+    "C3": {
+      "purpose": "obligation satisfaction (explicit + implicit requirements vs output evidence, support())",
+      "severity_on_violation": "warning",
+      "spec_ref": "ALGORITHM-v4-c1c5-reference.md sec 6 C3"
+    },
+    "C4": {
+      "purpose": "cross-policy modifier-scoped restriction preservation",
+      "severity_on_violation": "warning",
+      "spec_ref": "ALGORITHM-v4-c1c5-reference.md sec 6 C4"
+    }
+  },
+  "output_tuple_projection": {
+    "fields": ["outcome", "outcome_reason", "severity", "advisory"],
+    "note": "This is the REFERENCE DETECTION PROJECTION of a cv=11 CheckResult (reference/evaluate.py module docstring): {outcome, outcome_reason, severity} are the locked cv=11 CheckResult fields this module computes; \"advisory\" is the C1 row-9 harness/rendering-metadata flag and MUST NEVER be serialized into a real CheckResult by any integration layer.",
+    "advisory_note": "contract_tuple.advisory is a schema boolean. Every corpus-v1 record is expected false under the tier_1-only surface: the C1 advisory flag only fires on a decided t3-only contradiction (trusted AND tier_3 both nonempty, sec 6 C1 row 9), and this corpus carries no tier_3 source anywhere."
+  }
+}
