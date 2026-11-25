@@ -15,8 +15,8 @@ Never present one pillar as subordinate to the other.
 
 ## Current Version
 
-- **Spec version:** 1.4 (`spec/sanna-specification-v1.4.md`)
-- **checks_version:** `"9"` (current default at v1.4+)
+- **Spec version:** 1.5 (`spec/sanna-specification-v1.5.md`)
+- **checks_version:** `"10"` (current default at v1.5+)
 - **Schema:** `schemas/receipt.schema.json` (JSON Schema 2020-12)
 
 See `docs/state.md` for auto-generated version snapshot (spec version,
@@ -28,7 +28,7 @@ checks_version, schema list, fixture count).
 
 | Path | Purpose |
 |------|---------|
-| `spec/sanna-specification-v1.4.md` | The specification (source of truth) |
+| `spec/sanna-specification-v1.5.md` | The specification (source of truth) |
 | `schemas/receipt.schema.json` | Receipt JSON Schema |
 | `schemas/constitution.schema.json` | Constitution JSON Schema |
 | `fixtures/` | Golden test fixtures (keypairs, receipts, constitutions, hashes) |
@@ -134,7 +134,7 @@ against `sanna-protocol` and block the release.
 
 ## Working With This Repo
 
-**Editing the spec:** Edit `spec/sanna-specification-v1.4.md` directly. Keep
+**Editing the spec:** Edit `spec/sanna-specification-v1.5.md` directly. Keep
 RFC 2119 language (`MUST`, `MUST NOT`, `SHOULD`, etc.).
 
 **Schema changes:** Must be reflected in both the spec and

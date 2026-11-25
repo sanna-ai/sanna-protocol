@@ -20,7 +20,7 @@ Protocol; source of truth for all SDK implementations.
 - [docs/state.md](docs/state.md) — auto-generated: spec version, checks_version, schema list, fixture count, test vector count
 - [VERSIONING.md](VERSIONING.md) — normative versioning discipline for protocol + SDK coordination
 - [CHANGELOG.md](CHANGELOG.md) — protocol version history
-- [spec/sanna-specification-v1.4.md](spec/sanna-specification-v1.4.md) — current spec (source of truth for all SDKs)
+- [spec/sanna-specification-v1.5.md](spec/sanna-specification-v1.5.md) — current spec (source of truth for all SDKs)
 - [schemas/receipt.schema.json](schemas/receipt.schema.json) — receipt JSON Schema (JSON Schema 2020-12)
 - `docs/decisions/` — architectural decision records (ADR bootstrap forthcoming; follow-up PR per SAN-326 sequencing)
 

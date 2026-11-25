@@ -277,7 +277,7 @@ For SDK-only bumps (patch/minor, no protocol change):
 
 ## References
 
-- `spec/sanna-specification-v1.4.md` — current normative spec
+- `spec/sanna-specification-v1.5.md` — current normative spec
 - `schemas/receipt.schema.json` — current receipt schema
 - `schemas/constitution.schema.json` — current constitution schema
 - `CHANGELOG.md` — version history for the protocol

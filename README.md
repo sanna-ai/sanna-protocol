@@ -6,9 +6,9 @@ Open specification for cryptographic governance receipts. When an AI agent acts,
 
 | Path | Description |
 |------|-------------|
-| [`spec/`](spec/sanna-specification-v1.4.md) | Protocol specification v1.4 — receipt format, 20-field fingerprint (cv=9), tool identity, agent-model audit fields, multi-surface governance, canonicalization, signing, verification |
+| [`spec/`](spec/sanna-specification-v1.5.md) | Protocol specification v1.5 — receipt format, 21-field fingerprint (cv=10), tool identity, agent-model audit fields, multi-surface governance, canonicalization, signing, verification |
 | [`schemas/`](schemas/) | JSON Schema (2020-12) for [constitutions](schemas/constitution.schema.json) and [receipts](schemas/receipt.schema.json) |
-| [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes, 1,296 canonicalization test vectors, 24 multi-surface (CLI/API) test vectors |
+| [`fixtures/`](fixtures/) | Golden test fixtures — test keypair, signed constitutions, 4 receipt variants, expected hashes, 1,278 canonicalization test vectors, 24 multi-surface (CLI/API) test vectors |
 | [`templates/`](templates/) | Starter constitutions: [privacy-focused](templates/privacy-focused.yaml), [developer](templates/developer.yaml), [locked-down](templates/locked-down.yaml) |
 | [`http/`](http/header-conventions.md) | HTTP header conventions (`X-Sanna-Receipt`, `X-Sanna-Receipt-URL`, `X-Sanna-Verify`, `X-Sanna-Constitution`) |
 | [`docs/`](docs/) | [Implementers guide](docs/implementers-guide.md), [protocol comparison](docs/protocol-comparison.md) (Sanna vs ORS v0.1) |
